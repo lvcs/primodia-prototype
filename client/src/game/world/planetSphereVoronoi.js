@@ -99,6 +99,7 @@ function pushCartesianFromSpherical(out, latDeg, lonDeg) {
 
 function stereographicProjection(points) {
     const projected = [];
+    let southPoleIndex = -1;
     
     // Project from south pole onto z = 1 plane
     for (let i = 0; i < points.length; i += 3) {
@@ -106,14 +107,17 @@ function stereographicProjection(points) {
         const y = points[i + 1];
         const z = points[i + 2];
         
-        // Skip south pole (will be handled specially)
-        if (y > -0.99999) {
-            const scale = 1 / (1 + y);
-            projected.push(x * scale, z * scale);
+        // Mark south pole index
+        if (y <= -0.99999) {
+            southPoleIndex = i / 3;
+            continue;
         }
+        
+        const scale = 1 / (1 + y);
+        projected.push(x * scale, z * scale);
     }
     
-    return projected;
+    return { projected, southPoleIndex };
 }
 
 function addSouthPoleToMesh(southPoleId, {triangles, halfedges}) {
@@ -205,78 +209,78 @@ function generateDelaunayGeometry(xyz, delaunay) {
 }
 
 function generateVoronoiGeometry(points, delaunay) {
-    const {triangles, halfedges} = delaunay;
+    const {triangles} = delaunay;
     const geometry = [];
     const colors = [];
-    
-    // Calculate all triangle centers first
+
+    // 1. Pre-compute triangle centers (simple centroid projected to sphere)
     const centers = [];
     for (let t = 0; t < triangles.length / 3; t++) {
-        const i0 = triangles[3 * t];
-        const i1 = triangles[3 * t + 1];
-        const i2 = triangles[3 * t + 2];
-        
-        // Calculate circumcenter
-        const p0 = new THREE.Vector3(
-            points[3 * i0],
-            points[3 * i0 + 1],
-            points[3 * i0 + 2]
-        );
-        const p1 = new THREE.Vector3(
-            points[3 * i1],
-            points[3 * i1 + 1],
-            points[3 * i1 + 2]
-        );
-        const p2 = new THREE.Vector3(
-            points[3 * i2],
-            points[3 * i2 + 1],
-            points[3 * i2 + 2]
-        );
-        
-        // Calculate circumcenter on sphere surface
-        const e1 = p1.clone().sub(p0);
-        const e2 = p2.clone().sub(p0);
-        const n = e1.cross(e2).normalize();
-        const center = p0.clone().add(p1).add(p2).divideScalar(3).normalize();
-        
+        const a = triangles[3 * t];
+        const b = triangles[3 * t + 1];
+        const c = triangles[3 * t + 2];
+
+        const center = new THREE.Vector3(
+            points[3 * a] + points[3 * b] + points[3 * c],
+            points[3 * a + 1] + points[3 * b + 1] + points[3 * c + 1],
+            points[3 * a + 2] + points[3 * b + 2] + points[3 * c + 2]
+        ).divideScalar(3).normalize();
         centers.push(center);
     }
-    
-    // Process all edges to create Voronoi cells
-    for (let e = 0; e < triangles.length; e++) {
-        const t1 = Math.floor(e / 3);
-        const t2 = Math.floor(halfedges[e] / 3);
-        
-        // Skip boundary edges
-        if (t2 === -1) continue;
-        
-        // Get the vertex this edge belongs to
-        const p = triangles[e];
-        const vertex = new THREE.Vector3(
-            points[3 * p],
-            points[3 * p + 1],
-            points[3 * p + 2]
-        );
-        
-        const center1 = centers[t1];
-        const center2 = centers[t2];
-        
-        const rgb = randomColor(p);
-        
-        // Create two triangles for each Voronoi edge
-        geometry.push(
-            center1.x, center1.y, center1.z,
-            center2.x, center2.y, center2.z,
-            vertex.x, vertex.y, vertex.z
-        );
-        
-        // Add colors
+
+    // 2. Build mapping from vertex -> adjacent triangles
+    const vertexToTriangles = new Map();
+    for (let t = 0; t < triangles.length / 3; t++) {
         for (let i = 0; i < 3; i++) {
-            colors.push(rgb[0], rgb[1], rgb[2]);
+            const v = triangles[3 * t + i];
+            if (!vertexToTriangles.has(v)) vertexToTriangles.set(v, []);
+            vertexToTriangles.get(v).push(t);
         }
     }
-    
-    return {geometry, colors};
+
+    // Helper to generate consistent tangent basis for a vertex normal
+    function computeBasis(normal) {
+        let tangent = new THREE.Vector3(0, 0, 1).cross(normal);
+        if (tangent.lengthSq() < 1e-6) {
+            tangent = new THREE.Vector3(0, 1, 0).cross(normal); // fallback if normal ~ (0,0,1)
+        }
+        tangent.normalize();
+        const bitangent = normal.clone().cross(tangent);
+        return { tangent, bitangent };
+    }
+
+    const numVertices = points.length / 3;
+    for (let v = 0; v < numVertices; v++) {
+        const adjacent = vertexToTriangles.get(v);
+        if (!adjacent || adjacent.length < 3) continue; // need at least a triangle fan
+
+        const normal = new THREE.Vector3(points[3 * v], points[3 * v + 1], points[3 * v + 2]).normalize();
+        const { tangent, bitangent } = computeBasis(normal);
+
+        // Sort adjacent triangle centers by their angle around the vertex
+        const centersWithAngle = adjacent.map(tIdx => {
+            const c = centers[tIdx];
+            const vec = c.clone().sub(normal.clone().multiplyScalar(c.dot(normal))).normalize(); // project onto tangent plane
+            const angle = Math.atan2(vec.dot(bitangent), vec.dot(tangent));
+            return { tIdx, angle };
+        }).sort((a, b) => a.angle - b.angle);
+
+        const rgb = randomColor(v);
+        for (let i = 0; i < centersWithAngle.length; i++) {
+            const c1 = centers[centersWithAngle[i].tIdx];
+            const c2 = centers[centersWithAngle[(i + 1) % centersWithAngle.length].tIdx];
+
+            geometry.push(
+                c1.x, c1.y, c1.z,
+                c2.x, c2.y, c2.z,
+                normal.x, normal.y, normal.z
+            );
+            // push color for 3 vertices
+            colors.push(rgb[0], rgb[1], rgb[2], rgb[0], rgb[1], rgb[2], rgb[0], rgb[1], rgb[2]);
+        }
+    }
+
+    return { geometry, colors };
 }
 
 // Constants for drawing modes
@@ -311,8 +315,13 @@ export function generatePlanetGeometryGroup(config) {
         generateFibonacciSphere1(N, jitter);
     
     // Project points for triangulation
-    const projected = stereographicProjection(points);
-    const delaunay = new Delaunator(projected);
+    const { projected, southPoleIndex } = stereographicProjection(points);
+    let delaunay = new Delaunator(projected);
+    
+    // Add south pole triangles
+    if (southPoleIndex !== -1) {
+        delaunay = addSouthPoleToMesh(southPoleIndex, delaunay);
+    }
     
     // Create base group
     const group = new THREE.Group();
