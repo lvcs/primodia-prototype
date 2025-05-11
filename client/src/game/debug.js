@@ -27,7 +27,8 @@ export function createDebugUI() {
   debugPanel.id = 'debug-panel';
   debugPanel.style.position = 'absolute';
   debugPanel.style.bottom = '10px';
-  debugPanel.style.left = '10px';
+  debugPanel.style.left = '50%'; // Center horizontally
+  debugPanel.style.transform = 'translateX(-50%)'; // Ensure proper centering
   debugPanel.style.padding = '10px';
   debugPanel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
   debugPanel.style.color = 'white';

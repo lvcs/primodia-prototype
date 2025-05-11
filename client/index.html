@@ -38,18 +38,43 @@
         </div>
         <div id="mini-map"></div>
         
-        <!-- Hexagon Density Control Slider -->
-        <div id="hex-density-control">
-          <label for="hex-density-slider">Tile Density: <span id="hex-density-value">2</span></label>
-          <input 
-            type="range" 
-            id="hex-density-slider" 
-            min="0" 
-            max="4" 
-            step="1" 
-            value="2"
-            title="Drag to change the number of tiles"
-          >
+        <!-- Globe Control Panel -->
+        <div id="globe-control-panel">
+          <div class="control-section">
+            <div class="control-label">Draw:</div>
+            <div class="control-options">
+              <button id="draw-points" class="control-btn active">Points</button>
+              <button id="draw-delaunay" class="control-btn">Delaunay</button>
+              <button id="draw-voronoi" class="control-btn">Voronoi</button>
+              <button id="draw-centroid" class="control-btn">Centroid</button>
+            </div>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">Select points using:</div>
+            <div class="control-options">
+              <button id="algorithm-1" class="control-btn active">Algorithm 1</button>
+              <button id="algorithm-2" class="control-btn">Algorithm 2</button>
+            </div>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">Number of points on sphere:</div>
+            <input type="range" id="points-slider" min="50" max="5000" step="50" value="500" class="control-slider" />
+            <span id="points-value">500</span>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">Jitter:</div>
+            <input type="range" id="jitter-slider" min="0" max="1" step="0.01" value="0" class="control-slider" />
+            <span id="jitter-value">0.00</span>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">Sphere rotation:</div>
+            <input type="range" id="rotation-slider" min="0" max="360" step="1" value="0" class="control-slider" />
+            <span id="rotation-value">0°</span>
+          </div>
         </div>
       </div>
     </div>

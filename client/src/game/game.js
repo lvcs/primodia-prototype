@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { generateWorld } from './world/worldGenerator.js';
-// voronoiSphere.js is now an internal detail of worldGenerator.js
+// Import sphere settings and draw mode
+import { sphereSettings, DrawMode } from './world/planetSphereVoronoi.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './debug.js';
 
@@ -23,7 +24,7 @@ export function initGame() {
     setupControls();
     setupEventListeners();
     setupSocketConnection();
-    setupTileDensitySlider();
+    setupSphereControls();
     setupMouseTracking();
     animate();
     
@@ -99,7 +100,7 @@ function generateAndDisplayPlanet() {
         debug('Simplified world data log:', {cellCount: worldData.cells.length, config: worldData.config});
     }
 
-    updateTileCountDisplay();
+    updateControlValues();
     addPlanetaryGlow(worldConfig.radius);
     debug('Planet generation and display complete.');
 
@@ -152,39 +153,120 @@ function setupEventListeners() {
   });
 }
 
-function setupTileDensitySlider() {
-  const slider = document.getElementById('hex-density-slider');
-  if (!slider) return;
-  slider.value = worldConfig.detail;
-  updateTileCountDisplay(); 
-  slider.addEventListener('input', (e) => {
-    const newDetail = parseInt(e.target.value, 10);
-    if (newDetail !== worldConfig.detail) {
-      worldConfig.detail = newDetail;
-      generateAndDisplayPlanet(); 
-    }
+function setupSphereControls() {
+  // Draw mode buttons
+  document.getElementById('draw-points').addEventListener('click', () => {
+    setActiveButton('draw-points', ['draw-delaunay', 'draw-voronoi', 'draw-centroid']);
+    sphereSettings.drawMode = DrawMode.POINTS;
+    generateAndDisplayPlanet();
+  });
+  
+  document.getElementById('draw-delaunay').addEventListener('click', () => {
+    setActiveButton('draw-delaunay', ['draw-points', 'draw-voronoi', 'draw-centroid']);
+    sphereSettings.drawMode = DrawMode.DELAUNAY;
+    generateAndDisplayPlanet();
+  });
+  
+  document.getElementById('draw-voronoi').addEventListener('click', () => {
+    setActiveButton('draw-voronoi', ['draw-points', 'draw-delaunay', 'draw-centroid']);
+    sphereSettings.drawMode = DrawMode.VORONOI;
+    generateAndDisplayPlanet();
+  });
+  
+  document.getElementById('draw-centroid').addEventListener('click', () => {
+    setActiveButton('draw-centroid', ['draw-points', 'draw-delaunay', 'draw-voronoi']);
+    sphereSettings.drawMode = DrawMode.CENTROID;
+    generateAndDisplayPlanet();
+  });
+  
+  // Algorithm selection
+  document.getElementById('algorithm-1').addEventListener('click', () => {
+    setActiveButton('algorithm-1', ['algorithm-2']);
+    sphereSettings.algorithm = 1;
+    generateAndDisplayPlanet();
+  });
+  
+  document.getElementById('algorithm-2').addEventListener('click', () => {
+    setActiveButton('algorithm-2', ['algorithm-1']);
+    sphereSettings.algorithm = 2;
+    generateAndDisplayPlanet();
+  });
+  
+  // Point count slider
+  const pointsSlider = document.getElementById('points-slider');
+  pointsSlider.addEventListener('input', (e) => {
+    const value = parseInt(e.target.value);
+    document.getElementById('points-value').textContent = value;
+  });
+  
+  pointsSlider.addEventListener('change', (e) => {
+    sphereSettings.numPoints = parseInt(e.target.value);
+    generateAndDisplayPlanet();
+  });
+  
+  // Jitter slider
+  const jitterSlider = document.getElementById('jitter-slider');
+  jitterSlider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value).toFixed(2);
+    document.getElementById('jitter-value').textContent = value;
+  });
+  
+  jitterSlider.addEventListener('change', (e) => {
+    sphereSettings.jitter = parseFloat(e.target.value);
+    generateAndDisplayPlanet();
+  });
+  
+  // Rotation slider
+  const rotationSlider = document.getElementById('rotation-slider');
+  rotationSlider.addEventListener('input', (e) => {
+    const value = parseInt(e.target.value);
+    document.getElementById('rotation-value').textContent = value + '°';
+  });
+  
+  rotationSlider.addEventListener('change', (e) => {
+    sphereSettings.rotation = parseInt(e.target.value);
+    generateAndDisplayPlanet();
   });
 }
 
-function updateTileCountDisplay() {
-    let totalTiles = 0;
-    if (worldData && worldData.cells && Array.isArray(worldData.cells)) {
-      totalTiles = worldData.cells.length;
-    }
-    const densityValue = document.getElementById('hex-density-value');
-    if (densityValue) {
-      densityValue.textContent = `${worldConfig.detail} (${totalTiles} tiles)`;
-    }
+function setActiveButton(activeId, inactiveIds) {
+  document.getElementById(activeId).classList.add('active');
+  inactiveIds.forEach(id => {
+    document.getElementById(id).classList.remove('active');
+  });
 }
 
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-  renderer.render(scene, camera);
+function updateControlValues() {
+  // Update displayed values
+  document.getElementById('points-value').textContent = sphereSettings.numPoints;
+  document.getElementById('points-slider').value = sphereSettings.numPoints;
+  
+  document.getElementById('jitter-value').textContent = sphereSettings.jitter.toFixed(2);
+  document.getElementById('jitter-slider').value = sphereSettings.jitter;
+  
+  document.getElementById('rotation-value').textContent = sphereSettings.rotation + '°';
+  document.getElementById('rotation-slider').value = sphereSettings.rotation;
+  
+  // Update active buttons
+  setActiveButton(`draw-${sphereSettings.drawMode}`, 
+    Object.values(DrawMode)
+      .filter(mode => mode !== sphereSettings.drawMode)
+      .map(mode => `draw-${mode}`)
+  );
+  
+  setActiveButton(`algorithm-${sphereSettings.algorithm}`, 
+    [sphereSettings.algorithm === 1 ? 'algorithm-2' : 'algorithm-1']
+  );
 }
 
 function setupMouseTracking() {
   window.addEventListener('mousedown', () => { isMouseDown = true; });
   window.addEventListener('mouseup', () => { isMouseDown = false; });
   window.addEventListener('mouseleave', () => { isMouseDown = false; });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
 } 

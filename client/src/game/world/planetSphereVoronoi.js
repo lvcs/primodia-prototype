@@ -1,267 +1,365 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
-import { TerrainType, ResourceType, terrainColors, resourceMarkers } from './constants.js';
-import { debug, error } from '../debug.js';
+import { TerrainType, terrainColors } from './constants.js';
+import { debug } from '../debug.js';
 
-// --- Helper Functions (adapted from Red Blob Games or new) ---
+// Constants for drawing modes
+export const DrawMode = {
+  POINTS: 'points',
+  DELAUNAY: 'delaunay',
+  VORONOI: 'voronoi',
+  CENTROID: 'centroid'
+};
 
-/**
- * Generates 3D Cartesian points on a sphere using a Fibonacci lattice.
- * @param {number} n - Number of points.
- * @param {number} radius - Sphere radius.
- * @param {number} jitter - Amount of random displacement (0 to 1).
- * @param {number} algorithmId - 1 or 2 for different Fibonacci algorithms.
- * @returns {Array<THREE.Vector3>} Array of 3D points.
- */
-function generateFibonacciSpherePoints(n, radius, jitter, algorithmId = 1) {
+// Settings object to store sphere generation parameters
+export const sphereSettings = {
+  drawMode: DrawMode.POINTS,
+  algorithm: 1,
+  numPoints: 500,
+  jitter: 0.0,
+  rotation: 0.0
+};
+
+// Function to generate points using Algorithm 1 (Fibonacci Spiral)
+function generateFibonacciSpherePoints(n, radius, jitter) {
     const points = [];
-    const phi = Math.PI * (Math.sqrt(5) - 1); // Golden angle
-
+    const phi = Math.PI * (Math.sqrt(5) - 1);
     for (let i = 0; i < n; i++) {
-        let y, r_at_y, theta;
-        if (algorithmId === 1) {
-            y = 1 - (i / (n - 1)) * 2; // y goes from 1 to -1
-            r_at_y = Math.sqrt(1 - y * y);
-            theta = phi * i;
-        } else { // Algorithm 2 (from Red Blob Games demo, slightly different y distribution)
-            y = (2 * i + 1) / n - 1;
-            r_at_y = Math.sqrt(1 - y*y);
-            theta = i * 2.399963229728653; // Approx 2.pi.phi_conjugate
-        }
-
+        // Basic Fibonacci spiral distribution
+        const y = 1 - (i / (n - 1)) * 2;
+        const r_at_y = Math.sqrt(1 - y * y);
+        const theta = phi * i;
+        
+        // Calculate the base position
         let x = Math.cos(theta) * r_at_y;
+        let y_pos = y;
         let z = Math.sin(theta) * r_at_y;
-
+        
+        // Apply jitter if specified
         if (jitter > 0) {
-            // Apply jitter by small random rotations (spherical coordinates)
-            let spherical = new THREE.Spherical().setFromCartesianCoords(x, y, z);
-            spherical.theta += (Math.random() - 0.5) * jitter * 0.5; 
-            spherical.phi += (Math.random() - 0.5) * jitter * 0.5;
-            spherical.makeSafe(); // Keep phi within [0, PI]
-            const vec = new THREE.Vector3().setFromSpherical(spherical);
-            x = vec.x;
-            y = vec.y;
-            z = vec.z;
+            const jitterScale = jitter * 0.05; // Scale down jitter for better control
+            x += (Math.random() * 2 - 1) * jitterScale;
+            y_pos += (Math.random() * 2 - 1) * jitterScale;
+            z += (Math.random() * 2 - 1) * jitterScale;
+            
+            // Normalize back to the sphere surface
+            const len = Math.sqrt(x*x + y_pos*y_pos + z*z);
+            x = (x / len) * radius;
+            y_pos = (y_pos / len) * radius;
+            z = (z / len) * radius;
+        } else {
+            x *= radius;
+            y_pos *= radius;
+            z *= radius;
         }
-        points.push(new THREE.Vector3(x * radius, y * radius, z * radius));
+        
+        points.push(new THREE.Vector3(x, y_pos, z));
     }
     return points;
 }
 
-/**
- * Projects 3D points on a sphere to a 2D plane using stereographic projection.
- * Assumes the projection pole is (0, 0, -radius) [South Pole for Z-up] or (0, -radius, 0) [South Pole for Y-up].
- * We'll assume Y-up, so projection pole is (0, -R, 0).
- * The point (0, R, 0) [North Pole] projects to infinity.
- * @param {Array<THREE.Vector3>} points3D - Array of 3D points on the sphere.
- * @param {number} radius - Sphere radius.
- * @returns {Array<number>} Flat array of 2D coordinates [x0, y0, x1, y1, ...].
- */
-function stereographicProject(points3D, radius) {
-    const projectedCoords = [];
-    for (const p of points3D) {
-        // Formula for projection from (0, -R, 0) onto y=0 plane:
-        // x' = p.x * (2R / (R + p.y))
-        // z' = p.z * (2R / (R + p.y))
-        // We need to handle the case where p.y is close to -R (projection pole)
-        // And also the point that projects to infinity (0, R, 0)
-        // For Delaunator, we project all but one point (the "infinity" point).
+// Function to generate points using Algorithm 2 (Improved Distribution)
+function generateAlternativeSpherePoints(n, radius, jitter) {
+    const points = [];
+    // Algorithm 2 implementation (Weighted Voronoi Stippling approximation)
+    // This algorithm gives more even distribution by trying to maximize minimum distance
+    
+    const increment = Math.PI * (3 - Math.sqrt(5));
+    const offset = 2 / n;
+    
+    for (let i = 0; i < n; i++) {
+        const y = ((i * offset) - 1) + (offset / 2);
+        const r = Math.sqrt(1 - y * y);
+        const phi = i * increment;
         
-        // Red Blob Games projects from Z-pole. If our points are Y-polar:
-        // Project from (0, -R, 0) onto the plane y = 0.
-        // x_proj = x / (1 + y/R)  (if projecting onto a plane at distance R from origin)
-        // z_proj = z / (1 + y/R)
-        // Let's use the formula that maps to plane z=0 from pole (0,0,-1) for unit sphere from RedBlob
-        // then adapt. If our pole is (0, -R, 0), and we project other points:
-        // The point (0,R,0) is the one at infinity.
-        // For any other point (x,y,z), scale = R / (R + y_sphere)
-        // projected_x = x_sphere * scale_factor
-        // projected_z = z_sphere * scale_factor
-        // But Delaunator expects 2D coords. Let's use the RedBlob method: project from (0,0,-1) to z=0 plane.
-        // Requires rotating our points if our pole isn't (0,0,-1).
-
-        // Simpler: for points (px, py, pz) on unit sphere, projection from (0,0,-1) to z=0 plane:
-        // x' = px / (1+pz)
-        // y' = py / (1+pz)
-        // We need to ensure one of our points is effectively the south pole for this projection.
-        // The RedBlob code picks the *last* point in its r_xyz array, then does Delaunay on r_xyz WITHOUT that last point.
-        // Let's adopt this. The input `points3D` to this function should be all points *except* the one chosen as projection pole.
+        // Calculate the base position
+        let x = Math.cos(phi) * r;
+        let y_pos = y;
+        let z = Math.sin(phi) * r;
         
-        projectedCoords.push(p.x / (1 + p.z), p.y / (1 + p.z)); // Assuming points are on unit sphere and projection from (0,0,-1)
-    }
-    return projectedCoords;
-}
-
-// Placeholder for the complex logic of adding the south pole back to the mesh
-function addSouthPoleToDelaunay(southPoleIndex, points3D, delaunay) {
-    debug('addSouthPoleToDelaunay: Stitching south pole - placeholder.');
-    // This function needs to: 
-    // 1. Identify edges on the convex hull of the 2D Delaunay triangulation.
-    // 2. For each hull edge, create two new triangles fanning out to the southPoleIndex.
-    // 3. This means adding new entries to delaunay.triangles and delaunay.halfedges.
-    // This is non-trivial. Referring to RedBlobGames's addSouthPoleToMesh is key.
-    // For now, we'll just return the original delaunay object.
-    // `delaunay.hull` gives indices of points on the hull.
-    return delaunay; 
-}
-
-
-/**
- * Calculates triangle centers (circumcenters or centroids) on the sphere.
- * @param {Array<THREE.Vector3>} spherePoints - Original 3D seed points on the sphere.
- * @param {Delaunator} delaunay - Delaunay object (after spherical adjustments).
- * @param {string} mode - 'voronoi' (circumcenter) or 'centroid'.
- * @param {number} radius - Sphere radius.
- * @returns {Array<THREE.Vector3>} Array of 3D triangle center points.
- */
-function calculateSphericalTriangleCenters(spherePoints, delaunay, mode, radius) {
-    const centers = [];
-    for (let i = 0; i < delaunay.triangles.length; i += 3) {
-        const p1 = spherePoints[delaunay.triangles[i]];
-        const p2 = spherePoints[delaunay.triangles[i+1]];
-        const p3 = spherePoints[delaunay.triangles[i+2]];
-
-        if (!p1 || !p2 || !p3) {
-            error('Undefined point in triangle ', i/3, delaunay.triangles[i], delaunay.triangles[i+1], delaunay.triangles[i+2]);
-            centers.push(new THREE.Vector3()); // Placeholder
-            continue;
+        // Apply jitter if specified
+        if (jitter > 0) {
+            const jitterScale = jitter * 0.05;
+            x += (Math.random() * 2 - 1) * jitterScale;
+            y_pos += (Math.random() * 2 - 1) * jitterScale;
+            z += (Math.random() * 2 - 1) * jitterScale;
+            
+            // Normalize back to the sphere surface
+            const len = Math.sqrt(x*x + y_pos*y_pos + z*z);
+            x = (x / len) * radius;
+            y_pos = (y_pos / len) * radius;
+            z = (z / len) * radius;
+        } else {
+            x *= radius;
+            y_pos *= radius;
+            z *= radius;
         }
-
-        if (mode === 'centroid') {
-            const centroid = new THREE.Vector3().add(p1).add(p2).add(p3).divideScalar(3);
-            centroid.normalize().multiplyScalar(radius);
-            centers.push(centroid);
-        } else { // Voronoi (circumcenter) - Placeholder, complex on a sphere
-            debug('Spherical circumcenter calculation is complex, using centroid as placeholder for Voronoi mode.');
-            const centroid = new THREE.Vector3().add(p1).add(p2).add(p3).divideScalar(3);
-            centroid.normalize().multiplyScalar(radius);
-            centers.push(centroid);
-        }
+        
+        points.push(new THREE.Vector3(x, y_pos, z));
     }
-    return centers;
+    return points;
 }
 
+// Stereographic projection for Delaunay triangulation
+function stereographicProjectZ(points3D) {
+    const projectedPoints = [];
+    for (let i = 0; i < points3D.length; i++) {
+        const p = points3D[i];
+        // Project from 3D sphere to 2D plane
+        const x = p.x / (1 + p.z);
+        const y = p.y / (1 + p.z);
+        projectedPoints.push(x, y);
+    }
+    return projectedPoints;
+}
 
-/**
- * Main exported function to generate planet geometry.
- */
+// Calculate the circumcenter of a triangle on a sphere
+function sphereCircumcenter(a, b, c) {
+    // Cross product to get the normal
+    const ab = new THREE.Vector3().subVectors(b, a);
+    const ac = new THREE.Vector3().subVectors(c, a);
+    const normal = new THREE.Vector3().crossVectors(ab, ac).normalize();
+    
+    // Calculate circumcenter
+    const circumcenter = new THREE.Vector3(
+        a.x + b.x + c.x,
+        a.y + b.y + c.y,
+        a.z + b.z + c.z
+    ).normalize();
+    
+    // Make sure it's on the same side as the normal
+    if (circumcenter.dot(normal) < 0) {
+        circumcenter.multiplyScalar(-1);
+    }
+    
+    return circumcenter;
+}
+
+// Calculate the centroid of a triangle on a sphere
+function sphereCentroid(a, b, c) {
+    // Simple average of the three points, then normalize to the sphere surface
+    const centroid = new THREE.Vector3(
+        (a.x + b.x + c.x) / 3,
+        (a.y + b.y + c.y) / 3,
+        (a.z + b.z + c.z) / 3
+    );
+    return centroid.normalize();
+}
+
+// Apply rotation to the sphere
+function applyRotation(points, rotation) {
+    const rotationMatrix = new THREE.Matrix4().makeRotationY(rotation * Math.PI / 180);
+    for (let i = 0; i < points.length; i++) {
+        points[i].applyMatrix4(rotationMatrix);
+    }
+    return points;
+}
+
+// Main function to generate the planet geometry
 export function generatePlanetGeometryGroup(config) {
-    debug('generatePlanetGeometryGroup | Config:', config);
-    const { numPoints, jitter, algorithmId, drawMode, radius } = config;
-
-    // 1. Generate 3D seed points on sphere surface
-    const seedPoints3D = generateFibonacciSpherePoints(numPoints, radius, jitter, algorithmId);
+    const { radius = 10, detail = 2 } = config;
+    let numPoints = Math.pow(10, detail + 1); // Scale points based on detail
     
-    // For stereographic projection, we need to pick a pole (e.g., the last point)
-    // and project all *other* points. The RedBlob demo seems to normalize points to unit sphere for projection.
-    const unitSeedPoints3D = seedPoints3D.map(p => p.clone().normalize());
-    const projectionPole3D = unitSeedPoints3D[unitSeedPoints3D.length - 1]; // Choose last point as pole
-    const pointsToProject3D = unitSeedPoints3D.slice(0, -1); // All but the pole
-
-    // Rotate points so projectionPole3D is at (0,0,-1) for standard stereographic projection
-    // This is a complex step. For initial simplicity, we might get artifacts if pole isn't (0,0,-1).
-    // Or, adapt projection formula. RedBlob code does rotation.
-    // For now, let's assume points are somewhat generally distributed and proceed with a simplified projection.
-    // The `d3-geo-voronoi` we used before handles this rotation/projection internally.
-    // If we follow RedBlob's direct Delaunator approach, this rotation is important for correctness.
-    // TEMP: Let's use a simplified approach and see the artifacts first, then refine projection.
-    // The points for Delaunator should be 2D.
-    let projectedCoords2D = [];
-    const cartesianForDelaunator = []; // Store the 3D points that correspond to projectedCoords2D
-
-    // Simple projection: project all points assuming they are NOT the North Pole (0,R,0) if Y is up.
-    // RedBlob projects from Z south pole. If our Y is polar, we need to adapt.
-    // Let's try to use the same projection as in RedBlob (from Z south pole) by rotating points first.
-    // For now, very simplified: take x, y of points (effectively projecting along Z axis - NOT stereographic)
-    // This is WRONG for stereographic but will let Delaunator run.
+    // Override with sphere settings if available
+    numPoints = sphereSettings.numPoints || numPoints;
+    const jitter = sphereSettings.jitter || 0;
+    const algorithm = sphereSettings.algorithm || 1;
+    const drawMode = sphereSettings.drawMode || DrawMode.POINTS;
+    const rotation = sphereSettings.rotation || 0;
     
-    // Correct approach requires careful handling of the projection pole.
-    // Let's use the first N-1 points and assume the Nth is the pole for now, and project onto XY plane
-    // This is still not quite right for stereographic for Delaunator.
+    debug('Generating planet with:',
+          'radius:', radius,
+          'numPoints:', numPoints,
+          'jitter:', jitter,
+          'algorithm:', algorithm,
+          'drawMode:', drawMode,
+          'rotation:', rotation);
     
-    // The RedBlob code `stereographicProjection(r_xyz)` expects r_xyz to be ALREADY rotated such that the pole of projection is aligned.
-    // The `planet-generation.js` itself doesn't show this rotation before calling `stereographicProjection` for the main set.
-    // It DOES rotate the camera. The `stereographicProjection` in that JS file is: 
-    // function stereographicProjection(p) { let R = []; for (let i = 0; i < p.length/3; i++) { R.push(p[3*i]/(1+p[3*i+2]), p[3*i+1]/(1+p[3*i+2])); } return R; }
-    // This implies input p[3*i+2] (z-coordinate) is used, so it projects from a Z-pole.
-    // Our Fibonacci points use Y as the polar axis typically.
-
-    // We MUST prepare points for Delaunator as a flat array [x0,y0, x1,y1, ...]
-    // Let's take seedPoints3D, pick the last as the pole (pole3D), project the others.
-    const pointsForProjection = seedPoints3D.slice(0, -1);
-    const poleSeedPoint = seedPoints3D[seedPoints3D.length -1];
-
-    const delaunayInput2D = [];
-    pointsForProjection.forEach(p => {
-        // Simplified stereographic projection from Y-south-pole (0, -radius, 0) to Y=0 plane.
-        // Assuming p is NOT (0, radius, 0) (the north pole)
-        const scale = (2 * radius) / (radius + p.y); 
-        delaunayInput2D.push(p.x * scale, p.z * scale); 
+    // Generate points based on selected algorithm
+    let points3D;
+    if (algorithm === 2) {
+        points3D = generateAlternativeSpherePoints(numPoints, radius, jitter);
+    } else {
+        points3D = generateFibonacciSpherePoints(numPoints, radius, jitter);
+    }
+    
+    // Apply rotation if specified
+    if (rotation !== 0) {
+        points3D = applyRotation(points3D, rotation);
+    }
+    
+    // Create base group and ocean
+    const group = new THREE.Group();
+    const oceanMaterial = new THREE.MeshPhongMaterial({ 
+        color: terrainColors[TerrainType.OCEAN],
+        shininess: 20 
     });
-
-    debug('Points for Delaunator (2D projected):', delaunayInput2D.length / 2);
-    let delaunay = new Delaunator(delaunayInput2D);
-    debug('Initial Delaunay computed. Hull size:', delaunay.hull.length);
-
-    // TODO: Implement robust south pole stitching.
-    // For now, the Delaunay result is for a plane and doesn't wrap the sphere.
-    // The `spherePoints` used for triangle centers should be the original `seedPoints3D`
-    // mapped to the indices from the planar `delaunay` object. This needs care.
-    // The `pointsForProjection` are the ones indexed by `delaunay.triangles`.
-
-    // Placeholder for spherical triangle centers
-    const triangleCenters3D = calculateSphericalTriangleCenters(pointsForProjection, delaunay, drawMode, radius);
-
-    const planetMeshes = new THREE.Group();
-
-    // 1. Ocean base (always there)
-    const oceanMaterial = new THREE.MeshPhongMaterial({ color: terrainColors[TerrainType.OCEAN], transparent:true, opacity:0.7, shininess: 30 });
     const oceanGeometry = new THREE.SphereGeometry(radius * 0.99, 64, 32);
     const oceanSphere = new THREE.Mesh(oceanGeometry, oceanMaterial);
     oceanSphere.userData.isOcean = true;
-    planetMeshes.add(oceanSphere);
-
-    // 2. Generate requested geometry based on drawMode
-    if (drawMode === 'points') {
-        const geom = new THREE.BufferGeometry().setFromPoints(seedPoints3D);
-        const mat = new THREE.PointsMaterial({ color: 0xffffff, size: radius * 0.05 });
-        planetMeshes.add(new THREE.Points(geom, mat));
-    } else if (drawMode === 'delaunay') {
-        // This will draw the PLANAR Delaunay projection for now, not spherical triangles yet.
-        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-        const points = [];
-        for (let i = 0; i < delaunay.triangles.length; i++) {
-            const pIndex = delaunay.triangles[i];
-            // These are indices into the `pointsForProjection` array for 3D coords
-            // or into `delaunayInput2D` (every 2 elements) for 2D coords.
-            // For simplicity, let's draw based on original seed points if possible,
-            // but Delaunay is on the projected 2D points.
-            // THIS PART NEEDS CAREFUL RECONSTRUCTION OF SPHERICAL DELAUNAY TRIANGLES
-            // For now, just showing it won't be spherical.
-            if (pointsForProjection[pIndex]) {
-                 points.push(pointsForProjection[pIndex]);
+    group.add(oceanSphere);
+    
+    // Project the points for Delaunay triangulation
+    const projected2D = stereographicProjectZ(points3D);
+    const delaunay = new Delaunator(projected2D);
+    
+    // Draw based on selected mode
+    switch (drawMode) {
+        case DrawMode.POINTS:
+            const pointsGeom = new THREE.BufferGeometry().setFromPoints(points3D);
+            const pointsMat = new THREE.PointsMaterial({ 
+                color: 0xffffff,
+                size: radius * 0.05,
+                sizeAttenuation: true
+            });
+            group.add(new THREE.Points(pointsGeom, pointsMat));
+            break;
+            
+        case DrawMode.DELAUNAY:
+            // Draw Delaunay triangulation
+            const lineGeom = new THREE.BufferGeometry();
+            const lineVerts = [];
+            for (let i = 0; i < delaunay.triangles.length; i += 3) {
+                const a = points3D[delaunay.triangles[i]];
+                const b = points3D[delaunay.triangles[i+1]];
+                const c = points3D[delaunay.triangles[i+2]];
+                lineVerts.push(a.x, a.y, a.z, b.x, b.y, b.z);
+                lineVerts.push(b.x, b.y, b.z, c.x, c.y, c.z);
+                lineVerts.push(c.x, c.y, c.z, a.x, a.y, a.z);
             }
-        }
-        const geom = new THREE.BufferGeometry().setFromPoints(points);
-        // This will create lines for each edge of each triangle, so many duplicates.
-        // A proper line mesh from delaunay.halfedges would be better.
-        const mesh = new THREE.LineSegments(geom, lineMaterial); // Incorrect way to draw triangles as lines
-        planetMeshes.add(mesh);
-        debug('Delaunay mode drawing is a non-spherical placeholder.')
-
-    } else if (drawMode === 'voronoi' || drawMode === 'centroid') {
-        // This requires iterating through each original seedPoint,
-        // finding its surrounding Delaunay triangles, then connecting their centers (triangleCenters3D).
-        debug('Voronoi/Centroid mode drawing is a placeholder.');
-        // Placeholder: draw triangleCenters as points
-        const geom = new THREE.BufferGeometry().setFromPoints(triangleCenters3D);
-        const mat = new THREE.PointsMaterial({ color: 0xffff00, size: radius * 0.06 });
-        planetMeshes.add(new THREE.Points(geom, mat));
+            lineGeom.setAttribute('position', new THREE.Float32BufferAttribute(lineVerts, 3));
+            const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 1 });
+            group.add(new THREE.LineSegments(lineGeom, lineMat));
+            break;
+            
+        case DrawMode.VORONOI:
+            // Draw Voronoi diagram using Red Blob Games approach
+            const centers = []; // Calculate circumcenters for all triangles
+            const numTriangles = delaunay.triangles.length / 3;
+            
+            // Calculate circumcenter for each triangle
+            for (let t = 0; t < numTriangles; t++) {
+                const a = points3D[delaunay.triangles[3*t]];
+                const b = points3D[delaunay.triangles[3*t+1]];
+                const c = points3D[delaunay.triangles[3*t+2]];
+                const center = sphereCircumcenter(a, b, c).multiplyScalar(radius);
+                centers.push(center);
+            }
+            
+            // Create triangle data for drawing Voronoi cells
+            const voronoiVerts = [];
+            const voronoiColors = [];
+            
+            // Cache for random colors
+            const colorCache = {};
+            const getRandomColor = (seed) => {
+                if (!colorCache[seed]) {
+                    colorCache[seed] = new THREE.Color(
+                        0.5 + Math.random() * 0.5,
+                        0.6 + Math.random() * 0.3,
+                        0.5 + Math.random() * 0.5
+                    );
+                }
+                return colorCache[seed];
+            };
+            
+            // We need to connect triangles where they share an edge
+            for (let s = 0; s < delaunay.triangles.length; s++) {
+                const halfedge = delaunay.halfedges[s];
+                if (halfedge !== -1 && s < halfedge) { // Process each edge once
+                    const t1 = Math.floor(s / 3);
+                    const t2 = Math.floor(halfedge / 3);
+                    
+                    // Get the vertex from this edge - it forms the Voronoi cell
+                    const vertexId = delaunay.triangles[s];
+                    const vertex = points3D[vertexId];
+                    
+                    // Get centers of both triangles
+                    const center1 = centers[t1];
+                    const center2 = centers[t2];
+                    
+                    // Assign random color based on vertex
+                    const color = getRandomColor(vertexId);
+                    
+                    // Create a triangle connecting:
+                    // 1. Center of current triangle
+                    // 2. Center of adjacent triangle 
+                    // 3. The point this side belongs to
+                    voronoiVerts.push(
+                        center1.x, center1.y, center1.z,
+                        center2.x, center2.y, center2.z,
+                        vertex.x, vertex.y, vertex.z
+                    );
+                    
+                    // Add the same color for all vertices in the triangle
+                    voronoiColors.push(
+                        color.r, color.g, color.b,
+                        color.r, color.g, color.b,
+                        color.r, color.g, color.b
+                    );
+                }
+            }
+            
+            // Create geometry from vertices and colors
+            const voronoiGeom = new THREE.BufferGeometry();
+            voronoiGeom.setAttribute('position', new THREE.Float32BufferAttribute(voronoiVerts, 3));
+            voronoiGeom.setAttribute('color', new THREE.Float32BufferAttribute(voronoiColors, 3));
+            
+            // Create mesh with the geometry
+            const voronoiMat = new THREE.MeshBasicMaterial({ 
+                vertexColors: true,
+                side: THREE.DoubleSide
+            });
+            group.add(new THREE.Mesh(voronoiGeom, voronoiMat));
+            
+            // Add wireframe for better cell visibility
+            const voronoiWire = new THREE.LineSegments(
+                new THREE.WireframeGeometry(voronoiGeom),
+                new THREE.LineBasicMaterial({ 
+                    color: 0x000000, 
+                    transparent: true, 
+                    opacity: 0.1,
+                    linewidth: 0.5
+                })
+            );
+            group.add(voronoiWire);
+            
+            // Also render the points
+            const voronoiPointsGeom = new THREE.BufferGeometry().setFromPoints(points3D);
+            const voronoiPointsMat = new THREE.PointsMaterial({ 
+                color: 0x000000,
+                size: radius * 0.01,
+                sizeAttenuation: true
+            });
+            group.add(new THREE.Points(voronoiPointsGeom, voronoiPointsMat));
+            break;
+            
+        case DrawMode.CENTROID:
+            // Draw Centroid-based diagram (similar to Voronoi but using centroids)
+            const centroidGeom = new THREE.BufferGeometry();
+            const centroidVerts = [];
+            
+            for (let i = 0; i < delaunay.triangles.length; i += 3) {
+                const a = points3D[delaunay.triangles[i]];
+                const b = points3D[delaunay.triangles[i+1]];
+                const c = points3D[delaunay.triangles[i+2]];
+                const center = sphereCentroid(a, b, c).multiplyScalar(radius);
+                
+                // Connect centroid to the midpoints of each edge
+                const midAB = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5).normalize().multiplyScalar(radius);
+                const midBC = new THREE.Vector3().addVectors(b, c).multiplyScalar(0.5).normalize().multiplyScalar(radius);
+                const midCA = new THREE.Vector3().addVectors(c, a).multiplyScalar(0.5).normalize().multiplyScalar(radius);
+                
+                centroidVerts.push(center.x, center.y, center.z, midAB.x, midAB.y, midAB.z);
+                centroidVerts.push(center.x, center.y, center.z, midBC.x, midBC.y, midBC.z);
+                centroidVerts.push(center.x, center.y, center.z, midCA.x, midCA.y, midCA.z);
+            }
+            
+            centroidGeom.setAttribute('position', new THREE.Float32BufferAttribute(centroidVerts, 3));
+            const centroidMat = new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 1 });
+            group.add(new THREE.LineSegments(centroidGeom, centroidMat));
+            break;
     }
-
-    return { 
-        meshGroup: planetMeshes, 
-        cells: [], // Placeholder, to be filled with actual cell data later
-        config 
-    };
+    
+    return group;
 } 
