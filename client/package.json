@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "d3-geo-voronoi": "^2.1.0",
+    "delaunator": "^5.0.0",
     "simplex-noise": "^4.0.3",
     "socket.io-client": "^4.8.1",
     "three": "^0.176.0"

@@ -27,7 +27,8 @@ export function createDebugUI() {
   debugPanel.id = 'debug-panel';
   debugPanel.style.position = 'absolute';
   debugPanel.style.bottom = '10px';
-  debugPanel.style.left = '10px';
+  debugPanel.style.left = '50%'; // Center horizontally
+  debugPanel.style.transform = 'translateX(-50%)'; // Ensure proper centering
   debugPanel.style.padding = '10px';
   debugPanel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
   debugPanel.style.color = 'white';
@@ -87,20 +88,40 @@ export function logWorldStructure(world) {
   
   try {
     debug('World structure:');
-    debug(`- config: ${JSON.stringify(world.config)}`);
-    debug(`- cells count: ${world.cells ? world.cells.length : 'undefined'}`);
-    
-    if (world.cells && world.cells.length > 0) {
-      // Log a sample cell
-      const sampleCell = world.cells[0];
-      debug('Sample cell structure:');
-      debug(`- id: ${sampleCell.id}`);
-      debug(`- center: (${sampleCell.center.x.toFixed(2)}, ${sampleCell.center.y.toFixed(2)}, ${sampleCell.center.z.toFixed(2)})`);
-      debug(`- vertices: ${sampleCell.vertices.length} points`);
-      debug(`- data: ${JSON.stringify(sampleCell.data)}`);
+    if (!world) {
+      debug('- World object is null or undefined.');
+      return;
     }
-  } catch (error) {
-    error('Error logging world structure:', error);
+    debug(`- config: ${world.config ? JSON.stringify(world.config) : 'undefined'}`);
+    debug(`- cells count: ${world.cells ? world.cells.length : 'undefined'}`);
+    debug(`- uniqueWorldVertices count: ${world.uniqueWorldVertices ? world.uniqueWorldVertices.size : 'undefined'}`);
+    
+    if (world.cells && world.cells.length > 0 && world.cells[0]) {
+      const sampleCell = world.cells[0];
+      debug('Sample cell (cells[0]) structure:');
+      debug(`- id: ${sampleCell.id}`);
+      debug(`- seedPointKey: ${sampleCell.seedPointKey}`);
+      debug(`- vertexKeys count: ${sampleCell.vertexKeys ? sampleCell.vertexKeys.length : 'undefined'}`);
+      if (sampleCell.vertexKeys && sampleCell.vertexKeys.length > 0) {
+        debug(`- First vertexKey: ${sampleCell.vertexKeys[0]}`);
+      }
+      if (sampleCell.data) {
+        debug(`- data: ${JSON.stringify(sampleCell.data)}`);
+      }
+
+      // Optionally, log a sample vertex from uniqueWorldVertices if the key exists
+      if (world.uniqueWorldVertices && sampleCell.seedPointKey && world.uniqueWorldVertices.has(sampleCell.seedPointKey)) {
+        const sampleSeedVertexData = world.uniqueWorldVertices.get(sampleCell.seedPointKey);
+        debug('Sample seed vertex data (from uniqueWorldVertices via cell[0].seedPointKey):');
+        debug(`  - basePosition: (${sampleSeedVertexData.basePosition.x.toFixed(2)}, ${sampleSeedVertexData.basePosition.y.toFixed(2)}, ${sampleSeedVertexData.basePosition.z.toFixed(2)})`);
+        debug(`  - elevatedPosition: (${sampleSeedVertexData.elevatedPosition.x.toFixed(2)}, ${sampleSeedVertexData.elevatedPosition.y.toFixed(2)}, ${sampleSeedVertexData.elevatedPosition.z.toFixed(2)})`);
+        debug(`  - elevation: ${sampleSeedVertexData.elevation.toFixed(4)}`);
+      }
+    } else if (world.cells && world.cells.length > 0 && !world.cells[0]) {
+      debug('Sample cell (world.cells[0]) is null or undefined.');
+    }
+  } catch (err) { 
+    error('Error logging world structure:', err);
   }
 }
 
