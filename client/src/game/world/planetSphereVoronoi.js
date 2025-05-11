@@ -252,13 +252,17 @@ function generateVoronoiGeometry(points, delaunay) {
     const numVertices = points.length / 3;
     for (let v = 0; v < numVertices; v++) {
         const adjacent = vertexToTriangles.get(v);
-        if (!adjacent || adjacent.length < 3) continue; // need at least a triangle fan
+        if (!adjacent) continue;
+
+        // Deduplicate in case of repeated triangle indices
+        const uniqueAdj = Array.from(new Set(adjacent));
+        if (uniqueAdj.length < 3) continue; // need at least three unique triangles to form a cell
 
         const normal = new THREE.Vector3(points[3 * v], points[3 * v + 1], points[3 * v + 2]).normalize();
         const { tangent, bitangent } = computeBasis(normal);
 
         // Sort adjacent triangle centers by their angle around the vertex
-        const centersWithAngle = adjacent.map(tIdx => {
+        const centersWithAngle = uniqueAdj.map(tIdx => {
             const c = centers[tIdx];
             const vec = c.clone().sub(normal.clone().multiplyScalar(c.dot(normal))).normalize(); // project onto tangent plane
             const angle = Math.atan2(vec.dot(bitangent), vec.dot(tangent));
