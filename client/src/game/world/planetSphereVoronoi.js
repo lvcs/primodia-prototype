@@ -1,10 +1,8 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
 import { TerrainType, terrainColors } from './terrain.js';
+import { MapType, defaultMapType, generateMapTerrain } from './mapTypes.js';
 import { debug } from '../debug.js';
-
-// Cache for random colors
-const _randomColor = {};
 
 // Cache for random lat/lon offsets
 const _randomLat = [];
@@ -175,15 +173,58 @@ function addSouthPoleToMesh(southPoleId, {triangles, halfedges}) {
     };
 }
 
-function randomColor(index) {
-    if (!_randomColor[index]) {
-        _randomColor[index] = [
-            0.5 + 0.5 * Math.random(),
-            0.5 + 0.5 * Math.random(),
-            0.5 + 0.5 * Math.random()
-        ];
+// Function to determine terrain type based on vertex position
+function determineTerrainType(position) {
+    // First check if there's a map-specific algorithm
+    const mapBasedTerrain = generateMapTerrain(sphereSettings.mapType, position);
+    if (mapBasedTerrain) {
+        return mapBasedTerrain;
     }
-    return _randomColor[index];
+    
+    // Extract y coordinate (latitude) and normalize to [-1, 1]
+    const y = position.y;
+    
+    // Introduce some noise based on position
+    const noiseValue = Math.sin(position.x * 10) * Math.cos(position.z * 8) * 0.1;
+    
+    // Determine terrain type based on latitude and noise
+    if (y < -0.8) {
+        return TerrainType.SNOW; // South pole
+    } else if (y > 0.8) {
+        return TerrainType.SNOW; // North pole
+    } else if (y < -0.5) {
+        return Math.random() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
+    } else if (y < -0.2) {
+        if (noiseValue > 0.05) return TerrainType.FOREST;
+        if (noiseValue < -0.05) return TerrainType.HILLS;
+        return TerrainType.PLAINS;
+    } else if (y < 0.2) {
+        const rand = Math.random();
+        if (rand < 0.4) return TerrainType.OCEAN;
+        if (rand < 0.6) return TerrainType.COAST;
+        if (noiseValue > 0.05) return TerrainType.JUNGLE;
+        if (noiseValue < -0.05) return TerrainType.DESERT;
+        return TerrainType.PLAINS;
+    } else if (y < 0.5) {
+        if (noiseValue > 0.05) return TerrainType.FOREST;
+        if (noiseValue < -0.05) return TerrainType.HILLS;
+        return TerrainType.PLAINS;
+    } else {
+        return Math.random() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
+    }
+}
+
+// Export determineTerrainType for external usage (e.g., picking/debug)
+export { determineTerrainType as classifyTerrain };
+
+// Convert terrain hex color to RGB array [0-1, 0-1, 0-1]
+function getTerrainColorRGB(terrainType) {
+    const hexColor = terrainColors[terrainType];
+    return [
+        ((hexColor >> 16) & 255) / 255,
+        ((hexColor >> 8) & 255) / 255,
+        (hexColor & 255) / 255
+    ];
 }
 
 function generateDelaunayGeometry(xyz, delaunay) {
@@ -191,27 +232,42 @@ function generateDelaunayGeometry(xyz, delaunay) {
     const numTriangles = triangles.length / 3;
     const geometry = [];
     const colors = [];
+    const ids = [];
+    const tileTerrain = {};
     
     for (let t = 0; t < numTriangles; t++) {
         const a = triangles[3*t];
         const b = triangles[3*t+1];
         const c = triangles[3*t+2];
-        const rgb = randomColor(a+b+c);
+        
+        // Calculate centroid position for terrain determination
+        const centroidX = (xyz[3*a] + xyz[3*b] + xyz[3*c]) / 3;
+        const centroidY = (xyz[3*a+1] + xyz[3*b+1] + xyz[3*c+1]) / 3;
+        const centroidZ = (xyz[3*a+2] + xyz[3*b+2] + xyz[3*c+2]) / 3;
+        const centroid = new THREE.Vector3(centroidX, centroidY, centroidZ).normalize();
+        
+        // Determine terrain type based on position
+        const terrainType = determineTerrainType(centroid);
+        const rgb = getTerrainColorRGB(terrainType);
+        tileTerrain[t] = terrainType;
         
         for (let i = 0; i < 3; i++) {
             const vertex = triangles[3*t + i];
             geometry.push(xyz[3*vertex], xyz[3*vertex+1], xyz[3*vertex+2]);
             colors.push(...rgb);
+            ids.push(t);
         }
     }
     
-    return {geometry, colors};
+    return {geometry, colors, ids, tileTerrain};
 }
 
 function generateVoronoiGeometry(points, delaunay) {
     const {triangles} = delaunay;
     const geometry = [];
     const colors = [];
+    const ids = [];
+    const tileTerrain = {};
 
     // 1. Pre-compute triangle centers (simple centroid projected to sphere)
     const centers = [];
@@ -269,7 +325,11 @@ function generateVoronoiGeometry(points, delaunay) {
             return { tIdx, angle };
         }).sort((a, b) => a.angle - b.angle);
 
-        const rgb = randomColor(v);
+        // Determine terrain type based on vertex position
+        const terrainType = determineTerrainType(normal);
+        const rgb = getTerrainColorRGB(terrainType);
+        tileTerrain[v] = terrainType;
+
         for (let i = 0; i < centersWithAngle.length; i++) {
             const c1 = centers[centersWithAngle[i].tIdx];
             const c2 = centers[centersWithAngle[(i + 1) % centersWithAngle.length].tIdx];
@@ -281,10 +341,12 @@ function generateVoronoiGeometry(points, delaunay) {
             );
             // push color for 3 vertices
             colors.push(rgb[0], rgb[1], rgb[2], rgb[0], rgb[1], rgb[2], rgb[0], rgb[1], rgb[2]);
+            // push tile ids for 3 vertices (all belong to vertex v)
+            ids.push(v, v, v);
         }
     }
 
-    return { geometry, colors };
+    return { geometry, colors, ids, tileTerrain };
 }
 
 // Constants for drawing modes
@@ -299,9 +361,11 @@ export const DrawMode = {
 export const sphereSettings = {
   drawMode: DrawMode.VORONOI,
   algorithm: 1,
-  numPoints: 5000,
+  numPoints: 96000,
   jitter: 0.5,
-  rotation: 0.0
+  rotation: 0.0,
+  mapType: defaultMapType,
+  outlineVisible: true
 };
 
 // Main function to generate the planet geometry
@@ -331,11 +395,11 @@ export function generatePlanetGeometryGroup(config) {
     const group = new THREE.Group();
     
     // Generate geometry based on draw mode
-    let geometry, colors;
+    let geometry, colors, ids, tileTerrain;
     if (drawMode === DrawMode.VORONOI) {
-        ({geometry, colors} = generateVoronoiGeometry(points, delaunay));
+        ({geometry, colors, ids, tileTerrain} = generateVoronoiGeometry(points, delaunay));
     } else if (drawMode === DrawMode.DELAUNAY) {
-        ({geometry, colors} = generateDelaunayGeometry(points, delaunay));
+        ({geometry, colors, ids, tileTerrain} = generateDelaunayGeometry(points, delaunay));
     }
     
     if (geometry && colors) {
@@ -349,13 +413,87 @@ export function generatePlanetGeometryGroup(config) {
         const geom = new THREE.BufferGeometry();
         geom.setAttribute('position', new THREE.Float32BufferAttribute(geometry, 3));
         geom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        if (ids && ids.length === geometry.length / 3) {
+            geom.setAttribute('tileId', new THREE.Int32BufferAttribute(ids, 1));
+        }
         
         const material = new THREE.MeshBasicMaterial({
             vertexColors: true,
-            side: THREE.DoubleSide
+            side: THREE.FrontSide
         });
         
-        group.add(new THREE.Mesh(geom, material));
+        const mesh = new THREE.Mesh(geom, material);
+        mesh.userData.isMainMesh = true;
+        mesh.userData.tileTerrain = tileTerrain;
+        group.add(mesh);
+
+        // Build custom boundary edges only between distinct tileIds
+        const boundaryPositions = [];
+        const tileEdges = {};
+        const edgeMap = new Map();
+        const vertCount = geometry.length / 3;
+        const triCount = vertCount / 3;
+
+        function pushEdge(aIdx, bIdx, tileA, tileB) {
+            const ax0 = geometry[aIdx*3], ay0 = geometry[aIdx*3+1], az0 = geometry[aIdx*3+2];
+            const bx0 = geometry[bIdx*3], by0 = geometry[bIdx*3+1], bz0 = geometry[bIdx*3+2];
+
+            const vecA = new THREE.Vector3(ax0, ay0, az0).normalize().multiplyScalar(radius*1.001);
+            const vecB = new THREE.Vector3(bx0, by0, bz0).normalize().multiplyScalar(radius*1.001);
+
+            const ax = vecA.x, ay = vecA.y, az = vecA.z;
+            const bx = vecB.x, by = vecB.y, bz = vecB.z;
+            boundaryPositions.push(ax,ay,az, bx,by,bz);
+            if(!tileEdges[tileA]) tileEdges[tileA] = [];
+            tileEdges[tileA].push(ax,ay,az, bx,by,bz);
+            if(!tileEdges[tileB]) tileEdges[tileB] = [];
+            tileEdges[tileB].push(ax,ay,az, bx,by,bz);
+        }
+
+        for (let t=0;t<triCount;t++){
+            const i0 = t*3, i1 = i0+1, i2 = i0+2;
+            const tid = ids[i0];
+            const triEdges = [[i0,i1],[i1,i2],[i2,i0]];
+            for(const [a,b] of triEdges){
+                const ax0 = geometry[a*3], ay0=geometry[a*3+1], az0=geometry[a*3+2];
+                const bx0 = geometry[b*3], by0=geometry[b*3+1], bz0=geometry[b*3+2];
+                const key = (ax0<bx0 || (ax0===bx0 && ay0<by0) || (ax0===bx0 && ay0===by0 && az0< bz0)) ?
+                  `${ax0.toFixed(5)}_${ay0.toFixed(5)}_${az0.toFixed(5)}|${bx0.toFixed(5)}_${by0.toFixed(5)}_${bz0.toFixed(5)}` :
+                  `${bx0.toFixed(5)}_${by0.toFixed(5)}_${bz0.toFixed(5)}|${ax0.toFixed(5)}_${ay0.toFixed(5)}_${az0.toFixed(5)}`;
+
+                if(!edgeMap.has(key)){
+                    edgeMap.set(key, tid);
+                } else {
+                    const otherTid = edgeMap.get(key);
+                    if(otherTid!==tid){
+                        pushEdge(a,b, tid, otherTid);
+                    }
+                }
+            }
+        }
+
+        if(boundaryPositions.length>0){
+            const outlineGeo = new THREE.BufferGeometry();
+            outlineGeo.setAttribute('position', new THREE.Float32BufferAttribute(boundaryPositions,3));
+            const lineMat = new THREE.LineBasicMaterial({
+                color:0x000000,
+                transparent:true,
+                opacity:0.16,
+                depthTest:true,
+                depthWrite:false,
+                polygonOffset:true,
+                polygonOffsetFactor:-1,
+                polygonOffsetUnits:-1
+            });
+            const outlineLines = new THREE.LineSegments(outlineGeo, lineMat);
+            outlineLines.userData.isOutline = true;
+            outlineLines.visible = sphereSettings.outlineVisible;
+            group.add(outlineLines);
+            group.userData.outlineLines = outlineLines;
+        }
+
+        // store tileEdges map for highlighting
+        mesh.userData.tileEdges = tileEdges;
     }
     
     // Apply rotation

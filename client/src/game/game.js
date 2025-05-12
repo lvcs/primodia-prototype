@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { generateWorld } from './world/worldGenerator.js';
 // Import sphere settings and draw mode
-import { sphereSettings, DrawMode } from './world/planetSphereVoronoi.js';
+import { sphereSettings, DrawMode, classifyTerrain } from './world/planetSphereVoronoi.js';
+import { MapType, mapTypeInfo } from './world/mapTypes.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './debug.js';
 
@@ -11,6 +12,7 @@ let worldData; // Will store { meshGroup, cells, config } from generateWorld
 let planetGroup; // This will be worldData.meshGroup
 let worldConfig;
 let isMouseDown = false;
+let selectedHighlight = null;
 
 export function initGame() {
   try {
@@ -19,6 +21,12 @@ export function initGame() {
     
     setupThreeJS();
     setupWorldConfig();
+    // Initialize controls before planet generation so sliders have correct values
+    const pointsSlider = document.getElementById('points-slider');
+    if (pointsSlider) {
+      pointsSlider.max = sphereSettings.numPoints;
+      updateControlValues(); // Set initial values without generating planet
+    }
     generateAndDisplayPlanet(); 
     setupLighting();
     setupControls();
@@ -151,6 +159,88 @@ function setupEventListeners() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
+  
+  // Raycasting for tile selection
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  renderer.domElement.addEventListener('click', (event) => {
+    // Calculate mouse position in normalized device coordinates (-1 to +1)
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    if (!planetGroup) return;
+    const intersections = raycaster.intersectObject(planetGroup, true);
+    if (intersections.length === 0) return;
+
+    const intersect = intersections[0];
+    
+    // Skip outline objects and find the first terrain mesh
+    let mainIntersect = intersect;
+    for (let i = 0; i < intersections.length; i++) {
+      if (intersections[i].object.userData.isMainMesh) {
+        mainIntersect = intersections[i];
+        break;
+      }
+    }
+    
+    const point = mainIntersect.point.clone().sub(planetGroup.position); // relative to planet center
+    const radius = worldConfig.radius;
+    const normal = point.clone().normalize();
+
+    // Latitude and longitude in degrees
+    const lat = Math.asin(normal.y) * (180 / Math.PI);
+    const lon = Math.atan2(normal.z, normal.x) * (180 / Math.PI);
+
+    // Determine tileId first
+    let tileId = null;
+    const attr = mainIntersect.object.geometry.getAttribute('tileId');
+    if (attr) {
+      const idx = mainIntersect.faceIndex * 3; // first vertex of triangle
+      tileId = attr.array[idx];
+    }
+
+    // Determine terrain using stored map if available
+    let terrain = classifyTerrain(normal);
+    if(mainIntersect.object.userData.tileTerrain){
+      const mapTT = mainIntersect.object.userData.tileTerrain;
+      if(tileId!=null && mapTT[tileId]) terrain = mapTT[tileId];
+    }
+
+    // Highlight selected tile
+    if(selectedHighlight){
+       planetGroup.remove(selectedHighlight);
+       if(selectedHighlight.geometry) selectedHighlight.geometry.dispose();
+       selectedHighlight = null;
+    }
+
+    if(mainIntersect.object.userData.tileEdges && mainIntersect.object.userData.tileEdges[tileId]){
+        const posArr = mainIntersect.object.userData.tileEdges[tileId];
+        // Slightly scale outward to make it appear thicker
+        const scaled = [];
+        const scaleFactor = 1.003;
+        for(let i=0;i<posArr.length;i+=3){
+          const vx = posArr[i], vy = posArr[i+1], vz = posArr[i+2];
+          const vec = new THREE.Vector3(vx, vy, vz).normalize().multiplyScalar(worldConfig.radius * scaleFactor);
+          scaled.push(vec.x, vec.y, vec.z);
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(scaled,3));
+        const mat = new THREE.LineBasicMaterial({color:0x0077ff, transparent:true, opacity:0.9});
+        selectedHighlight = new THREE.LineSegments(geo, mat);
+        selectedHighlight.userData.isHighlight = true;
+        planetGroup.add(selectedHighlight);
+    }
+
+    debug(`Tile clicked – ID: ${tileId}, Terrain: ${terrain}, Lat: ${lat.toFixed(2)}°, Lon: ${lon.toFixed(2)}°`);
+
+    // Update debug panel if present
+    const statusDiv = document.getElementById('debug-status');
+    if (statusDiv) {
+      statusDiv.textContent = `ID: ${tileId}, Terrain: ${terrain}, Lat: ${lat.toFixed(2)}°, Lon: ${lon.toFixed(2)}°`;
+    }
+  });
 }
 
 function setupSphereControls() {
@@ -227,6 +317,51 @@ function setupSphereControls() {
     sphereSettings.rotation = parseInt(e.target.value);
     generateAndDisplayPlanet();
   });
+  
+  // Radius (globe size) slider
+  const radiusSlider = document.getElementById('radius-slider');
+  radiusSlider.addEventListener('input', (e) => {
+    const value = parseInt(e.target.value);
+    document.getElementById('radius-value').textContent = value;
+  });
+  
+  radiusSlider.addEventListener('change', (e) => {
+    worldConfig.radius = parseInt(e.target.value);
+    // Update OrbitControls distances and camera position to match new radius
+    if (controls) {
+      controls.minDistance = worldConfig.radius * 1.2;
+      controls.maxDistance = worldConfig.radius * 5;
+    }
+    if (camera) {
+      camera.position.set(0, worldConfig.radius * 0.5, worldConfig.radius * 2.5);
+    }
+    generateAndDisplayPlanet();
+  });
+  
+  // Map type selector
+  const mapTypeSelector = document.getElementById('map-type-selector');
+  mapTypeSelector.addEventListener('change', (e) => {
+    sphereSettings.mapType = e.target.value;
+    
+    // Update description text
+    const description = mapTypeInfo[sphereSettings.mapType]?.description || '';
+    document.getElementById('map-type-description').textContent = description;
+    
+    generateAndDisplayPlanet();
+  });
+  
+  // Outline toggle
+  const outlineToggle = document.getElementById('outline-toggle');
+  outlineToggle.addEventListener('change', (e) => {
+    sphereSettings.outlineVisible = e.target.checked;
+    if(planetGroup){
+        planetGroup.traverse(obj=>{
+            if(obj.userData.isOutline){
+                obj.visible = sphereSettings.outlineVisible;
+            }
+        });
+    }
+  });
 }
 
 function setActiveButton(activeId, inactiveIds) {
@@ -247,6 +382,14 @@ function updateControlValues() {
   document.getElementById('rotation-value').textContent = sphereSettings.rotation + '°';
   document.getElementById('rotation-slider').value = sphereSettings.rotation;
   
+  document.getElementById('radius-value').textContent = worldConfig.radius;
+  document.getElementById('radius-slider').value = worldConfig.radius;
+  
+  // Update map type selector
+  document.getElementById('map-type-selector').value = sphereSettings.mapType;
+  document.getElementById('map-type-description').textContent = 
+    mapTypeInfo[sphereSettings.mapType]?.description || '';
+  
   // Update active buttons
   setActiveButton(`draw-${sphereSettings.drawMode}`, 
     Object.values(DrawMode)
@@ -257,6 +400,8 @@ function updateControlValues() {
   setActiveButton(`algorithm-${sphereSettings.algorithm}`, 
     [sphereSettings.algorithm === 1 ? 'algorithm-2' : 'algorithm-1']
   );
+  
+  document.getElementById('outline-toggle').checked = sphereSettings.outlineVisible;
 }
 
 function setupMouseTracking() {
