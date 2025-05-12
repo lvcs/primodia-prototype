@@ -1,5 +1,6 @@
 // Map types for world generation
-import { TerrainType } from './terrain.js';
+import { Terrains } from './registries/TerrainRegistry.js';
+const TerrainType = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
 
 // MapType enum
 export const MapType = {
@@ -118,67 +119,3 @@ export const mapTypeInfo = {
 
 // Default map type
 export const defaultMapType = MapType.CONTINENTS;
-
-// Map generation parameters for different map types
-export const mapGenerationParams = {
-  [MapType.CONTINENTS]: {
-    continentCount: 5,
-    continentSize: 0.2,
-    noiseScale: 0.5,
-    oceanLevel: 0.4
-  },
-  [MapType.PANGAEA]: {
-    continentCount: 1,
-    continentSize: 0.6,
-    noiseScale: 0.6,
-    oceanLevel: 0.35
-  },
-  [MapType.FRACTAL]: {
-    fractalLayers: 5,
-    fractalRoughness: 0.7,
-    noiseScale: 0.4,
-    oceanLevel: 0.45
-  },
-  [MapType.ARCHIPELAGO]: {
-    islandCount: 50,
-    islandSizeVariance: 0.3,
-    noiseScale: 0.8,
-    oceanLevel: 0.6
-  },
-  [MapType.ISLAND_PLATES]: {
-    plateCount: 12,
-    plateSizeVariance: 0.5,
-    noiseScale: 0.6,
-    oceanLevel: 0.5
-  },
-  [MapType.HIGHLANDS]: {
-    mountainFrequency: 0.7,
-    plateHeight: 0.8,
-    noiseScale: 0.4,
-    oceanLevel: 0.2
-  },
-  [MapType.LAKES]: {
-    lakeFrequency: 0.8,
-    lakeSize: 0.3,
-    noiseScale: 0.7,
-    oceanLevel: 0.4
-  },
-  [MapType.DRY]: {
-    desertRatio: 0.7,
-    noiseScale: 0.5,
-    oceanLevel: 0.25,
-    temperatureOffset: 0.3
-  }
-};
-
-// Get map generation parameters based on map type
-export function getMapParameters(mapType) {
-  return mapGenerationParams[mapType] || mapGenerationParams[defaultMapType];
-}
-
-// Placeholder for future implementation of map generation algorithms
-export function generateMapTerrain(mapType, pointPosition) {
-  // This will be implemented later with more sophisticated algorithms
-  // For now, returns the default terrain determination
-  return null; // Returning null means use the default algorithm
-} 

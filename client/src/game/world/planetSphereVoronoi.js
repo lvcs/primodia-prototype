@@ -1,12 +1,18 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
-import { TerrainType, terrainColors } from './terrain.js';
 import { MapType, defaultMapType, generateMapTerrain } from './mapTypes.js';
 import { debug } from '../debug.js';
+import { terrainById } from './registries/TerrainRegistry.js';
+import WorldGlobe from './model/WorldGlobe.js';
+import Tile from './model/Tile.js';
+import { Terrains } from './registries/TerrainRegistry.js';
 
 // Cache for random lat/lon offsets
 const _randomLat = [];
 const _randomLon = [];
+
+const TerrainType = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
+const terrainColors = Object.fromEntries(Object.values(Terrains).map(t=>[t.id,t.color]));
 
 function generateFibonacciSphere1(N, jitter) {
     const points = [];
@@ -502,4 +508,4 @@ export function generatePlanetGeometryGroup(config) {
     }
     
     return group;
-} 
+}
