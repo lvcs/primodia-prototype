@@ -46,4 +46,7 @@ export const resourceMarkers = {
   [ResourceType.IRON]: { color: 0x708090, symbol: '⚒️' },
   [ResourceType.GOLD]: { color: 0xffd700, symbol: '💰' },
   [ResourceType.OIL]: { color: 0x000000, symbol: '🛢️' }
-}; 
+};
+
+// This file has been split into terrain.js and resources.js.
+// Please import from './terrain.js' or './resources.js' as appropriate. 

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
-import { TerrainType, terrainColors } from './constants.js';
+import { TerrainType, terrainColors } from './terrain.js';
 import { debug } from '../debug.js';
 
 // Cache for random colors
@@ -297,10 +297,10 @@ export const DrawMode = {
 
 // Settings object to store sphere generation parameters
 export const sphereSettings = {
-  drawMode: DrawMode.POINTS,
+  drawMode: DrawMode.VORONOI,
   algorithm: 1,
-  numPoints: 500,
-  jitter: 0.0,
+  numPoints: 5000,
+  jitter: 0.5,
   rotation: 0.0
 };
 
