@@ -371,7 +371,9 @@ export const sphereSettings = {
   jitter: 0.5,
   rotation: 0.0,
   mapType: defaultMapType,
-  outlineVisible: true
+  outlineVisible: true,
+  numPlates: 16,
+  viewMode: 'terrain'
 };
 
 // Main function to generate the planet geometry
@@ -436,6 +438,7 @@ export function generatePlanetGeometryGroup(config) {
         // Build custom boundary edges only between distinct tileIds
         const boundaryPositions = [];
         const tileEdges = {};
+        const tileNeighborSets = {};
         const edgeMap = new Map();
         const vertCount = geometry.length / 3;
         const triCount = vertCount / 3;
@@ -454,6 +457,12 @@ export function generatePlanetGeometryGroup(config) {
             tileEdges[tileA].push(ax,ay,az, bx,by,bz);
             if(!tileEdges[tileB]) tileEdges[tileB] = [];
             tileEdges[tileB].push(ax,ay,az, bx,by,bz);
+
+            // neighbor tracking
+            if(!tileNeighborSets[tileA]) tileNeighborSets[tileA] = new Set();
+            if(!tileNeighborSets[tileB]) tileNeighborSets[tileB] = new Set();
+            tileNeighborSets[tileA].add(tileB);
+            tileNeighborSets[tileB].add(tileA);
         }
 
         for (let t=0;t<triCount;t++){
@@ -500,6 +509,12 @@ export function generatePlanetGeometryGroup(config) {
 
         // store tileEdges map for highlighting
         mesh.userData.tileEdges = tileEdges;
+        // store neighbor map
+        const neighborObj = {};
+        Object.keys(tileNeighborSets).forEach(id=>{
+            neighborObj[id] = Array.from(tileNeighborSets[id]);
+        });
+        mesh.userData.tileNeighbors = neighborObj;
     }
     
     // Apply rotation

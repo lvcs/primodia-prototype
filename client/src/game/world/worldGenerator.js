@@ -3,6 +3,7 @@ import { generatePlanetGeometryGroup, sphereSettings, classifyTerrain } from './
 import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
 import { terrainById } from './registries/TerrainRegistry.js';
+import { generatePlates } from './platesGenerator.js';
 
 /**
  * Generates globe mesh (legacy) plus OO WorldGlobe description.
@@ -40,13 +41,37 @@ export function generateWorld(config){
 
   Object.keys(sums).forEach(idStr=>{
     const id = parseInt(idStr,10);
-    const center = sums[id].divideScalar(counts[id]).normalize();
-    const lat = THREE.MathUtils.radToDeg(Math.asin(center.y));
-    const lon = THREE.MathUtils.radToDeg(Math.atan2(center.z, center.x));
-    const terrId = tileTerrain[id] || classifyTerrain(center);
+    const centerVec = sums[id].divideScalar(counts[id]).normalize();
+    const center = [centerVec.x, centerVec.y, centerVec.z];
+    const terrId = tileTerrain[id] || classifyTerrain(centerVec);
     const terrain = terrainById(terrId) || terrainById('PLAINS');
-    globe.addTile(new Tile({ id, terrain, lat, lon }));
+    globe.addTile(new Tile({ id, terrain, center, neighbors: [] }));
   });
+
+  // Use neighbor map from mesh if provided
+  if(mainMesh && mainMesh.userData.tileNeighbors){
+    const neighborObj = mainMesh.userData.tileNeighbors;
+    Object.keys(neighborObj).forEach(idStr=>{
+      const tile = globe.getTile(parseInt(idStr,10));
+      if(tile){ tile.neighbors = neighborObj[idStr].map(n=>parseInt(n,10)); }
+    });
+  }
+
+  // Generate tectonic plates and elevations
+  const numPlates = sphereSettings.numPlates || 16;
+  const { plates, tilePlate } = generatePlates(globe, numPlates);
+
+  // Store tilePlate mapping in mainMesh for coloring later
+  if(mainMesh){
+    mainMesh.userData.tilePlate = tilePlate;
+    // Generate plate colors
+    const plateColors = {};
+    plates.forEach(p=>{
+      const color = new THREE.Color().setHSL(Math.random(), 0.6, 0.5);
+      plateColors[p.id] = color.getHex();
+    });
+    mainMesh.userData.plateColors = plateColors;
+  }
 
   meshGroup.userData.globe = globe;
   return { meshGroup, globe, config };

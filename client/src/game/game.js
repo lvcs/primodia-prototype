@@ -4,6 +4,7 @@ import { generateWorld } from './world/worldGenerator.js';
 // Import sphere settings and draw mode
 import { sphereSettings, DrawMode, classifyTerrain } from './world/planetSphereVoronoi.js';
 import { MapTypes, MapRegistry } from './world/registries/MapTypeRegistry.js';
+import { Terrains } from './world/registries/TerrainRegistry.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './debug.js';
 
@@ -110,6 +111,11 @@ function generateAndDisplayPlanet() {
 
     updateControlValues();
     addPlanetaryGlow(worldConfig.radius);
+
+    // Apply current view mode colors
+    if(sphereSettings.viewMode==='plates'){
+      updatePlanetColors();
+    }
     debug('Planet generation and display complete.');
 
   } catch (err) {
@@ -208,6 +214,12 @@ function setupEventListeners() {
       if(tileId!=null && mapTT[tileId]) terrain = mapTT[tileId];
     }
 
+    // Plate ID if available
+    let plateId = null;
+    if(mainIntersect.object.userData.tilePlate && tileId!=null){
+      plateId = mainIntersect.object.userData.tilePlate[tileId];
+    }
+
     // Highlight selected tile
     if(selectedHighlight){
        planetGroup.remove(selectedHighlight);
@@ -233,12 +245,12 @@ function setupEventListeners() {
         planetGroup.add(selectedHighlight);
     }
 
-    debug(`Tile clicked – ID: ${tileId}, Terrain: ${terrain}, Lat: ${lat.toFixed(2)}°, Lon: ${lon.toFixed(2)}°`);
+    debug(`Tile clicked – ID: ${tileId}, Terrain: ${terrain}, Plate: ${plateId}, Lat: ${lat.toFixed(2)}°, Lon: ${lon.toFixed(2)}°`);
 
     // Update debug panel if present
     const statusDiv = document.getElementById('debug-status');
     if (statusDiv) {
-      statusDiv.textContent = `ID: ${tileId}, Terrain: ${terrain}, Lat: ${lat.toFixed(2)}°, Lon: ${lon.toFixed(2)}°`;
+      statusDiv.textContent = `ID: ${tileId}, Terrain: ${terrain}, Plate: ${plateId}, Lat: ${lat.toFixed(2)}°, Lon: ${lon.toFixed(2)}°`;
     }
   });
 }
@@ -362,6 +374,28 @@ function setupSphereControls() {
         });
     }
   });
+
+  // Number of plates slider
+  const platesSlider = document.getElementById('plates-slider');
+  if(platesSlider){
+    platesSlider.addEventListener('input', (e)=>{
+      const val = parseInt(e.target.value);
+      document.getElementById('plates-value').textContent = val;
+    });
+    platesSlider.addEventListener('change', (e)=>{
+      sphereSettings.numPlates = parseInt(e.target.value);
+      generateAndDisplayPlanet();
+    });
+  }
+
+  // View selector (terrain vs plates)
+  const viewSelector = document.getElementById('view-selector');
+  if(viewSelector){
+    viewSelector.addEventListener('change', (e)=>{
+      sphereSettings.viewMode = e.target.value;
+      updatePlanetColors();
+    });
+  }
 }
 
 function setActiveButton(activeId, inactiveIds) {
@@ -402,6 +436,15 @@ function updateControlValues() {
   );
   
   document.getElementById('outline-toggle').checked = sphereSettings.outlineVisible;
+
+  if(document.getElementById('plates-slider')){
+    document.getElementById('plates-slider').value = sphereSettings.numPlates;
+    document.getElementById('plates-value').textContent = sphereSettings.numPlates;
+  }
+
+  if(document.getElementById('view-selector')){
+    document.getElementById('view-selector').value = sphereSettings.viewMode;
+  }
 }
 
 function setupMouseTracking() {
@@ -414,4 +457,41 @@ function animate() {
   requestAnimationFrame(animate);
   controls.update();
   renderer.render(scene, camera);
+}
+
+function updatePlanetColors() {
+  if(!planetGroup) return;
+  const mainMesh = planetGroup.children.find(c=>c.userData && c.userData.isMainMesh);
+  if(!mainMesh) return;
+  const colorsAttr = mainMesh.geometry.getAttribute('color');
+  const tileIds = mainMesh.geometry.getAttribute('tileId');
+  if(!colorsAttr || !tileIds) return;
+
+  const tileTerrain = mainMesh.userData.tileTerrain || {};
+  const tilePlate = mainMesh.userData.tilePlate || {};
+  const plateColors = mainMesh.userData.plateColors || {};
+
+  function hexToRgbArr(hex){
+    return [ ((hex>>16)&255)/255, ((hex>>8)&255)/255, (hex&255)/255 ];
+  }
+
+  const terrainColorCache = {};
+  Object.values(Terrains).forEach(t=>{ terrainColorCache[t.id] = [ ((t.color>>16)&255)/255, ((t.color>>8)&255)/255, (t.color&255)/255 ]; });
+
+  for(let i=0;i<tileIds.count;i++){
+    const tId = tileIds.array[i];
+    let rgb;
+    if(sphereSettings.viewMode==='plates'){
+       const pid = tilePlate[tId];
+       const hex = plateColors[pid] || 0xffffff;
+       rgb = hexToRgbArr(hex);
+    } else {
+       const terr = tileTerrain[tId];
+       rgb = terrainColorCache[terr] || [1,1,1];
+    }
+    colorsAttr.array[i*3] = rgb[0];
+    colorsAttr.array[i*3+1] = rgb[1];
+    colorsAttr.array[i*3+2] = rgb[2];
+  }
+  colorsAttr.needsUpdate = true;
 } 

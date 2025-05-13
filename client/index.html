@@ -100,6 +100,20 @@
           <div class="control-section">
             <label><input type="checkbox" id="outline-toggle" checked /> Show Outlines</label>
           </div>
+          
+          <div class="control-section">
+            <div class="control-label">Number of plates:</div>
+            <input type="range" id="plates-slider" min="4" max="64" step="1" value="16" class="control-slider" />
+            <span id="plates-value">16</span>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">View:</div>
+            <select id="view-selector" class="control-select">
+              <option value="terrain">Terrain</option>
+              <option value="plates">Tectonic Plates</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
