@@ -8,6 +8,8 @@ import { Terrains } from './world/registries/TerrainRegistry.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './debug.js';
 import * as Const from '../config/gameConstants.js'; // Import constants
+import { keyBindings } from '../config/key_bindings.js'; // Updated path
+import { ExtendedOrbitControls } from '../libs/controls/ExtendedOrbitControls.js'; // Import our extended controls
 
 let scene, camera, renderer, controls;
 let worldData; // Will store { meshGroup, cells, config } from generateWorld
@@ -33,6 +35,7 @@ export function initGame() {
     setupLighting();
     setupControls();
     setupEventListeners();
+    setupKeyboardControls(); // Added call
     setupSocketConnection();
     setupMouseTracking();
     animate();
@@ -173,14 +176,16 @@ function setupLighting() {
 }
 
 function setupControls() {
-  // If controls exist, dispose of them first to avoid multiple listeners or issues
   if (controls) {
     controls.dispose();
   }
-  controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
+  controls = new ExtendedOrbitControls(camera, renderer.domElement);
+  
+  controls.enableDamping = false;
   controls.minDistance = worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
   controls.maxDistance = worldConfig.radius * Const.CAMERA_MAX_DISTANCE_FACTOR;
+  controls.rotateSpeed = 1.0;
+  
   camera.position.set(0, worldConfig.radius * Const.CAMERA_INITIAL_POS_Y_FACTOR, worldConfig.radius * Const.CAMERA_INITIAL_POS_Z_FACTOR);
   controls.update();
 }
@@ -313,6 +318,78 @@ function setupEventListeners() {
       // ... existing code ...
     }
   });
+}
+
+function setupKeyboardControls() {
+  const baseZoomScale = 1.1; // Constant zoom factor for keyboard
+  const baseKeyboardRotationAngle = 0.03; // Base angle for keyboard rotation, will be scaled by zoom
+  
+  const pressedKeys = new Set();
+  
+  // This function is called within the modified animate loop
+  function updateKeyboardControls() {
+    if (!controls) return;
+    
+    // Ensure minDistance is up-to-date (for close zoom)
+    controls.minDistance = worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
+    
+    const zoomScale = baseZoomScale; // Use constant zoom scale
+
+    // Calculate dynamic rotation angle for keyboard based on zoom
+    const currentDistance = controls.getDistance();
+    const keyboardRotationReferenceDistance = worldConfig.radius * 3; // Reference distance for scaling
+    let rotationScaleFactor = currentDistance / keyboardRotationReferenceDistance;
+    rotationScaleFactor = Math.max(0.2, Math.min(3.0, rotationScaleFactor)); // Clamp scale factor (e.g., 0.2x to 3x)
+    const actualKeyboardRotationAngle = baseKeyboardRotationAngle * rotationScaleFactor;
+
+    // Apply zoom (if keys are pressed)
+    if (pressedKeys.has(keyBindings.ZOOM_IN)) {
+      controls.dollyIn(zoomScale);
+    }
+    if (pressedKeys.has(keyBindings.ZOOM_OUT)) {
+      controls.dollyOut(zoomScale);
+    }
+    
+    // Apply rotations (if keys are pressed)
+    if (pressedKeys.has(keyBindings.ROTATE_WEST)) {
+      controls.rotateLeft(actualKeyboardRotationAngle);
+    }
+    if (pressedKeys.has(keyBindings.ROTATE_EAST)) {
+      controls.rotateLeft(-actualKeyboardRotationAngle);
+    }
+    if (pressedKeys.has(keyBindings.ROTATE_NORTH)) {
+      controls.rotateUp(actualKeyboardRotationAngle);
+    }
+    if (pressedKeys.has(keyBindings.ROTATE_SOUTH)) {
+      controls.rotateUp(-actualKeyboardRotationAngle);
+    }
+  }
+  
+  // Override animate to include keyboard updates
+  const originalAnimate = animate;
+  animate = function() { // Make sure this refers to the global animate
+    updateKeyboardControls();
+    originalAnimate();
+  };
+
+  // Key down/up listeners remain the same (handling pressedKeys set and preventDefault)
+  window.addEventListener('keydown', (event) => {
+    if (!pressedKeys.has(event.key)) {
+      // Optional: Minimal debug log only on first press, if needed
+      // if ([keyBindings.ROTATE_NORTH, ...].includes(event.key)) { debug('Key pressed:', event.key); }
+    }
+    pressedKeys.add(event.key);
+    if ([keyBindings.ROTATE_NORTH, keyBindings.ROTATE_SOUTH, keyBindings.ROTATE_EAST, keyBindings.ROTATE_WEST, 
+         keyBindings.ZOOM_IN, keyBindings.ZOOM_OUT].includes(event.key)) {
+      event.preventDefault();
+    }
+  });
+
+  window.addEventListener('keyup', (event) => {
+    pressedKeys.delete(event.key);
+  });
+
+  debug('Keyboard controls setup: Dynamic rotation, constant zoom.');
 }
 
 function setupMouseTracking() {
