@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { generateWorld } from './world/worldGenerator.js';
 // Import sphere settings and draw mode
-import { sphereSettings, DrawMode } from './world/planetSphereVoronoi.js';
+import { sphereSettings, DrawMode, classifyTerrain } from './world/planetSphereVoronoi.js';
+import { MapTypes, MapRegistry } from './world/registries/MapTypeRegistry.js';
+import { Terrains } from './world/registries/TerrainRegistry.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './debug.js';
 
@@ -11,6 +13,7 @@ let worldData; // Will store { meshGroup, cells, config } from generateWorld
 let planetGroup; // This will be worldData.meshGroup
 let worldConfig;
 let isMouseDown = false;
+let selectedHighlight = null;
 
 export function initGame() {
   try {
@@ -19,6 +22,12 @@ export function initGame() {
     
     setupThreeJS();
     setupWorldConfig();
+    // Initialize controls before planet generation so sliders have correct values
+    const pointsSlider = document.getElementById('points-slider');
+    if (pointsSlider) {
+      pointsSlider.max = sphereSettings.numPoints;
+      updateControlValues(); // Set initial values without generating planet
+    }
     generateAndDisplayPlanet(); 
     setupLighting();
     setupControls();
@@ -102,6 +111,11 @@ function generateAndDisplayPlanet() {
 
     updateControlValues();
     addPlanetaryGlow(worldConfig.radius);
+
+    // Apply current view mode colors
+    if(sphereSettings.viewMode==='plates'){
+      updatePlanetColors();
+    }
     debug('Planet generation and display complete.');
 
   } catch (err) {
@@ -150,6 +164,97 @@ function setupEventListeners() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+  
+  // Raycasting for tile selection
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  renderer.domElement.addEventListener('click', (event) => {
+    // Calculate mouse position in normalized device coordinates (-1 to +1)
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    if (!planetGroup) return;
+    const intersections = raycaster.intersectObject(planetGroup, true);
+    if (intersections.length === 0) return;
+
+    const intersect = intersections[0];
+    
+    // Skip outline objects and find the first terrain mesh
+    let mainIntersect = intersect;
+    for (let i = 0; i < intersections.length; i++) {
+      if (intersections[i].object.userData.isMainMesh) {
+        mainIntersect = intersections[i];
+        break;
+      }
+    }
+    
+    const point = mainIntersect.point.clone().sub(planetGroup.position); // relative to planet center
+    const radius = worldConfig.radius;
+    const normal = point.clone().normalize();
+
+    // Latitude and longitude in degrees
+    const lat = Math.asin(normal.y) * (180 / Math.PI);
+    const lon = Math.atan2(normal.z, normal.x) * (180 / Math.PI);
+
+    // Determine tileId first
+    let tileId = null;
+    const attr = mainIntersect.object.geometry.getAttribute('tileId');
+    if (attr) {
+      const idx = mainIntersect.faceIndex * 3; // first vertex of triangle
+      tileId = attr.array[idx];
+    }
+
+    // Determine terrain using stored map if available
+    let terrain = classifyTerrain(normal);
+    if(mainIntersect.object.userData.tileTerrain){
+      const mapTT = mainIntersect.object.userData.tileTerrain;
+      if(tileId!=null && mapTT[tileId]) terrain = mapTT[tileId];
+    }
+
+    // Plate ID if available
+    let plateId = null;
+    if(mainIntersect.object.userData.tilePlate && tileId!=null){
+      plateId = mainIntersect.object.userData.tilePlate[tileId];
+    }
+
+    // Highlight selected tile
+    if(selectedHighlight){
+       planetGroup.remove(selectedHighlight);
+       if(selectedHighlight.geometry) selectedHighlight.geometry.dispose();
+       selectedHighlight = null;
+    }
+
+    if(mainIntersect.object.userData.tileEdges && mainIntersect.object.userData.tileEdges[tileId]){
+        const posArr = mainIntersect.object.userData.tileEdges[tileId];
+        // Slightly scale outward to make it appear thicker
+        const scaled = [];
+        const scaleFactor = 1.003;
+        for(let i=0;i<posArr.length;i+=3){
+          const vx = posArr[i], vy = posArr[i+1], vz = posArr[i+2];
+          const vec = new THREE.Vector3(vx, vy, vz).normalize().multiplyScalar(worldConfig.radius * scaleFactor);
+          scaled.push(vec.x, vec.y, vec.z);
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(scaled,3));
+        const mat = new THREE.LineBasicMaterial({color:0x0077ff, transparent:true, opacity:0.9});
+        selectedHighlight = new THREE.LineSegments(geo, mat);
+        selectedHighlight.userData.isHighlight = true;
+        planetGroup.add(selectedHighlight);
+    }
+
+    const elevation = mainIntersect.object.userData.tileElevation ? mainIntersect.object.userData.tileElevation[tileId] : null;
+    const moisture = mainIntersect.object.userData.tileMoisture ? mainIntersect.object.userData.tileMoisture[tileId] : null;
+
+    debug(`Tile ${tileId} – Terr:${terrain} Plate:${plateId} Elev:${elevation?.toFixed(2)} Moist:${moisture?.toFixed(2)} Lat:${lat.toFixed(2)}° Lon:${lon.toFixed(2)}°`);
+
+    // Update debug panel if present
+    const statusDiv = document.getElementById('debug-status');
+    if (statusDiv) {
+      statusDiv.textContent = `ID:${tileId} Terr:${terrain} Plate:${plateId} Elev:${elevation?.toFixed(2)} Moist:${moisture?.toFixed(2)} Lat:${lat.toFixed(2)}° Lon:${lon.toFixed(2)}°`;
+    }
   });
 }
 
@@ -227,6 +332,88 @@ function setupSphereControls() {
     sphereSettings.rotation = parseInt(e.target.value);
     generateAndDisplayPlanet();
   });
+  
+  // Radius (globe size) slider
+  const radiusSlider = document.getElementById('radius-slider');
+  radiusSlider.addEventListener('input', (e) => {
+    const value = parseInt(e.target.value);
+    document.getElementById('radius-value').textContent = value;
+  });
+  
+  radiusSlider.addEventListener('change', (e) => {
+    worldConfig.radius = parseInt(e.target.value);
+    // Update OrbitControls distances and camera position to match new radius
+    if (controls) {
+      controls.minDistance = worldConfig.radius * 1.2;
+      controls.maxDistance = worldConfig.radius * 5;
+    }
+    if (camera) {
+      camera.position.set(0, worldConfig.radius * 0.5, worldConfig.radius * 2.5);
+    }
+    generateAndDisplayPlanet();
+  });
+  
+  // Map type selector
+  const mapTypeSelector = document.getElementById('map-type-selector');
+  mapTypeSelector.addEventListener('change', (e) => {
+    sphereSettings.mapType = e.target.value;
+    
+    // Update description text
+    const description = MapRegistry[sphereSettings.mapType]?.description || '';
+    document.getElementById('map-type-description').textContent = description;
+    
+    generateAndDisplayPlanet();
+  });
+  
+  // Outline toggle
+  const outlineToggle = document.getElementById('outline-toggle');
+  outlineToggle.addEventListener('change', (e) => {
+    sphereSettings.outlineVisible = e.target.checked;
+    if(planetGroup){
+        planetGroup.traverse(obj=>{
+            if(obj.userData.isOutline){
+                obj.visible = sphereSettings.outlineVisible;
+            }
+        });
+    }
+  });
+
+  // Number of plates slider
+  const platesSlider = document.getElementById('plates-slider');
+  if(platesSlider){
+    platesSlider.addEventListener('input', (e)=>{
+      const val = parseInt(e.target.value);
+      document.getElementById('plates-value').textContent = val;
+    });
+    platesSlider.addEventListener('change', (e)=>{
+      sphereSettings.numPlates = parseInt(e.target.value);
+      generateAndDisplayPlanet();
+    });
+  }
+
+  // View selector (terrain vs plates)
+  const viewSelector = document.getElementById('view-selector');
+  if(viewSelector){
+    viewSelector.addEventListener('change', (e)=>{
+      sphereSettings.viewMode = e.target.value;
+      updatePlanetColors();
+    });
+  }
+
+  // Elevation bias slider
+  const ebSlider = document.getElementById('elevbias-slider');
+  if(ebSlider){
+    ebSlider.addEventListener('input',(e)=>{
+      const val=parseFloat(e.target.value);
+      document.getElementById('elevbias-value').textContent=val.toFixed(2);
+    });
+    ebSlider.addEventListener('change',(e)=>{
+      sphereSettings.elevationBias=parseFloat(e.target.value);
+      if(sphereSettings.viewMode==='elevation'){
+         updatePlanetColors();
+      }
+    });
+  }
 }
 
 function setActiveButton(activeId, inactiveIds) {
@@ -247,6 +434,14 @@ function updateControlValues() {
   document.getElementById('rotation-value').textContent = sphereSettings.rotation + '°';
   document.getElementById('rotation-slider').value = sphereSettings.rotation;
   
+  document.getElementById('radius-value').textContent = worldConfig.radius;
+  document.getElementById('radius-slider').value = worldConfig.radius;
+  
+  // Update map type selector
+  document.getElementById('map-type-selector').value = sphereSettings.mapType;
+  document.getElementById('map-type-description').textContent = 
+    MapRegistry[sphereSettings.mapType]?.description || '';
+  
   // Update active buttons
   setActiveButton(`draw-${sphereSettings.drawMode}`, 
     Object.values(DrawMode)
@@ -257,6 +452,22 @@ function updateControlValues() {
   setActiveButton(`algorithm-${sphereSettings.algorithm}`, 
     [sphereSettings.algorithm === 1 ? 'algorithm-2' : 'algorithm-1']
   );
+  
+  document.getElementById('outline-toggle').checked = sphereSettings.outlineVisible;
+
+  if(document.getElementById('plates-slider')){
+    document.getElementById('plates-slider').value = sphereSettings.numPlates;
+    document.getElementById('plates-value').textContent = sphereSettings.numPlates;
+  }
+
+  if(document.getElementById('view-selector')){
+    document.getElementById('view-selector').value = sphereSettings.viewMode;
+  }
+
+  if(document.getElementById('elevbias-slider')){
+    document.getElementById('elevbias-slider').value = sphereSettings.elevationBias;
+    document.getElementById('elevbias-value').textContent = sphereSettings.elevationBias.toFixed(2);
+  }
 }
 
 function setupMouseTracking() {
@@ -269,4 +480,66 @@ function animate() {
   requestAnimationFrame(animate);
   controls.update();
   renderer.render(scene, camera);
+}
+
+function updatePlanetColors() {
+  if(!planetGroup) return;
+  const mainMesh = planetGroup.children.find(c=>c.userData && c.userData.isMainMesh);
+  if(!mainMesh) return;
+  const colorsAttr = mainMesh.geometry.getAttribute('color');
+  const tileIds = mainMesh.geometry.getAttribute('tileId');
+  if(!colorsAttr || !tileIds) return;
+
+  const tileTerrain = mainMesh.userData.tileTerrain || {};
+  const tilePlate = mainMesh.userData.tilePlate || {};
+  const plateColors = mainMesh.userData.plateColors || {};
+
+  function hexToRgbArr(hex){
+    return [ ((hex>>16)&255)/255, ((hex>>8)&255)/255, (hex&255)/255 ];
+  }
+
+  const terrainColorCache = {};
+  Object.values(Terrains).forEach(t=>{ terrainColorCache[t.id] = [ ((t.color>>16)&255)/255, ((t.color>>8)&255)/255, (t.color&255)/255 ]; });
+
+  function elevationRGB(val){
+    const elev = val + sphereSettings.elevationBias;
+    const stops=[1,0.8,0.6,0.4,0.2,0,-0.2,-0.4,-0.6,-0.8,-1];
+    const hex=[0x641009,0x87331E,0xAB673D,0xD2A467,0xFAE29A,0xF1EBDA,0x2F62B9,0x1E3FB2,0x0D1BA1,0x0C0484,0x170162];
+    for(let i=0;i<stops.length;i++){
+      if(elev>=stops[i]){ const h=hex[i]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255]; }
+    }
+    const h=hex[hex.length-1]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
+  }
+
+  function moistureRGB(val){
+    const stops=[1,0.8,0.6,0.4,0.2,0];
+    const hex=[0x75FB4C,0x7BD851,0x88B460,0x839169,0x6C6E65,0x6C6E65];
+    for(let i=0;i<stops.length;i++){
+      if(val>=stops[i]){ const h=hex[i]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255]; }
+    }
+    const h=hex[hex.length-1]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
+  }
+
+  for(let i=0;i<tileIds.count;i++){
+    const tId = tileIds.array[i];
+    let rgb;
+    if(sphereSettings.viewMode==='plates'){
+       const pid = tilePlate[tId];
+       const hex = plateColors[pid] || 0xffffff;
+       rgb = hexToRgbArr(hex);
+    } else if(sphereSettings.viewMode==='elevation'){
+       const elev = mainMesh.userData.tileElevation ? mainMesh.userData.tileElevation[tId] : 0;
+       rgb = elevationRGB(elev);
+    } else if(sphereSettings.viewMode==='moisture'){
+       const moist = mainMesh.userData.tileMoisture ? mainMesh.userData.tileMoisture[tId] : 0;
+       rgb = moistureRGB(moist);
+    } else {
+       const terr = tileTerrain[tId];
+       rgb = terrainColorCache[terr] || [1,1,1];
+    }
+    colorsAttr.array[i*3] = rgb[0];
+    colorsAttr.array[i*3+1] = rgb[1];
+    colorsAttr.array[i*3+2] = rgb[2];
+  }
+  colorsAttr.needsUpdate = true;
 } 

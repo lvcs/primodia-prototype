@@ -60,7 +60,7 @@
           
           <div class="control-section">
             <div class="control-label">Number of points on sphere:</div>
-            <input type="range" id="points-slider" min="50" max="5000" step="50" value="500" class="control-slider" />
+            <input type="range" id="points-slider" min="50" max="12000" step="50" class="control-slider" />
             <span id="points-value">500</span>
           </div>
           
@@ -74,6 +74,53 @@
             <div class="control-label">Sphere rotation:</div>
             <input type="range" id="rotation-slider" min="0" max="360" step="1" value="0" class="control-slider" />
             <span id="rotation-value">0°</span>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">Globe size:</div>
+            <input type="range" id="radius-slider" min="5" max="50" step="1" value="10" class="control-slider" />
+            <span id="radius-value">10</span>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">Map Type:</div>
+            <select id="map-type-selector" class="control-select">
+              <option value="continents">Continents</option>
+              <option value="pangaea">Pangaea</option>
+              <option value="fractal">Fractal</option>
+              <option value="archipelago">Archipelago</option>
+              <option value="island_plates">Island Plates</option>
+              <option value="highlands">Highlands</option>
+              <option value="lakes">Lakes</option>
+              <option value="dry">Dry</option>
+            </select>
+            <div id="map-type-description" class="control-description">Large landmasses separated by oceans.</div>
+          </div>
+          
+          <div class="control-section">
+            <label><input type="checkbox" id="outline-toggle" checked /> Show Outlines</label>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">Number of plates:</div>
+            <input type="range" id="plates-slider" min="4" max="64" step="1" value="16" class="control-slider" />
+            <span id="plates-value">16</span>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">Elevation bias:</div>
+            <input type="range" id="elevbias-slider" min="-0.5" max="0.5" step="0.01" value="0" class="control-slider" />
+            <span id="elevbias-value">0</span>
+          </div>
+          
+          <div class="control-section">
+            <div class="control-label">View:</div>
+            <select id="view-selector" class="control-select">
+              <option value="terrain">Terrain</option>
+              <option value="plates">Tectonic Plates</option>
+              <option value="elevation">Elevation</option>
+              <option value="moisture">Moisture</option>
+            </select>
           </div>
         </div>
       </div>
