@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { generateWorld } from './world/worldGenerator.js';
 // Import sphere settings and draw mode
 import { sphereSettings, DrawMode, classifyTerrain } from './world/planetSphereVoronoi.js';
-import { MapType, mapTypeInfo } from './world/mapTypes.js';
+import { MapTypes, MapRegistry } from './world/registries/MapTypeRegistry.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './debug.js';
 
@@ -344,7 +344,7 @@ function setupSphereControls() {
     sphereSettings.mapType = e.target.value;
     
     // Update description text
-    const description = mapTypeInfo[sphereSettings.mapType]?.description || '';
+    const description = MapRegistry[sphereSettings.mapType]?.description || '';
     document.getElementById('map-type-description').textContent = description;
     
     generateAndDisplayPlanet();
@@ -388,7 +388,7 @@ function updateControlValues() {
   // Update map type selector
   document.getElementById('map-type-selector').value = sphereSettings.mapType;
   document.getElementById('map-type-description').textContent = 
-    mapTypeInfo[sphereSettings.mapType]?.description || '';
+    MapRegistry[sphereSettings.mapType]?.description || '';
   
   // Update active buttons
   setActiveButton(`draw-${sphereSettings.drawMode}`, 

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
-import { MapType, defaultMapType, generateMapTerrain } from './mapTypes.js';
+import { MapTypes, defaultMapType, generateMapTerrain } from './registries/MapTypeRegistry.js';
 import { debug } from '../debug.js';
 import { terrainById } from './registries/TerrainRegistry.js';
 import WorldGlobe from './model/WorldGlobe.js';
