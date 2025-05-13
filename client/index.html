@@ -108,10 +108,18 @@
           </div>
           
           <div class="control-section">
+            <div class="control-label">Elevation bias:</div>
+            <input type="range" id="elevbias-slider" min="-0.5" max="0.5" step="0.01" value="0" class="control-slider" />
+            <span id="elevbias-value">0</span>
+          </div>
+          
+          <div class="control-section">
             <div class="control-label">View:</div>
             <select id="view-selector" class="control-select">
               <option value="terrain">Terrain</option>
               <option value="plates">Tectonic Plates</option>
+              <option value="elevation">Elevation</option>
+              <option value="moisture">Moisture</option>
             </select>
           </div>
         </div>

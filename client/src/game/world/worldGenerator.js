@@ -73,6 +73,17 @@ export function generateWorld(config){
     mainMesh.userData.plateColors = plateColors;
   }
 
+  if(mainMesh){
+    const tileElevation = {};
+    const tileMoisture = {};
+    globe.tiles.forEach(tile=>{
+      tileElevation[tile.id] = tile.elevation;
+      tileMoisture[tile.id] = tile.moisture;
+    });
+    mainMesh.userData.tileElevation = tileElevation;
+    mainMesh.userData.tileMoisture = tileMoisture;
+  }
+
   meshGroup.userData.globe = globe;
   return { meshGroup, globe, config };
 } 

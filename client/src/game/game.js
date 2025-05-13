@@ -245,12 +245,15 @@ function setupEventListeners() {
         planetGroup.add(selectedHighlight);
     }
 
-    debug(`Tile clicked – ID: ${tileId}, Terrain: ${terrain}, Plate: ${plateId}, Lat: ${lat.toFixed(2)}°, Lon: ${lon.toFixed(2)}°`);
+    const elevation = mainIntersect.object.userData.tileElevation ? mainIntersect.object.userData.tileElevation[tileId] : null;
+    const moisture = mainIntersect.object.userData.tileMoisture ? mainIntersect.object.userData.tileMoisture[tileId] : null;
+
+    debug(`Tile ${tileId} – Terr:${terrain} Plate:${plateId} Elev:${elevation?.toFixed(2)} Moist:${moisture?.toFixed(2)} Lat:${lat.toFixed(2)}° Lon:${lon.toFixed(2)}°`);
 
     // Update debug panel if present
     const statusDiv = document.getElementById('debug-status');
     if (statusDiv) {
-      statusDiv.textContent = `ID: ${tileId}, Terrain: ${terrain}, Plate: ${plateId}, Lat: ${lat.toFixed(2)}°, Lon: ${lon.toFixed(2)}°`;
+      statusDiv.textContent = `ID:${tileId} Terr:${terrain} Plate:${plateId} Elev:${elevation?.toFixed(2)} Moist:${moisture?.toFixed(2)} Lat:${lat.toFixed(2)}° Lon:${lon.toFixed(2)}°`;
     }
   });
 }
@@ -396,6 +399,21 @@ function setupSphereControls() {
       updatePlanetColors();
     });
   }
+
+  // Elevation bias slider
+  const ebSlider = document.getElementById('elevbias-slider');
+  if(ebSlider){
+    ebSlider.addEventListener('input',(e)=>{
+      const val=parseFloat(e.target.value);
+      document.getElementById('elevbias-value').textContent=val.toFixed(2);
+    });
+    ebSlider.addEventListener('change',(e)=>{
+      sphereSettings.elevationBias=parseFloat(e.target.value);
+      if(sphereSettings.viewMode==='elevation'){
+         updatePlanetColors();
+      }
+    });
+  }
 }
 
 function setActiveButton(activeId, inactiveIds) {
@@ -445,6 +463,11 @@ function updateControlValues() {
   if(document.getElementById('view-selector')){
     document.getElementById('view-selector').value = sphereSettings.viewMode;
   }
+
+  if(document.getElementById('elevbias-slider')){
+    document.getElementById('elevbias-slider').value = sphereSettings.elevationBias;
+    document.getElementById('elevbias-value').textContent = sphereSettings.elevationBias.toFixed(2);
+  }
 }
 
 function setupMouseTracking() {
@@ -478,6 +501,25 @@ function updatePlanetColors() {
   const terrainColorCache = {};
   Object.values(Terrains).forEach(t=>{ terrainColorCache[t.id] = [ ((t.color>>16)&255)/255, ((t.color>>8)&255)/255, (t.color&255)/255 ]; });
 
+  function elevationRGB(val){
+    const elev = val + sphereSettings.elevationBias;
+    const stops=[1,0.8,0.6,0.4,0.2,0,-0.2,-0.4,-0.6,-0.8,-1];
+    const hex=[0x641009,0x87331E,0xAB673D,0xD2A467,0xFAE29A,0xF1EBDA,0x2F62B9,0x1E3FB2,0x0D1BA1,0x0C0484,0x170162];
+    for(let i=0;i<stops.length;i++){
+      if(elev>=stops[i]){ const h=hex[i]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255]; }
+    }
+    const h=hex[hex.length-1]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
+  }
+
+  function moistureRGB(val){
+    const stops=[1,0.8,0.6,0.4,0.2,0];
+    const hex=[0x75FB4C,0x7BD851,0x88B460,0x839169,0x6C6E65,0x6C6E65];
+    for(let i=0;i<stops.length;i++){
+      if(val>=stops[i]){ const h=hex[i]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255]; }
+    }
+    const h=hex[hex.length-1]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
+  }
+
   for(let i=0;i<tileIds.count;i++){
     const tId = tileIds.array[i];
     let rgb;
@@ -485,6 +527,12 @@ function updatePlanetColors() {
        const pid = tilePlate[tId];
        const hex = plateColors[pid] || 0xffffff;
        rgb = hexToRgbArr(hex);
+    } else if(sphereSettings.viewMode==='elevation'){
+       const elev = mainMesh.userData.tileElevation ? mainMesh.userData.tileElevation[tId] : 0;
+       rgb = elevationRGB(elev);
+    } else if(sphereSettings.viewMode==='moisture'){
+       const moist = mainMesh.userData.tileMoisture ? mainMesh.userData.tileMoisture[tId] : 0;
+       rgb = moistureRGB(moist);
     } else {
        const terr = tileTerrain[tId];
        rgb = terrainColorCache[terr] || [1,1,1];

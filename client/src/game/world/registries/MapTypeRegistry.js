@@ -21,6 +21,7 @@ export const MapRegistry = {
     id: MapTypes.CONTINENTS,
     name: 'Continents',
     description: 'Large landmasses separated by oceans.',
+    waterCutoff: 0,
     terrainDistribution: {
       [TerrainType.OCEAN]: 0.65,
       [TerrainType.PLAINS]: 0.15,
@@ -35,6 +36,7 @@ export const MapRegistry = {
     id: MapTypes.PANGAEA,
     name: 'Pangaea',
     description: 'One massive supercontinent.',
+    waterCutoff: 0,
     terrainDistribution: {
       [TerrainType.OCEAN]: 0.40,
       [TerrainType.PLAINS]: 0.20,
@@ -49,6 +51,7 @@ export const MapRegistry = {
     id: MapTypes.FRACTAL,
     name: 'Fractal',
     description: 'Semi-random landmasses with chaotic coastlines. Good for unpredictable games.',
+    waterCutoff: 0.1,
     terrainDistribution: {
       [TerrainType.OCEAN]: 0.55,
       [TerrainType.PLAINS]: 0.15,
@@ -63,6 +66,7 @@ export const MapRegistry = {
     id: MapTypes.ARCHIPELAGO,
     name: 'Archipelago',
     description: 'Lots of small islands.',
+    waterCutoff: -0.2,
     terrainDistribution: {
       [TerrainType.OCEAN]: 0.80,
       [TerrainType.COAST]: 0.05,
@@ -77,6 +81,7 @@ export const MapRegistry = {
     id: MapTypes.ISLAND_PLATES,
     name: 'Island Plates',
     description: 'Mix of small-to-medium islands.',
+    waterCutoff: -0.1,
     terrainDistribution: {
       [TerrainType.OCEAN]: 0.70,
       [TerrainType.COAST]: 0.08,
@@ -91,6 +96,7 @@ export const MapRegistry = {
     id: MapTypes.HIGHLANDS,
     name: 'Highlands',
     description: 'Mostly hills and mountains. Few seas.',
+    waterCutoff: 0.25,
     terrainDistribution: {
       [TerrainType.OCEAN]: 0.25,
       [TerrainType.PLAINS]: 0.10,
@@ -103,6 +109,7 @@ export const MapRegistry = {
     id: MapTypes.LAKES,
     name: 'Lakes',
     description: 'Tons of small inland lakes.',
+    waterCutoff: 0,
     terrainDistribution: {
       [TerrainType.OCEAN]: 0.10,
       [TerrainType.COAST]: 0.20,
@@ -116,6 +123,7 @@ export const MapRegistry = {
     id: MapTypes.DRY,
     name: 'Dry',
     description: 'Arid terrain, with lots of deserts.',
+    waterCutoff: 0,
     terrainDistribution: {
       [TerrainType.OCEAN]: 0.30,
       [TerrainType.PLAINS]: 0.15,

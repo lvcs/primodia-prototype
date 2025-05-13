@@ -373,7 +373,8 @@ export const sphereSettings = {
   mapType: defaultMapType,
   outlineVisible: true,
   numPlates: 16,
-  viewMode: 'terrain'
+  viewMode: 'terrain',
+  elevationBias: 0
 };
 
 // Main function to generate the planet geometry

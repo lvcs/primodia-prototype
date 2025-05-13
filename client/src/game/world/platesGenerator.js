@@ -104,6 +104,9 @@ export function generatePlates(globe, numPlates = 16) {
     // We cannot compute neighbors here; expected to be filled elsewhere.
   }
 
+  // Assign base elevation per plate (range -0.3 .. 0.3)
+  const plateBaseElev = plates.map(()=> (Math.random()*0.6 - 0.3));
+
   // Elevation assignment
   globe.tiles.forEach(tile => {
     // Determine if tile is at a plate boundary by checking neighbor plates
@@ -130,12 +133,13 @@ export function generatePlates(globe, numPlates = 16) {
         // divergent -> trench
         tile.elevation = Math.max(-1, -0.5 - Math.abs(avgDiv));
       } else {
-        tile.elevation = 0;
+        tile.elevation = plateBaseElev[tile.plate];
       }
     } else {
-      const base = fbmNoise(new THREE.Vector3(tile.center[0], tile.center[1], tile.center[2])) * 2 - 1; // -1..1
-      tile.elevation = base * 0.5;
+      const local = fbmNoise(new THREE.Vector3(tile.center[0], tile.center[1], tile.center[2])) * 0.3; // -0.3..0.3
+      tile.elevation = plateBaseElev[tile.plate] + local;
     }
+    tile.elevation = Math.max(-1, Math.min(1, tile.elevation));
   });
 
   // Simple erosion/smoothing: weighted average with neighbors, 3 passes
@@ -154,6 +158,14 @@ export function generatePlates(globe, numPlates = 16) {
       tile.elevation = (tile.elevation + newElev.get(tile.id))*0.5; // blend to keep features
     });
   }
+
+  // Assign moisture per plate (simple)
+  const plateMoist = plates.map(()=>Math.random());
+  globe.tiles.forEach(tile=>{
+    const base = plateMoist[tile.plate];
+    const noise = noise3(tile.center[0]*23, tile.center[1]*17, tile.center[2]*11)*0.4 - 0.2;
+    tile.moisture = Math.min(1, Math.max(0, base + noise));
+  });
 
   return { plates, tilePlate };
 } 
