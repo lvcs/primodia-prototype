@@ -7,8 +7,7 @@ export default class WorldGlobe {
     algorithm,
     numTiles,
     jitter,
-    size,
-    rotation
+    size
   }) {
     this.id = id;
     this.drawMode = drawMode;
@@ -16,7 +15,6 @@ export default class WorldGlobe {
     this.numTiles = numTiles;
     this.jitter = jitter;
     this.size = size;
-    this.rotation = rotation;
     /** @type {Map<number,Tile>} */
     this.tiles = new Map();
   }

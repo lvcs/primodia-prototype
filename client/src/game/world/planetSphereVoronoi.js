@@ -369,7 +369,6 @@ export const sphereSettings = {
   algorithm: 1,
   numPoints: 96000,
   jitter: 0.5,
-  rotation: 0.0,
   mapType: defaultMapType,
   outlineVisible: true,
   numPlates: 16,
@@ -384,7 +383,6 @@ export function generatePlanetGeometryGroup(config) {
     const jitter = sphereSettings.jitter;
     const algorithm = sphereSettings.algorithm;
     const drawMode = sphereSettings.drawMode;
-    const rotation = sphereSettings.rotation;
     
     // Generate points using selected algorithm
     const points = algorithm === 2 ? 
@@ -516,11 +514,6 @@ export function generatePlanetGeometryGroup(config) {
             neighborObj[id] = Array.from(tileNeighborSets[id]);
         });
         mesh.userData.tileNeighbors = neighborObj;
-    }
-    
-    // Apply rotation
-    if (rotation !== 0) {
-        group.rotation.y = rotation * Math.PI / 180;
     }
     
     return group;

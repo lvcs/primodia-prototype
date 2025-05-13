@@ -25,8 +25,7 @@ export function generateWorld(config){
     algorithm: sphereSettings.algorithm,
     numTiles: sphereSettings.numPoints,
     jitter: sphereSettings.jitter,
-    size: config.radius,
-    rotation: sphereSettings.rotation
+    size: config.radius
   });
 
   // compute centroid per tile

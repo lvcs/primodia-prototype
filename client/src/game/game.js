@@ -33,11 +33,15 @@ export function initGame() {
     setupControls();
     setupEventListeners();
     setupSocketConnection();
-    setupSphereControls();
     setupMouseTracking();
     animate();
     
     debug('Game initialized successfully (fresh start).');
+    // Hide loading overlay and show the game
+    const loadingElem = document.getElementById('loading-container');
+    if (loadingElem) loadingElem.style.display = 'none';
+    const gameElem = document.getElementById('game-container');
+    if (gameElem) gameElem.style.display = 'block';
   } catch (e) {
     error('Error initializing game (fresh start):', e);
     const errDiv = document.createElement('div');
@@ -68,7 +72,7 @@ function setupWorldConfig() {
   debug('Initial worldConfig set:', worldConfig);
 }
 
-function generateAndDisplayPlanet() {
+export function generateAndDisplayPlanet() {
   try {
     debug(`Generating planet with config: ${JSON.stringify(worldConfig)}`);
     
@@ -109,7 +113,10 @@ function generateAndDisplayPlanet() {
         debug('Simplified world data log:', {cellCount: worldData.cells.length, config: worldData.config});
     }
 
-    updateControlValues();
+    // Update controls only if sliders exist (dynamic UI setup)
+    if (document.getElementById('points-slider')) {
+      updateControlValues();
+    }
     addPlanetaryGlow(worldConfig.radius);
 
     // Apply current view mode colors
@@ -117,7 +124,6 @@ function generateAndDisplayPlanet() {
       updatePlanetColors();
     }
     debug('Planet generation and display complete.');
-
   } catch (err) {
     error('Error in generateAndDisplayPlanet:', err);
     if (planetGroup) scene.remove(planetGroup); 
@@ -253,221 +259,16 @@ function setupEventListeners() {
     // Update debug panel if present
     const statusDiv = document.getElementById('debug-status');
     if (statusDiv) {
-      statusDiv.textContent = `ID:${tileId} Terr:${terrain} Plate:${plateId} Elev:${elevation?.toFixed(2)} Moist:${moisture?.toFixed(2)} Lat:${lat.toFixed(2)}° Lon:${lon.toFixed(2)}°`;
+      statusDiv.innerHTML =
+        `ID: ${tileId}<br>` +
+        `Terr: ${terrain}<br>` +
+        `Plate: ${plateId}<br>` +
+        `Elev: ${elevation?.toFixed(2)}<br>` +
+        `Moist: ${moisture?.toFixed(2)}<br>` +
+        `Lat: ${lat.toFixed(2)}°<br>` +
+        `Lon: ${lon.toFixed(2)}°`;
     }
   });
-}
-
-function setupSphereControls() {
-  // Draw mode buttons
-  document.getElementById('draw-points').addEventListener('click', () => {
-    setActiveButton('draw-points', ['draw-delaunay', 'draw-voronoi', 'draw-centroid']);
-    sphereSettings.drawMode = DrawMode.POINTS;
-    generateAndDisplayPlanet();
-  });
-  
-  document.getElementById('draw-delaunay').addEventListener('click', () => {
-    setActiveButton('draw-delaunay', ['draw-points', 'draw-voronoi', 'draw-centroid']);
-    sphereSettings.drawMode = DrawMode.DELAUNAY;
-    generateAndDisplayPlanet();
-  });
-  
-  document.getElementById('draw-voronoi').addEventListener('click', () => {
-    setActiveButton('draw-voronoi', ['draw-points', 'draw-delaunay', 'draw-centroid']);
-    sphereSettings.drawMode = DrawMode.VORONOI;
-    generateAndDisplayPlanet();
-  });
-  
-  document.getElementById('draw-centroid').addEventListener('click', () => {
-    setActiveButton('draw-centroid', ['draw-points', 'draw-delaunay', 'draw-voronoi']);
-    sphereSettings.drawMode = DrawMode.CENTROID;
-    generateAndDisplayPlanet();
-  });
-  
-  // Algorithm selection
-  document.getElementById('algorithm-1').addEventListener('click', () => {
-    setActiveButton('algorithm-1', ['algorithm-2']);
-    sphereSettings.algorithm = 1;
-    generateAndDisplayPlanet();
-  });
-  
-  document.getElementById('algorithm-2').addEventListener('click', () => {
-    setActiveButton('algorithm-2', ['algorithm-1']);
-    sphereSettings.algorithm = 2;
-    generateAndDisplayPlanet();
-  });
-  
-  // Point count slider
-  const pointsSlider = document.getElementById('points-slider');
-  pointsSlider.addEventListener('input', (e) => {
-    const value = parseInt(e.target.value);
-    document.getElementById('points-value').textContent = value;
-  });
-  
-  pointsSlider.addEventListener('change', (e) => {
-    sphereSettings.numPoints = parseInt(e.target.value);
-    generateAndDisplayPlanet();
-  });
-  
-  // Jitter slider
-  const jitterSlider = document.getElementById('jitter-slider');
-  jitterSlider.addEventListener('input', (e) => {
-    const value = parseFloat(e.target.value).toFixed(2);
-    document.getElementById('jitter-value').textContent = value;
-  });
-  
-  jitterSlider.addEventListener('change', (e) => {
-    sphereSettings.jitter = parseFloat(e.target.value);
-    generateAndDisplayPlanet();
-  });
-  
-  // Rotation slider
-  const rotationSlider = document.getElementById('rotation-slider');
-  rotationSlider.addEventListener('input', (e) => {
-    const value = parseInt(e.target.value);
-    document.getElementById('rotation-value').textContent = value + '°';
-  });
-  
-  rotationSlider.addEventListener('change', (e) => {
-    sphereSettings.rotation = parseInt(e.target.value);
-    generateAndDisplayPlanet();
-  });
-  
-  // Radius (globe size) slider
-  const radiusSlider = document.getElementById('radius-slider');
-  radiusSlider.addEventListener('input', (e) => {
-    const value = parseInt(e.target.value);
-    document.getElementById('radius-value').textContent = value;
-  });
-  
-  radiusSlider.addEventListener('change', (e) => {
-    worldConfig.radius = parseInt(e.target.value);
-    // Update OrbitControls distances and camera position to match new radius
-    if (controls) {
-      controls.minDistance = worldConfig.radius * 1.2;
-      controls.maxDistance = worldConfig.radius * 5;
-    }
-    if (camera) {
-      camera.position.set(0, worldConfig.radius * 0.5, worldConfig.radius * 2.5);
-    }
-    generateAndDisplayPlanet();
-  });
-  
-  // Map type selector
-  const mapTypeSelector = document.getElementById('map-type-selector');
-  mapTypeSelector.addEventListener('change', (e) => {
-    sphereSettings.mapType = e.target.value;
-    
-    // Update description text
-    const description = MapRegistry[sphereSettings.mapType]?.description || '';
-    document.getElementById('map-type-description').textContent = description;
-    
-    generateAndDisplayPlanet();
-  });
-  
-  // Outline toggle
-  const outlineToggle = document.getElementById('outline-toggle');
-  outlineToggle.addEventListener('change', (e) => {
-    sphereSettings.outlineVisible = e.target.checked;
-    if(planetGroup){
-        planetGroup.traverse(obj=>{
-            if(obj.userData.isOutline){
-                obj.visible = sphereSettings.outlineVisible;
-            }
-        });
-    }
-  });
-
-  // Number of plates slider
-  const platesSlider = document.getElementById('plates-slider');
-  if(platesSlider){
-    platesSlider.addEventListener('input', (e)=>{
-      const val = parseInt(e.target.value);
-      document.getElementById('plates-value').textContent = val;
-    });
-    platesSlider.addEventListener('change', (e)=>{
-      sphereSettings.numPlates = parseInt(e.target.value);
-      generateAndDisplayPlanet();
-    });
-  }
-
-  // View selector (terrain vs plates)
-  const viewSelector = document.getElementById('view-selector');
-  if(viewSelector){
-    viewSelector.addEventListener('change', (e)=>{
-      sphereSettings.viewMode = e.target.value;
-      updatePlanetColors();
-    });
-  }
-
-  // Elevation bias slider
-  const ebSlider = document.getElementById('elevbias-slider');
-  if(ebSlider){
-    ebSlider.addEventListener('input',(e)=>{
-      const val=parseFloat(e.target.value);
-      document.getElementById('elevbias-value').textContent=val.toFixed(2);
-    });
-    ebSlider.addEventListener('change',(e)=>{
-      sphereSettings.elevationBias=parseFloat(e.target.value);
-      if(sphereSettings.viewMode==='elevation'){
-         updatePlanetColors();
-      }
-    });
-  }
-}
-
-function setActiveButton(activeId, inactiveIds) {
-  document.getElementById(activeId).classList.add('active');
-  inactiveIds.forEach(id => {
-    document.getElementById(id).classList.remove('active');
-  });
-}
-
-function updateControlValues() {
-  // Update displayed values
-  document.getElementById('points-value').textContent = sphereSettings.numPoints;
-  document.getElementById('points-slider').value = sphereSettings.numPoints;
-  
-  document.getElementById('jitter-value').textContent = sphereSettings.jitter.toFixed(2);
-  document.getElementById('jitter-slider').value = sphereSettings.jitter;
-  
-  document.getElementById('rotation-value').textContent = sphereSettings.rotation + '°';
-  document.getElementById('rotation-slider').value = sphereSettings.rotation;
-  
-  document.getElementById('radius-value').textContent = worldConfig.radius;
-  document.getElementById('radius-slider').value = worldConfig.radius;
-  
-  // Update map type selector
-  document.getElementById('map-type-selector').value = sphereSettings.mapType;
-  document.getElementById('map-type-description').textContent = 
-    MapRegistry[sphereSettings.mapType]?.description || '';
-  
-  // Update active buttons
-  setActiveButton(`draw-${sphereSettings.drawMode}`, 
-    Object.values(DrawMode)
-      .filter(mode => mode !== sphereSettings.drawMode)
-      .map(mode => `draw-${mode}`)
-  );
-  
-  setActiveButton(`algorithm-${sphereSettings.algorithm}`, 
-    [sphereSettings.algorithm === 1 ? 'algorithm-2' : 'algorithm-1']
-  );
-  
-  document.getElementById('outline-toggle').checked = sphereSettings.outlineVisible;
-
-  if(document.getElementById('plates-slider')){
-    document.getElementById('plates-slider').value = sphereSettings.numPlates;
-    document.getElementById('plates-value').textContent = sphereSettings.numPlates;
-  }
-
-  if(document.getElementById('view-selector')){
-    document.getElementById('view-selector').value = sphereSettings.viewMode;
-  }
-
-  if(document.getElementById('elevbias-slider')){
-    document.getElementById('elevbias-slider').value = sphereSettings.elevationBias;
-    document.getElementById('elevbias-value').textContent = sphereSettings.elevationBias.toFixed(2);
-  }
 }
 
 function setupMouseTracking() {
@@ -482,7 +283,7 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-function updatePlanetColors() {
+export function updatePlanetColors() {
   if(!planetGroup) return;
   const mainMesh = planetGroup.children.find(c=>c.userData && c.userData.isMainMesh);
   if(!mainMesh) return;

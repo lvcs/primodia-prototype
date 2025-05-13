@@ -1,11 +1,13 @@
-import './auth.js';
+import loginTemplate from './pages/login.html?raw';
+import registerTemplate from './pages/register.html?raw';
+import gameTemplate from './pages/game.html?raw';
+import { setupLogin, setupRegister } from './auth.js';
 import { initGame } from './game/game.js';
+import { renderGlobeControls } from './ui/index.js';
 
-// Add global error handler
+// Global error handler
 window.addEventListener('error', (event) => {
   console.error('Global error:', event.error);
-  
-  // Display error message on screen
   const errorDisplay = document.createElement('div');
   errorDisplay.style.position = 'fixed';
   errorDisplay.style.top = '10px';
@@ -19,28 +21,46 @@ window.addEventListener('error', (event) => {
   errorDisplay.style.whiteSpace = 'pre-wrap';
   errorDisplay.style.maxHeight = '50vh';
   errorDisplay.style.overflow = 'auto';
-  
   errorDisplay.innerHTML = `<h3>Error Occurred</h3>
     <p>${event.error.message}</p>
     <pre>${event.error.stack}</pre>
     <button onclick="location.reload()">Reload</button>`;
-    
   document.body.appendChild(errorDisplay);
 });
 
-// Check if the user is already logged in
-const token = localStorage.getItem('token');
-if (token) {
-  document.getElementById('login-container').style.display = 'none';
-  document.getElementById('game-container').style.display = 'block';
-  
-  // Initialize game with a try-catch block
-  try {
-    console.log('Starting game initialization...');
-    initGame();
-  } catch (error) {
-    console.error('Error during game initialization:', error);
+const app = document.getElementById('app');
+
+function renderLoginPage() {
+  app.innerHTML = loginTemplate;
+  setupLogin(renderGamePage, renderRegisterPage);
+}
+
+function renderRegisterPage() {
+  app.innerHTML = registerTemplate;
+  setupRegister(renderLoginPage);
+}
+
+function renderGamePage() {
+  app.innerHTML = gameTemplate;
+  renderGlobeControls();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userNameSpan = document.getElementById('user-name');
+  if (userNameSpan) userNameSpan.textContent = user.username || '';
+  const signOutBtn = document.getElementById('sign-out');
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      renderLoginPage();
+    });
   }
-} else {
-  console.log('User not logged in, showing login screen');
-} 
+  initGame();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('token')) {
+    renderGamePage();
+  } else {
+    renderLoginPage();
+  }
+}); 
