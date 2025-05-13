@@ -6,6 +6,7 @@ import { ToggleControl } from './components/ToggleControl.js';
 import { sphereSettings, DrawMode } from '../game/world/planetSphereVoronoi.js';
 import { generateAndDisplayPlanet, updatePlanetColors } from '../game/game.js';
 import { MapRegistry } from '../game/world/registries/MapTypeRegistry.js';
+import * as Const from '../config/gameConstants.js'; // Import constants
 
 // Stub: you can fill in logic to match current sphereSettings & event hooks
 export function renderGlobeControls() {
@@ -46,7 +47,10 @@ export function renderGlobeControls() {
   const ptsValue = document.createElement('span');
   ptsValue.textContent = sphereSettings.numPoints;
   const ptsSlider = SliderControl({
-    min: 50, max: 12000, step: 50, value: sphereSettings.numPoints,
+    min: Const.MIN_NUMBER_OF_GLOBE_TILES, 
+    max: Const.MAX_NUMBER_OF_GLOBE_TILES, 
+    step: Const.STEP_NUMBER_OF_GLOBE_TILES, 
+    value: sphereSettings.numPoints,
     onInput: e => ptsValue.textContent = e.target.value,
     onChange: e => {
       sphereSettings.numPoints = +e.target.value;
@@ -59,7 +63,10 @@ export function renderGlobeControls() {
   const jitterValue = document.createElement('span');
   jitterValue.textContent = sphereSettings.jitter.toFixed(2);
   const jitterSlider = SliderControl({
-    min: 0, max: 1, step: 0.01, value: sphereSettings.jitter,
+    min: Const.MIN_JITTER, 
+    max: Const.MAX_JITTER, 
+    step: Const.STEP_JITTER, 
+    value: sphereSettings.jitter,
     onInput: e => jitterValue.textContent = parseFloat(e.target.value).toFixed(2),
     onChange: e => { sphereSettings.jitter = +e.target.value; generateAndDisplayPlanet(); }
   });
@@ -69,7 +76,10 @@ export function renderGlobeControls() {
   const radValue = document.createElement('span');
   radValue.textContent = sphereSettings.radius || '';
   const radSlider = SliderControl({
-    min: 5, max: 50, step: 1, value: sphereSettings.radius,
+    min: Const.MIN_GLOBE_RADIUS, 
+    max: Const.MAX_GLOBE_RADIUS, 
+    step: Const.STEP_GLOBE_RADIUS, 
+    value: sphereSettings.radius,
     onInput: e => radValue.textContent = e.target.value,
     onChange: e => { sphereSettings.radius = +e.target.value; generateAndDisplayPlanet(); }
   });
@@ -95,7 +105,10 @@ export function renderGlobeControls() {
   const platesValue = document.createElement('span');
   platesValue.textContent = sphereSettings.numPlates;
   const platesSlider = SliderControl({
-    min: 4, max: 64, step: 1, value: sphereSettings.numPlates,
+    min: Const.MIN_TECHTONIC_PLATES, 
+    max: Const.MAX_TECHTONIC_PLATES, 
+    step: Const.STEP_TECHTONIC_PLATES, 
+    value: sphereSettings.numPlates,
     onInput: e => platesValue.textContent = e.target.value,
     onChange: e => { sphereSettings.numPlates = +e.target.value; generateAndDisplayPlanet(); }
   });
@@ -105,7 +118,10 @@ export function renderGlobeControls() {
   const elevValue = document.createElement('span');
   elevValue.textContent = sphereSettings.elevationBias.toFixed(2);
   const elevSlider = SliderControl({
-    min: -0.5, max: 0.5, step: 0.01, value: sphereSettings.elevationBias,
+    min: Const.MIN_ELEVATION_BIAS, 
+    max: Const.MAX_ELEVATION_BIAS, 
+    step: Const.STEP_ELEVATION_BIAS, 
+    value: sphereSettings.elevationBias,
     onInput: e => elevValue.textContent = parseFloat(e.target.value).toFixed(2),
     onChange: e => { sphereSettings.elevationBias = +e.target.value; updatePlanetColors(); }
   });

@@ -7,6 +7,7 @@ import { MapTypes, MapRegistry } from './world/registries/MapTypeRegistry.js';
 import { Terrains } from './world/registries/TerrainRegistry.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './debug.js';
+import * as Const from '../config/gameConstants.js'; // Import constants
 
 let scene, camera, renderer, controls;
 let worldData; // Will store { meshGroup, cells, config } from generateWorld
@@ -53,9 +54,9 @@ export function initGame() {
 
 function setupThreeJS() {
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a0a2a);
-  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 0, 25);
+  scene.background = new THREE.Color(Const.SCENE_BACKGROUND_COLOR);
+  camera = new THREE.PerspectiveCamera(Const.CAMERA_FOV, window.innerWidth / window.innerHeight, Const.CAMERA_NEAR_PLANE, Const.CAMERA_FAR_PLANE);
+  camera.position.set(0, 0, 25); // Initial Z will be overridden by setupControls based on radius
   camera.lookAt(0, 0, 0);
   renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -66,14 +67,22 @@ function setupThreeJS() {
 
 function setupWorldConfig() {
   worldConfig = {
-    radius: 10,
-    detail: 2, 
+    radius: Const.DEFAULT_GLOBE_RADIUS, // Use constant for initial radius
+    detail: Const.DEFAULT_WORLD_DETAIL, 
   };
   debug('Initial worldConfig set:', worldConfig);
 }
 
 export function generateAndDisplayPlanet() {
   try {
+    // Synchronize worldConfig.radius with sphereSettings.radius
+    let radiusChanged = false;
+    if (sphereSettings.radius !== undefined && sphereSettings.radius !== worldConfig.radius) {
+      worldConfig.radius = sphereSettings.radius;
+      radiusChanged = true;
+      debug(`Globe radius changed to: ${worldConfig.radius}`);
+    }
+
     debug(`Generating planet with config: ${JSON.stringify(worldConfig)}`);
     
     if (planetGroup) {
@@ -117,6 +126,13 @@ export function generateAndDisplayPlanet() {
     if (document.getElementById('points-slider')) {
       updateControlValues();
     }
+    
+    // If radius changed, controls need to be re-setup
+    // Also, setup controls after the first planet generation.
+    if (radiusChanged || !controls) { // !controls implies first run
+        setupControls(); 
+    }
+
     addPlanetaryGlow(worldConfig.radius);
 
     // Apply current view mode colors
@@ -135,8 +151,8 @@ export function generateAndDisplayPlanet() {
 }
 
 function addPlanetaryGlow(radius) {
-  const glowGeometry = new THREE.SphereGeometry(radius * 1.15, 64, 32);
-  const glowMaterial = new THREE.MeshBasicMaterial({ color: 0x5c95ff, transparent: true, opacity: 0.15, side: THREE.BackSide });
+  const glowGeometry = new THREE.SphereGeometry(radius * Const.PLANETARY_GLOW_RADIUS_FACTOR, 64, 32);
+  const glowMaterial = new THREE.MeshBasicMaterial({ color: Const.PLANETARY_GLOW_COLOR, transparent: true, opacity: Const.PLANETARY_GLOW_OPACITY, side: THREE.BackSide });
   const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
   glowMesh.userData.isGlow = true;
   scene.add(glowMesh);
@@ -157,11 +173,15 @@ function setupLighting() {
 }
 
 function setupControls() {
+  // If controls exist, dispose of them first to avoid multiple listeners or issues
+  if (controls) {
+    controls.dispose();
+  }
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.minDistance = worldConfig.radius * 1.2;
-  controls.maxDistance = worldConfig.radius * 5;
-  camera.position.set(0, worldConfig.radius * 0.5, worldConfig.radius * 2.5);
+  controls.minDistance = worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
+  controls.maxDistance = worldConfig.radius * Const.CAMERA_MAX_DISTANCE_FACTOR;
+  camera.position.set(0, worldConfig.radius * Const.CAMERA_INITIAL_POS_Y_FACTOR, worldConfig.radius * Const.CAMERA_INITIAL_POS_Z_FACTOR);
   controls.update();
 }
 
@@ -259,14 +279,38 @@ function setupEventListeners() {
     // Update debug panel if present
     const statusDiv = document.getElementById('debug-status');
     if (statusDiv) {
+      // Retrieve the clicked tile to get its area
+      const clickedTileForUI = worldData.globe.getTile(tileId);
+      const areaForUI = clickedTileForUI?.area !== undefined ? clickedTileForUI.area.toFixed(4) : 'N/A';
       statusDiv.innerHTML =
         `ID: ${tileId}<br>` +
         `Terr: ${terrain}<br>` +
         `Plate: ${plateId}<br>` +
+        `Area: ${areaForUI}<br>` +
         `Elev: ${elevation?.toFixed(2)}<br>` +
         `Moist: ${moisture?.toFixed(2)}<br>` +
         `Lat: ${lat.toFixed(2)}°<br>` +
         `Lon: ${lon.toFixed(2)}°`;
+    }
+
+    const clickedTile = worldData.globe.getTile(tileId);
+
+    if (clickedTile) {
+      let debugMsg = `Tile clicked: ID=${clickedTile.id}, Terrain=${clickedTile.terrain.id}, Center=(${clickedTile.center.map(c=>c.toFixed(2))})`;
+      if (clickedTile.neighbors) {
+        debugMsg += `, Neighbors=[${clickedTile.neighbors.join(',')}]`;
+      }
+      if (clickedTile.area !== undefined) {
+        debugMsg += `, Area=${clickedTile.area.toFixed(4)}`; // Display area
+      }
+      if (clickedTile.plateId !== null) {
+        debugMsg += `, PlateID=${clickedTile.plateId}`;
+      }
+      debugMsg += `, Elevation=${clickedTile.elevation.toFixed(2)}, Moisture=${clickedTile.moisture.toFixed(2)}`;
+      debug(debugMsg);
+      // highlightTile(clickedTileId, mainIntersect.object); // Commented out due to ReferenceError
+    } else {
+      // ... existing code ...
     }
   });
 }

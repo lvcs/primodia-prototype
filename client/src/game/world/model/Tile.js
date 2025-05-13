@@ -11,8 +11,19 @@ export default class Tile {
    * @param {number} opts.plate tectonic plate id
    * @param {number} opts.moisture moisture level (0..1)
    * @param {number} opts.temperature temperature level (0..1)
+   * @param {number} opts.area Default area to 0.0
    */
-  constructor({ id, terrain, center, neighbors = [], elevation = 0, plate = 0, moisture = 0, temperature = 0 }) {
+  constructor({
+    id,
+    terrain,
+    center,
+    neighbors = [],
+    area = 0.0,
+    elevation = 0,
+    plate = 0,
+    moisture = 0,
+    temperature = 0
+  }) {
     this.id = id;
     this.terrain = terrain;
     if(center && Array.isArray(center)){
@@ -27,6 +38,8 @@ export default class Tile {
     this.plate = plate;
     this.moisture = moisture;
     this.temperature = temperature;
+    this.area = area;
+    this.plateId = null;
   }
 
   /**

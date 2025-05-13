@@ -19,6 +19,8 @@ export function generateWorld(config){
   const idsAttr = mainMesh.geometry.getAttribute('tileId');
   const posAttr = mainMesh.geometry.getAttribute('position');
   const tileTerrain = mainMesh.userData.tileTerrain || {};
+  const tileSphericalExcesses = mainMesh.userData.tileSphericalExcesses || {}; // Get excesses
+  const sphereRadius = config.radius; // Actual radius of the sphere
 
   const globe = new WorldGlobe({
     drawMode: sphereSettings.drawMode,
@@ -44,7 +46,12 @@ export function generateWorld(config){
     const center = [centerVec.x, centerVec.y, centerVec.z];
     const terrId = tileTerrain[id] || classifyTerrain(centerVec);
     const terrain = terrainById(terrId) || terrainById('PLAINS');
-    globe.addTile(new Tile({ id, terrain, center, neighbors: [] }));
+    
+    // Calculate actual area
+    const sphericalExcess = tileSphericalExcesses[id] !== undefined ? tileSphericalExcesses[id] : 0.0;
+    const area = sphericalExcess * sphereRadius * sphereRadius;
+    
+    globe.addTile(new Tile({ id, terrain, center, neighbors: [], area }));
   });
 
   // Use neighbor map from mesh if provided

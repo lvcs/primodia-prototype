@@ -6,6 +6,7 @@ import { terrainById } from './registries/TerrainRegistry.js';
 import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
 import { Terrains } from './registries/TerrainRegistry.js';
+import * as Const from '../../config/gameConstants.js'; // Import constants
 
 // Cache for random lat/lon offsets
 const _randomLat = [];
@@ -102,81 +103,77 @@ function pushCartesianFromSpherical(out, latDeg, lonDeg) {
 }
 
 function stereographicProjection(points) {
-    const projected = [];
-    let southPoleIndex = -1;
-    
-    // Project from south pole onto z = 1 plane
+    const projected = []; // 2D points for Delaunator (x,y, x,y, ...)
+    let southPoleIndex = -1; // index in the original points array / 3
+    const originalIndicesMap = []; // map from new projected index to original point index
+
     for (let i = 0; i < points.length; i += 3) {
+        const originalPointIndex = i / 3;
         const x = points[i];
         const y = points[i + 1];
         const z = points[i + 2];
-        
-        // Mark south pole index
-        if (y <= -0.99999) {
-            southPoleIndex = i / 3;
-            continue;
+
+        if (y <= -0.99999) { // South pole check (y is up/down, so -1 is south)
+            southPoleIndex = originalPointIndex;
+            continue; // Skip adding south pole to 'projected'
         }
-        
-        const scale = 1 / (1 + y);
-        projected.push(x * scale, z * scale);
+
+        // Project from south pole (0, -1, 0) onto y = 0 plane, then map to z=1 equivalent or scale.
+        // A common stereographic projection from south pole (0,-1,0) to plane y=0 is:
+        // Px = x / (1 + y)
+        // Pz = z / (1 + y)
+        // We need to handle the case 1+y is near zero if projection point is included, but it's excluded.
+        const scale = 1 / (1 + y); // Denominator for projection from (0,-1,0) to plane y=... (or related to y component of vector from pole)
+                                   // This projects points onto a plane. For Delaunay, relative positions matter.
+        projected.push(x * scale, z * scale); // Using x and z for the 2D plane
+        originalIndicesMap.push(originalPointIndex); // Store mapping
     }
-    
-    return { projected, southPoleIndex };
+
+    return { projected, southPoleIndex, originalIndicesMap };
 }
 
-function addSouthPoleToMesh(southPoleId, {triangles, halfedges}) {
-    const numSides = triangles.length;
-    
-    // Find unpaired edges (the convex hull)
-    const unpairedEdges = [];
-    for (let s = 0; s < numSides; s++) {
-        if (halfedges[s] === -1) {
-            unpairedEdges.push(s);
+// New function to add south pole triangles and ensure all indices are original.
+function addSouthPoleTriangles(southPoleOriginalIndex, delaunatorInstance, originalIndicesMap) {
+    const hullDelaunatorIndices = delaunatorInstance.hull; // Indices for 'projected' / 'originalIndicesMap'
+    const numHullPoints = hullDelaunatorIndices.length;
+
+    if (numHullPoints < 3) {
+        // Not enough hull points to form triangles, something is wrong or the projected shape is too simple.
+        // Just convert existing triangles and return.
+        console.warn('South pole stitching: Not enough hull points (<3).');
+        const convertedTriangles = new Int32Array(delaunatorInstance.triangles.length);
+        for (let i = 0; i < delaunatorInstance.triangles.length; i++) {
+            convertedTriangles[i] = originalIndicesMap[delaunatorInstance.triangles[i]];
         }
+        return convertedTriangles;
     }
-    
-    const numUnpairedEdges = unpairedEdges.length;
-    const numNewTriangles = numUnpairedEdges;
-    
-    // Create new arrays with space for the additional triangles
-    const newTriangles = new Int32Array(numSides + 3 * numNewTriangles);
-    const newHalfedges = new Int32Array(numSides + 3 * numNewTriangles);
-    
-    // Copy existing triangles and halfedges
-    newTriangles.set(triangles);
-    newHalfedges.set(halfedges);
-    
-    // Add new triangles connecting the hull to the south pole
-    for (let i = 0; i < numUnpairedEdges; i++) {
-        const edge = unpairedEdges[i];
-        const nextEdge = unpairedEdges[(i + 1) % numUnpairedEdges];
-        
-        const baseIndex = numSides + 3 * i;
-        
-        // Create new triangle
-        newTriangles[baseIndex] = triangles[edge];
-        newTriangles[baseIndex + 1] = triangles[nextEdge];
-        newTriangles[baseIndex + 2] = southPoleId;
-        
-        // Update halfedges
-        newHalfedges[baseIndex] = -1;  // Outer edge
-        newHalfedges[baseIndex + 1] = baseIndex + ((i + 1 < numUnpairedEdges) ? 5 : -3 * (numUnpairedEdges - 1));
-        newHalfedges[baseIndex + 2] = baseIndex - 3;
-        
-        if (i > 0) {
-            newHalfedges[baseIndex - 1] = baseIndex + 1;
-        }
+
+    // Size of the new triangles array: original projected triangles + new triangles for the pole.
+    const finalTriangles = new Int32Array(delaunatorInstance.triangles.length + numHullPoints * 3);
+    let currentTriangleArrIndex = 0;
+
+    // 1. Copy existing Delaunay triangles from the projected set, converting their indices to original point indices.
+    for (let i = 0; i < delaunatorInstance.triangles.length; i++) {
+        finalTriangles[currentTriangleArrIndex++] = originalIndicesMap[delaunatorInstance.triangles[i]];
     }
-    
-    // Connect the last triangle to the first
-    if (numUnpairedEdges > 0) {
-        newHalfedges[numSides + 3 * numUnpairedEdges - 1] = numSides + 1;
+
+    // 2. Add new triangles for the South Pole, connecting it to the hull edges.
+    for (let j = 0; j < numHullPoints; j++) {
+        const hull_d_idx_j = hullDelaunatorIndices[j];
+        const hull_d_idx_k = hullDelaunatorIndices[(j + 1) % numHullPoints]; // Next hull point in CCW order
+
+        // Convert Delaunator hull indices to original point indices
+        const original_hull_pt_j = originalIndicesMap[hull_d_idx_j];
+        const original_hull_pt_k = originalIndicesMap[hull_d_idx_k];
+
+        // Add triangle (southPoleOriginalIndex, original_hull_pt_k, original_hull_pt_j)
+        // Winding order: S, P_next, P_current for CCW hull when viewed from outside.
+        // This should form triangles facing outwards.
+        finalTriangles[currentTriangleArrIndex++] = southPoleOriginalIndex;
+        finalTriangles[currentTriangleArrIndex++] = original_hull_pt_k; 
+        finalTriangles[currentTriangleArrIndex++] = original_hull_pt_j;
     }
-    
-    return {
-        triangles: newTriangles,
-        halfedges: newHalfedges
-    };
+    return finalTriangles;
 }
 
 // Function to determine terrain type based on vertex position
@@ -233,6 +230,24 @@ function getTerrainColorRGB(terrainType) {
     ];
 }
 
+// Helper function to calculate spherical excess (area on unit sphere) of a spherical triangle
+// vertices v1, v2, v3 are THREE.Vector3 unit vectors
+function calculateSphericalTriangleExcess(v1, v2, v3) {
+    // Using the formula: E = 2 * atan2( |det(v1,v2,v3)|, 1 + v1·v2 + v2·v3 + v3·v1 )
+    // where det(v1,v2,v3) = v1 · (v2 x v3)
+    const v2_cross_v3 = new THREE.Vector3().crossVectors(v2, v3);
+    const scalarTripleProduct = v1.dot(v2_cross_v3);
+    
+    const denominator = 1.0 + v1.dot(v2) + v2.dot(v3) + v3.dot(v1);
+
+    // Handle degenerate triangles or numerical precision issues leading to very small denominator
+    if (Math.abs(denominator) < 1e-9) {
+        return 0.0;
+    }
+    
+    return 2.0 * Math.atan2(Math.abs(scalarTripleProduct), denominator);
+}
+
 function generateDelaunayGeometry(xyz, delaunay) {
     const {triangles} = delaunay;
     const numTriangles = triangles.length / 3;
@@ -240,7 +255,8 @@ function generateDelaunayGeometry(xyz, delaunay) {
     const colors = [];
     const ids = [];
     const tileTerrain = {};
-    
+    const tileSphericalExcesses = {}; // Added for area calculation
+
     for (let t = 0; t < numTriangles; t++) {
         const a = triangles[3*t];
         const b = triangles[3*t+1];
@@ -256,7 +272,13 @@ function generateDelaunayGeometry(xyz, delaunay) {
         const terrainType = determineTerrainType(centroid);
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[t] = terrainType;
-        
+
+        // Calculate spherical excess for this Delaunay triangle (tile t)
+        const v1 = new THREE.Vector3(xyz[3*a], xyz[3*a+1], xyz[3*a+2]);
+        const v2 = new THREE.Vector3(xyz[3*b], xyz[3*b+1], xyz[3*b+2]);
+        const v3 = new THREE.Vector3(xyz[3*c], xyz[3*c+1], xyz[3*c+2]);
+        tileSphericalExcesses[t] = calculateSphericalTriangleExcess(v1, v2, v3);
+
         for (let i = 0; i < 3; i++) {
             const vertex = triangles[3*t + i];
             geometry.push(xyz[3*vertex], xyz[3*vertex+1], xyz[3*vertex+2]);
@@ -265,7 +287,7 @@ function generateDelaunayGeometry(xyz, delaunay) {
         }
     }
     
-    return {geometry, colors, ids, tileTerrain};
+    return {geometry, colors, ids, tileTerrain, tileSphericalExcesses};
 }
 
 function generateVoronoiGeometry(points, delaunay) {
@@ -274,6 +296,7 @@ function generateVoronoiGeometry(points, delaunay) {
     const colors = [];
     const ids = [];
     const tileTerrain = {};
+    const tileSphericalExcesses = {}; // Added for area calculation
 
     // 1. Pre-compute triangle centers (simple centroid projected to sphere)
     const centers = [];
@@ -328,13 +351,27 @@ function generateVoronoiGeometry(points, delaunay) {
             const c = centers[tIdx];
             const vec = c.clone().sub(normal.clone().multiplyScalar(c.dot(normal))).normalize(); // project onto tangent plane
             const angle = Math.atan2(vec.dot(bitangent), vec.dot(tangent));
-            return { tIdx, angle };
+            return { tIdx, angle, vertex: c }; // Store vertex for convenience
         }).sort((a, b) => a.angle - b.angle);
 
         // Determine terrain type based on vertex position
         const terrainType = determineTerrainType(normal);
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[v] = terrainType;
+        
+        // Calculate spherical excess for this Voronoi cell (tile v)
+        let currentTileSphericalExcess = 0.0;
+        const polygonVertices = centersWithAngle.map(cwa => cwa.vertex);
+
+        if (polygonVertices.length >= 3) { // Need at least 3 vertices for a polygon
+            for (let j = 0; j < polygonVertices.length; j++) {
+                const p_i = polygonVertices[j];
+                const p_next = polygonVertices[(j + 1) % polygonVertices.length];
+                // Triangle is (tileCenter, p_i, p_next)
+                currentTileSphericalExcess += calculateSphericalTriangleExcess(normal, p_i, p_next);
+            }
+        }
+        tileSphericalExcesses[v] = currentTileSphericalExcess;
 
         for (let i = 0; i < centersWithAngle.length; i++) {
             const c1 = centers[centersWithAngle[i].tIdx];
@@ -352,7 +389,7 @@ function generateVoronoiGeometry(points, delaunay) {
         }
     }
 
-    return { geometry, colors, ids, tileTerrain };
+    return { geometry, colors, ids, tileTerrain, tileSphericalExcesses };
 }
 
 // Constants for drawing modes
@@ -367,13 +404,14 @@ export const DrawMode = {
 export const sphereSettings = {
   drawMode: DrawMode.VORONOI,
   algorithm: 1,
-  numPoints: 96000,
-  jitter: 0.5,
+  numPoints: Const.DEFAULT_NUMBER_OF_GLOBE_TILES,
+  jitter: Const.DEFAULT_JITTER,
   mapType: defaultMapType,
   outlineVisible: true,
-  numPlates: 16,
+  numPlates: Const.DEFAULT_TECHTONIC_PLATES,
   viewMode: 'terrain',
-  elevationBias: 0
+  elevationBias: Const.DEFAULT_ELEVATION_BIAS,
+  radius: Const.DEFAULT_GLOBE_RADIUS
 };
 
 // Main function to generate the planet geometry
@@ -390,23 +428,49 @@ export function generatePlanetGeometryGroup(config) {
         generateFibonacciSphere1(N, jitter);
     
     // Project points for triangulation
-    const { projected, southPoleIndex } = stereographicProjection(points);
-    let delaunay = new Delaunator(projected);
+    const { projected, southPoleIndex, originalIndicesMap } = stereographicProjection(points);
     
-    // Add south pole triangles
-    if (southPoleIndex !== -1) {
-        delaunay = addSouthPoleToMesh(southPoleIndex, delaunay);
+    let completeTriangles; // Will hold all triangles with original indices
+    const delaunatorInstance = new Delaunator(projected);
+
+    if (southPoleIndex !== -1 && originalIndicesMap && originalIndicesMap.length > 0) {
+        completeTriangles = addSouthPoleTriangles(
+            southPoleIndex,      // Original index of the South Pole
+            delaunatorInstance,  // Result of Delaunator(projected)
+            originalIndicesMap   // Map from Delaunator's indices to original indices
+        );
+    } else {
+        // Fallback: If no south pole handling (e.g., southPoleIndex is -1) or map is missing/empty,
+        // just convert the existing triangles from delaunatorInstance.
+        // This case should ideally not happen if points always include a south pole.
+        console.warn('South pole stitching skipped or originalIndicesMap empty.');
+        completeTriangles = new Int32Array(delaunatorInstance.triangles.length);
+        for (let i = 0; i < delaunatorInstance.triangles.length; i++) {
+            if (originalIndicesMap && originalIndicesMap[delaunatorInstance.triangles[i]] !== undefined) {
+                 completeTriangles[i] = originalIndicesMap[delaunatorInstance.triangles[i]];
+            } else {
+                // This would indicate a serious issue: a Delaunay index is out of bounds for originalIndicesMap.
+                // For robustness, one might skip this triangle or use a placeholder, but it signals a deeper problem.
+                console.error('Error mapping Delaunay index to original index.');
+                // As a temporary fallback, just copy the (problematic) delaunay index.
+                // This part of the fallback might need more thought if it's ever hit.
+                completeTriangles[i] = delaunatorInstance.triangles[i]; 
+            }
+        }
     }
     
+    // This object now holds the complete triangulation with original point indices.
+    const sphereTriangulation = { triangles: completeTriangles };
+
     // Create base group
     const group = new THREE.Group();
     
     // Generate geometry based on draw mode
-    let geometry, colors, ids, tileTerrain;
+    let geometry, colors, ids, tileTerrain, tileSphericalExcesses;
     if (drawMode === DrawMode.VORONOI) {
-        ({geometry, colors, ids, tileTerrain} = generateVoronoiGeometry(points, delaunay));
+        ({geometry, colors, ids, tileTerrain, tileSphericalExcesses} = generateVoronoiGeometry(points, sphereTriangulation));
     } else if (drawMode === DrawMode.DELAUNAY) {
-        ({geometry, colors, ids, tileTerrain} = generateDelaunayGeometry(points, delaunay));
+        ({geometry, colors, ids, tileTerrain, tileSphericalExcesses} = generateDelaunayGeometry(points, sphereTriangulation));
     }
     
     if (geometry && colors) {
@@ -432,6 +496,9 @@ export function generatePlanetGeometryGroup(config) {
         const mesh = new THREE.Mesh(geom, material);
         mesh.userData.isMainMesh = true;
         mesh.userData.tileTerrain = tileTerrain;
+        if (tileSphericalExcesses) {
+            mesh.userData.tileSphericalExcesses = tileSphericalExcesses; // Store for later use
+        }
         group.add(mesh);
 
         // Build custom boundary edges only between distinct tileIds
