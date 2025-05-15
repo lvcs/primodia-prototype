@@ -134,9 +134,21 @@ export function renderGlobeControls() {
       if (isNaN(seed)) {
         seed = undefined;
       }
-      sphereSettings.currentSeed = seed;
-      requestPlanetRegeneration(seed);
+      sphereSettings.currentSeed = seed; // Store for UI consistency before regeneration call
+      
+      requestPlanetRegeneration(seed); // Regenerate the world
+      
+      // After regeneration, ensure UI reflects the correct state:
+      // 1. Update the seed input field with the seed that was actually used (RandomService might have picked a default)
       seedInputField.setValue(RandomService.getCurrentSeed() || '');
+      sphereSettings.currentSeed = RandomService.getCurrentSeed(); // Also update sphereSettings to be sure
+
+      // 2. Re-apply the current view mode to the planet's colors
+      triggerPlanetColorUpdate();
+
+      // 3. Re-render the entire control panel to ensure all controls are consistent
+      // This is a bit of a catch-all for now; more granular updates would be part of a larger UI refactor.
+      renderGlobeControls(); 
     }
   });
   panel.appendChild(ControlSection({ label: 'World Seed', children: [seedInputField.getControl(), regenerateButton.getControl()] }));
