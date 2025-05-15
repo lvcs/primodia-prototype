@@ -1,8 +1,8 @@
 // Main animation loop (animate function and clock) 
 import * as THREE from 'three';
-import { handleKeyboardInput } from '../controls/keyboardControls.js'; // Path updated
-import { updatePlanetRotation, getPlanetGroup } from '../planet.js'; // Path updated
-import { updateUIDisplay as updateComponentUIDisplay } from '../../ui/components/ZoomControls.js'; // Path is already correct relative to core/
+import { handleKeyboardInput } from '@/game/controls/keyboardControls.js'; // Path updated
+import { updatePlanetRotation, getPlanetGroup } from '@/game/planet.js'; // Path updated
+import { updateUIDisplay as updateComponentUIDisplay } from '@/ui/components/ZoomControls.js'; // Path is already correct relative to core/
 import { getCamera, getRenderer, getScene, getControls } from './setup.js'; // Path updated (now sibling in core/)
 
 const clock = new THREE.Clock();

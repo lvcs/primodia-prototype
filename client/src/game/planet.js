@@ -66,6 +66,13 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
       const fallbackGeo = new THREE.SphereGeometry(currentWorldConfig.radius, 32, 32);
       const fallbackMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
       planetGroup = new THREE.Mesh(fallbackGeo, fallbackMat);
+      // Initialize userData for the fallback planetGroup
+      planetGroup.userData = {
+        angularVelocity: new THREE.Vector3(0, 0, 0),
+        targetAngularVelocity: new THREE.Vector3(0, 0, 0),
+        isBeingDragged: false
+        // Add any other userData properties that might be accessed
+      };
       _scene.add(planetGroup);
     }
 
@@ -75,14 +82,24 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     
     addPlanetaryGlow(_scene, currentWorldConfig.radius);
 
-    if(sphereSettings.viewMode==='plates'){
-      updatePlanetColors(); // Uses module-level planetGroup
-    }
+    // Always update planet colors after generation to reflect the current sphereSettings.viewMode
+    updatePlanetColors(); 
+
     debug('Planet generation and display complete.');
     return { planetGroup, worldData }; // Return the new planet group and world data
 
   } catch (err) {
-    error('Error in generateAndDisplayPlanet:', err);
+    // Log the full error object, its message, and stack for better debugging
+    console.error('Caught error in generateAndDisplayPlanet. Original error object:', err);
+    if (err && err.message) {
+      error('Error in generateAndDisplayPlanet (message): ', err.message);
+    }
+    if (err && err.stack) {
+      console.error('Error stack trace:', err.stack);
+    }
+    // Keep the original generic error log as well, or replace if preferred
+    error('Error in generateAndDisplayPlanet: Processing fallback.'); 
+
     if (_existingPlanetGroup) _scene.remove(_existingPlanetGroup);
     // Ensure planetGroup is assigned a fallback if error occurs before assignment
     const fallbackRadius = currentWorldConfig?.radius || worldConfig?.radius || 10;

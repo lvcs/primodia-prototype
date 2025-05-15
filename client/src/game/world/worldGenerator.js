@@ -72,9 +72,21 @@ export function generateWorld(config, seed){
   }
 
   // Generate tectonic plates and elevations using the now-initialized RandomService.
-  const numPlates = sphereSettings.numPlates || 16;
+  // Calculate numPlates based on numPoints (sphereSettings.numPoints)
+  // Linear relationship: (480 points, 4 plates), (128000 points, 32 plates)
+  const N = sphereSettings.numPoints;
+  const m = (32 - 4) / (128000 - 480); // slope
+  const c_intercept = 4 - m * 480; // y-intercept
+  let calculatedNumPlates = m * N + c_intercept;
+  calculatedNumPlates = Math.round(calculatedNumPlates);
+  calculatedNumPlates = Math.max(4, Math.min(32, calculatedNumPlates)); // Clamp between 4 and 32
+
+  // TODO: Make number of tectonic plates slightly random in relation to the number of points.
+  // For example, add a small random +/- variation to calculatedNumPlates, ensuring it stays within reasonable min/max bounds.
+
+  const numPlatesToUse = calculatedNumPlates;
   // generatePlates will internally use RandomService for its random choices.
-  const { plates, tilePlate } = generatePlates(globe, numPlates);
+  const { plates, tilePlate } = generatePlates(globe, numPlatesToUse);
 
   // Store tilePlate mapping in mainMesh for coloring later
   if(mainMesh){

@@ -9,6 +9,7 @@
 - [ ] Implement Strategic Resources System
 - [ ] Implement Natural Wonders System
 - [ ] Implement World Events & Disasters (incl. Moon-phase Flooding)
+- [ ] Randomize number of tectonic plates based on globe points.
 
 ### UI/UX & Core Systems
 - [x] Implement 3D Globe Rendering & Interaction (Base rendering and event handling)
@@ -171,4 +172,4 @@
 
 ## VII. Future-Proofing & Maintainability (from ROADMAP.MD)
 - [ ] Adhere to Domain-Driven Design (DDD) Principles for Game Engine
-- [ ] Architect Engine for Extensibility & Moddability (Plugin System Consideration) 
+- [ ] Architect Engine for Extensibility & Moddability (Plugin System Consideration)

@@ -1,14 +1,14 @@
 // Event listeners for window resize, mouse clicks (tile selection), etc. 
 
 import * as THREE from 'three';
-import { debug, error } from '../utils/debug.js'; // Path updated
-import { classifyTerrain } from '../world/planetSphereVoronoi.js'; // Path updated
-import { initMouseControls, disposeMouseControls } from '../controls/mouseControls.js'; // Path updated
-import { initKeyboardControls, disposeKeyboardControls } from '../controls/keyboardControls.js'; // Path updated
+import { debug, error } from '@/game/utils/debug.js'; // Path updated
+import { classifyTerrain } from '@/game/world/planetSphereVoronoi.js'; // Path updated
+import { initMouseControls, disposeMouseControls } from '@/game/controls/mouseControls.js'; // Path updated
+import { initKeyboardControls, disposeKeyboardControls } from '@/game/controls/keyboardControls.js'; // Path updated
 
 // Import getters for shared state
 import { getCamera, getRenderer, getWorldConfig, getControls } from './setup.js'; // Path updated (sibling in core/)
-import { getPlanetGroup, getWorldData } from '../planet.js'; // Path updated
+import { getPlanetGroup, getWorldData } from '@/game/planet.js'; // Path updated
 import RandomService from './RandomService.js'; // Import RandomService
 
 // Factor to slightly scale highlight geometry to prevent z-fighting.
@@ -78,7 +78,7 @@ export function setupRootEventListeners() {
                 tileId = attr.array[idx];
             }
 
-            let terrain = classifyTerrain(normal); 
+            let terrain = classifyTerrain(normal, RandomService.nextFloat.bind(RandomService)); 
             if (mainIntersect.object.userData.tileTerrain) {
                 const mapTT = mainIntersect.object.userData.tileTerrain;
                 if (tileId != null && mapTT[tileId]) terrain = mapTT[tileId];

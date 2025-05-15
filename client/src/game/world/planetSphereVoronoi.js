@@ -179,32 +179,35 @@ function addSouthPoleTriangles(southPoleOriginalIndex, delaunatorInstance, origi
 
 // Function to determine terrain type based on vertex position
 function determineTerrainType(position, randomFloat) {
-    // First check if there's a map-specific algorithm
+    // Derive elevation and moisture for the map-specific algorithm
+    // const elevation = position.y; // Using y-coordinate of the normal as a proxy for elevation -- No longer needed here directly for the call
+    // const moisture = 0.5; // Placeholder for moisture - this might need a more sophisticated approach -- No longer needed here directly for the call
+
+    // Call the map-specific terrain generation function
+    // Pass the full 'position' vector and ensure 'randomFloat' is the third argument.
     const mapBasedTerrain = generateMapTerrain(sphereSettings.mapType, position, randomFloat);
+    
     if (mapBasedTerrain) {
         return mapBasedTerrain;
     }
     
-    // Extract y coordinate (latitude) and normalize to [-1, 1]
-    const y = position.y;
+    // Fallback logic if mapBasedTerrain is not returned (or mapType doesn't have a specific generator)
+    const y = position.y; // Already have this as elevation
+    const noiseValue = Math.sin(position.x * 10) * Math.cos(position.z * 8) * 0.1; // Existing noise
     
-    // Introduce some noise based on position
-    const noiseValue = Math.sin(position.x * 10) * Math.cos(position.z * 8) * 0.1;
-    
-    // Determine terrain type based on latitude and noise
-    if (y < -0.8) {
-        return TerrainType.SNOW; // South pole
-    } else if (y > 0.8) {
-        return TerrainType.SNOW; // North pole
+    if (y < -0.8) { // South pole
+        return TerrainType.SNOW;
+    } else if (y > 0.8) { // North pole
+        return TerrainType.SNOW;
     } else if (y < -0.5) {
         return randomFloat() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
     } else if (y < -0.2) {
         if (noiseValue > 0.05) return TerrainType.FOREST;
         if (noiseValue < -0.05) return TerrainType.HILLS;
         return TerrainType.PLAINS;
-    } else if (y < 0.2) {
+    } else if (y < 0.2) { // Equatorial regions
         const rand = randomFloat();
-        if (rand < 0.4) return TerrainType.OCEAN;
+        if (rand < 0.4) return TerrainType.OCEAN; // Increased chance of ocean for demo
         if (rand < 0.6) return TerrainType.COAST;
         if (noiseValue > 0.05) return TerrainType.JUNGLE;
         if (noiseValue < -0.05) return TerrainType.DESERT;
@@ -213,7 +216,7 @@ function determineTerrainType(position, randomFloat) {
         if (noiseValue > 0.05) return TerrainType.FOREST;
         if (noiseValue < -0.05) return TerrainType.HILLS;
         return TerrainType.PLAINS;
-    } else {
+    } else { // Approaches North pole
         return randomFloat() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
     }
 }
@@ -401,6 +404,8 @@ export const DrawMode = {
   CENTROID: 'centroid'
 };
 
+export const DEFAULT_VIEW_MODE = 'elevation'; // Added constant for default view
+
 // Settings object to store sphere generation parameters
 export const sphereSettings = {
   drawMode: DrawMode.VORONOI,
@@ -410,7 +415,7 @@ export const sphereSettings = {
   mapType: defaultMapType,
   outlineVisible: true,
   numPlates: Const.DEFAULT_TECHTONIC_PLATES,
-  viewMode: 'terrain',
+  viewMode: DEFAULT_VIEW_MODE, // Changed to use the constant
   elevationBias: Const.DEFAULT_ELEVATION_BIAS,
   // radius: Const.DEFAULT_GLOBE_RADIUS // Radius is now a global constant: Const.GLOBE_RADIUS
 };

@@ -15,7 +15,8 @@ import RandomService from './core/RandomService.js'; // Added to ensure it's her
 // Import new control modules
 import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';
 import { initKeyboardControls, handleKeyboardInput, disposeKeyboardControls } from './controls/keyboardControls.js';
-import { ZoomControlsComponent, updateUIDisplay as updateComponentUIDisplay } from '../ui/components/ZoomControls.js';
+import { ZoomControlsComponent, updateUIDisplay as updateComponentUIDisplay } from '@/ui/components/ZoomControls.js';
+import { renderGlobeControls } from '@/ui/index.js'; // Import renderGlobeControls
 
 // Import setup functions
 import {
@@ -93,6 +94,9 @@ export function initGame() {
     // After initial generation, store the used seed in sphereSettings for the UI.
     sphereSettings.currentSeed = RandomService.getCurrentSeed();
     debug(`Initial map seed set in sphereSettings: ${sphereSettings.currentSeed}`);
+
+    // Refresh the UI controls to display the initial seed and correct view mode
+    renderGlobeControls(); 
     
     setupLighting(scene);
     controls = setupOrbitControls(camera, renderer, worldConfig);

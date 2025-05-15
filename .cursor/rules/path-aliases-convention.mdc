@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Path Alias Convention for `client/src`
+
+- Primary Alias: Use `@/` for imports from `client/src/`.
+- Local Paths: Use relative paths (`./` or `./subdir/`) for imports within the same directory or direct subdirectories.

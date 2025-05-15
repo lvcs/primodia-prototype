@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import * as Const from '../../config/gameConstants.js'; // Adjusted path
+import * as Const from '@/config/gameConstants.js'; // Adjusted path
 
 // Store references to camera and controls, set by an init function or passed to methods
 let localCamera;

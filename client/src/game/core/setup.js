@@ -1,8 +1,8 @@
 // Three.js scene, camera, renderer, lighting, and initial controls setup 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import * as Const from '../../config/gameConstants.js'; // Updated path
-import { debug } from '../utils/debug.js'; // Updated path
+import * as Const from '@/config/gameConstants.js'; // Updated path
+import { debug } from '@/game/utils/debug.js'; // Updated path
 
 // Module-level variables for scene, camera, renderer, controls, and worldConfig
 // These will be initialized by the functions in this module.
