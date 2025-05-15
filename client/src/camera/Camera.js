@@ -33,6 +33,8 @@ export class Camera {
       ANIMATION_DURATION_MS,
       EASING_CURVE,
     };
+
+    // No additional rig structure required at this stage.
   }
 
   /**
@@ -203,41 +205,22 @@ export class Camera {
       return;
     }
 
-    // Clamp tiltDegrees to a safe and common range (0 = top-down, positive towards horizon).
-    const clampedTiltDeg = Math.max(0, Math.min(tiltDegrees, 89)); 
+    const clampedTiltDeg = Math.max(0, Math.min(tiltDegrees, 89));
     const targetPolarAngleRad = THREE.MathUtils.degToRad(clampedTiltDeg);
 
-    const currentAzimuthalAngleRad = this.orbitControls.getAzimuthalAngle();
-    const currentDistance = this.orbitControls.getDistance();
-    const targetFocusPoint = this.orbitControls.target.clone();
+    const offset = new THREE.Vector3().subVectors(this.threeJsCamera.position, this.orbitControls.target);
+    const spherical = new THREE.Spherical();
+    spherical.setFromVector3(offset);
+    spherical.phi = targetPolarAngleRad;
+    spherical.makeSafe();
 
-    // <NEW LOGS>
-    const globeWorldPosition = new THREE.Vector3();
-    this.globeModel.getWorldPosition(globeWorldPosition);
-    console.log('[Camera.setTilt] OrbitControls Target:', JSON.stringify(targetFocusPoint));
-    console.log('[Camera.setTilt] Globe Model World Position:', JSON.stringify(globeWorldPosition));
-    // </NEW LOGS>
+    const newOffset = new THREE.Vector3().setFromSpherical(spherical);
+    const newPosition = new THREE.Vector3().copy(this.orbitControls.target).add(newOffset);
 
-    // Calculate the new camera position based on spherical coordinates
-    // (distance, polar angle from Y-axis, azimuthal angle around Y-axis).
-    const offset = new THREE.Vector3();
-    offset.x = currentDistance * Math.sin(targetPolarAngleRad) * Math.sin(currentAzimuthalAngleRad);
-    offset.y = currentDistance * Math.cos(targetPolarAngleRad); // Positive Y is up
-    offset.z = currentDistance * Math.sin(targetPolarAngleRad) * Math.cos(currentAzimuthalAngleRad);
-
-    // console.log('[Camera.setTilt] Degrees:', tiltDegrees, 'Clamped Deg:', clampedTiltDeg, 'Target Polar Rad:', targetPolarAngleRad.toFixed(2));
-    // console.log('[Camera.setTilt] Current Azimuthal Rad:', currentAzimuthalAngleRad.toFixed(2), 'Current Dist:', currentDistance.toFixed(2));
-    // console.log('[Camera.setTilt] Target Focus Point:', JSON.stringify(targetFocusPoint));
-    // console.log('[Camera.setTilt] Calculated Offset:', JSON.stringify(offset));
-    
-    this.threeJsCamera.position.copy(targetFocusPoint).add(offset);
-    // console.log('[Camera.setTilt] New Camera Position:', JSON.stringify(this.threeJsCamera.position));
-    this.threeJsCamera.lookAt(targetFocusPoint); // Ensure camera is looking at the target after repositioning.
-    
-    // CRITICAL: Update OrbitControls to synchronize its internal state (polar angle, distance, etc.)
-    // with the new programmatically set camera position.
+    this.threeJsCamera.position.copy(newPosition);
+    this.threeJsCamera.up.set(0,1,0);
+    this.threeJsCamera.lookAt(this.orbitControls.target);
     this.orbitControls.update();
-    // console.log('[Camera.setTilt] Post-update OrbitControls Polar Angle (deg):', THREE.MathUtils.radToDeg(this.orbitControls.getPolarAngle()).toFixed(2));
   }
 
   /**
@@ -246,13 +229,60 @@ export class Camera {
    * @returns {number} The current tilt in degrees.
    */
   getTilt() {
-    if (!this.orbitControls) {
-      console.error('[Camera.getTilt] OrbitControls not available.');
-      return 0; // Default to 0 if controls are not available.
-    }
-    // OrbitControls.getPolarAngle() returns radians from the positive Y axis.
-    // 0 rad = top-down. PI/2 rad = horizon.
-    const currentPolarAngleRad = this.orbitControls.getPolarAngle();
-    return THREE.MathUtils.radToDeg(currentPolarAngleRad);
+    if (!this.orbitControls) return 0;
+    return THREE.MathUtils.radToDeg(this.orbitControls.getPolarAngle());
+  }
+
+  /**
+   * Smoothly moves the CAMERA to an isometric-like view above the given tile.
+   * 1. OrbitControls.target becomes the tile centre on the globe surface.
+   * 2. Camera moves to a latitude offset (tile.lat + tiltDeg sign) keeping same longitude.
+   * 3. Camera distance becomes `distance`.
+   *
+   * @param {{latitude:number, longitude:number}} tile
+   * @param {number} tiltDeg   Desired tilt in degrees (e.g. 45)
+   * @param {number} distance  Desired camera distance from the target (world units)
+   * @param {number} durationMs Animation duration in ms
+   */
+  zoomToTile(tile, tiltDeg = 45, distance = this.globeRadius * 1.5, durationMs = 1000) {
+    if (!tile) return;
+
+    // 1. Get tile world position (centre of clicked face)
+    const targetPosLocal = this.latLonToWorld(tile.latitude, tile.longitude);
+    const targetPos = this.globeModel ? this.globeModel.localToWorld(targetPosLocal.clone()) : targetPosLocal.clone();
+
+    // 2. Derive camera destination.
+    const latOffset = tile.latitude + (tile.latitude >= 0 ? tiltDeg : -tiltDeg);
+    const latCam = THREE.MathUtils.clamp(latOffset, -89, 89);
+    const lonCam = tile.longitude;
+
+    const camDirLocal = this.latLonToWorld(latCam, lonCam).normalize();
+    const camDirWorld = this.globeModel ? this.globeModel.localToWorld(camDirLocal.clone()).sub(this.globeModel.position).normalize() : camDirLocal;
+
+    const desiredCamPos = targetPos.clone().add(camDirWorld.multiplyScalar(distance));
+
+    const startCamPos = this.threeJsCamera.position.clone();
+    const startTarget = this.orbitControls.target.clone();
+
+    const startTime = Date.now();
+    const easing = this.config.EASING_CURVE;
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const t = Math.min(elapsed / durationMs, 1);
+      const p = easing(t);
+
+      this.threeJsCamera.position.lerpVectors(startCamPos, desiredCamPos, p);
+      this.orbitControls.target.lerpVectors(startTarget, targetPos, p);
+
+      this.threeJsCamera.lookAt(this.orbitControls.target);
+      this.orbitControls.update();
+
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
   }
 } 

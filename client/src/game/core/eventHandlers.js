@@ -7,11 +7,10 @@ import { initMouseControls, disposeMouseControls } from '@/game/controls/mouseCo
 import { initKeyboardControls, disposeKeyboardControls } from '@/game/controls/keyboardControls.js'; // Path updated
 
 // Import getters for shared state
-import { getCamera, getRenderer, getWorldConfig, getCameraRig } from './setup.js'; // Path updated (sibling in core/)
+import { getCamera, getRenderer, getWorldConfig, getControls } from './setup.js'; // Path updated (sibling in core/)
 import { getPlanetGroup, getWorldData } from '@/game/planet.js'; // Path updated
 import RandomService from './RandomService.js'; // Import RandomService
-import * as CamConfig from '@/camera/cameraConfig.js'; // ADDED for click animation params
-import { updateCameraControlsUI } from '@/ui/components/CameraControlsSection.js'; // ADDED
+import { Camera } from '@/camera/Camera.js'; // <<< CHANGED TO NAMED IMPORT
 
 // Factor to slightly scale highlight geometry to prevent z-fighting.
 const HIGHLIGHT_SCALE_FACTOR = 1.003;
@@ -21,7 +20,7 @@ const MAX_DRAG_DIST_FOR_CLICK = 10;
 const MAX_DRAG_TIME_FOR_CLICK = 250; 
 
 let selectedHighlight = null;
-// let cameraAnimator = null; // REMOVED old cameraAnimator instance
+let cameraAnimator = null; // Instance of the Camera class from @/camera/Camera.js
 
 // Variables to track mouse press state to distinguish a click from a drag operation.
 let mouseDownTime;
@@ -33,19 +32,26 @@ export function getSelectedHighlight() {
 
 /**
  * Sets up root event listeners for the application, including window resize and canvas interactions.
- * @returns {CameraRig | null} The initialized CameraRig instance.
+ * Initializes the CameraAnimator for globe and camera animations.
+ * @returns {Camera | null} The initialized Camera animator instance, or null if initialization failed.
  */
 export function setupRootEventListeners() {
     const cameraInstance = getCamera();
     const rendererInstance = getRenderer();
-    // const planetGroupInstance = getPlanetGroup(); // Not directly used by CameraRig setup here
-    const cameraRigInstance = getCameraRig(); // Now expecting CameraRig from setup.js
-    // const worldConfigInstance = getWorldConfig(); // Not directly used by CameraRig setup here
+    const planetGroupInstance = getPlanetGroup();
+    const orbitControlsInstance = getControls();
+    const worldConfigInstance = getWorldConfig();
 
-    // The CameraRig is now expected to be set up in setup.js and retrieved by getCameraRig()
-    // No need to instantiate it here.
-    if (!cameraRigInstance) {
-      error("CameraRig not available from getCameraRig() in setupRootEventListeners.");
+    // Instantiate the Camera animator which handles globe rotations and camera tilt.
+    if (cameraInstance && planetGroupInstance && orbitControlsInstance && worldConfigInstance) {
+      cameraAnimator = new Camera(
+        cameraInstance,
+        planetGroupInstance,
+        orbitControlsInstance,
+        worldConfigInstance.radius
+      );
+    } else {
+      error("Failed to initialize CameraAnimator in setupRootEventListeners: Missing one or more core components.");
     }
     
     // Handles window resize to keep camera and renderer updated.
@@ -69,16 +75,15 @@ export function setupRootEventListeners() {
         });
 
         // Listener for click events on the renderer's canvas.
-        rendererInstance.domElement.addEventListener('click', async (event) => { // Made async for await
+        rendererInstance.domElement.addEventListener('click', (event) => {
             const cam = getCamera();
             const rend = getRenderer();
             const wConfig = getWorldConfig();
             const pGroup = getPlanetGroup();
             const wData = getWorldData();
-            const activeCameraRig = getCameraRig(); // Get current CameraRig instance
 
-            if (!rend || !cam || !wConfig || !pGroup || !wData || !wData.globe || !activeCameraRig) {
-                error('[eventHandlers.click] Missing dependencies for click event processing (incl. CameraRig).');
+            if (!rend || !cam || !wConfig || !pGroup || !wData || !wData.globe) {
+                error('[eventHandlers.click] Missing dependencies for click event processing.');
                 return;
             }
 
@@ -92,7 +97,7 @@ export function setupRootEventListeners() {
             const moveDistance = mouseDownPosition.distanceTo(new THREE.Vector2(event.clientX, event.clientY));
 
             if (moveDistance > MAX_DRAG_DIST_FOR_CLICK || pressDuration > MAX_DRAG_TIME_FOR_CLICK) {
-                debug('[eventHandlers.click] Drag detected, click animation skipped.');
+                debug('[eventHandlers.click] Drag detected, click-to-rotate globe animation skipped.');
                 return; // Interpreted as a drag, so don't proceed with click-specific actions.
             }
 
@@ -177,40 +182,27 @@ export function setupRootEventListeners() {
                     `Lon: ${lon.toFixed(2)}°`;
             }
 
-            // If a valid tile was clicked and the cameraRig is available, trigger globe rotation.
+            // If a valid tile was clicked and the cameraAnimator is available, trigger globe rotation.
             const clickedTile = wData.globe.getTile(tileId);
             if (clickedTile) {
-                if (activeCameraRig) {
-                    debug(`[eventHandlers.click] Animating CameraRig to tile ${tileId} (Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)})`);
-                    activeCameraRig.stopAnimation(); // Stop any ongoing animation first
-                    try {
-                        await activeCameraRig.lookAtTile(
-                            lat, 
-                            lon,
-                            CamConfig.DEFAULT_ANIMATION_DURATION_MS / 2,
-                            CamConfig.EASING_CURVE_FUNCTION
-                        );
-                        debug('[eventHandlers.click] lookAtTile animation complete.');
+                // ... (extensive debug logging for clickedTile, can be kept or summarized)
+                if (cameraAnimator) {
+                  const tileDataForCamera = {
+                    latitude: clickedTile.lat,
+                    longitude: clickedTile.lon
+                  };
+                  // This call to cameraAnimator.animateTo will rotate the GLOBE MODEL
+                  // so the clicked tile faces the camera.
+                  cameraAnimator.animateTo(tileDataForCamera, (success) => {
+                    debug(`[eventHandlers.click] Globe animation to tile ${success ? 'complete' : 'interrupted'}.`);
 
-                        const targetDistance = wConfig.radius * CamConfig.CLICK_FOCUS_DISTANCE_FACTOR;
-                        await activeCameraRig.animateTiltZoom(
-                            CamConfig.CLICK_FOCUS_TILT_DEG,
-                            targetDistance,
-                            CamConfig.DEFAULT_ANIMATION_DURATION_MS / 2,
-                            CamConfig.EASING_CURVE_FUNCTION
-                        );
-                        debug('[eventHandlers.click] animateTiltZoom animation complete.');
-
-                    } catch (animError) {
-                        // Error could be a boolean false if animation was interrupted by stopAnimation itself
-                        if (animError !== false) { 
-                           error('[eventHandlers.click] CameraRig animation failed:', animError);
-                        }
-                    } finally {
-                        updateCameraControlsUI(); // ADDED: Update UI after animations attempt
+                    if (success) {
+                      // After the globe faces the camera, move camera to an isometric close-up.
+                      cameraAnimator.zoomToTile(tileDataForCamera, 45, wConfig.radius * 1.5, 1000);
                     }
+                  });
                 } else {
-                  error("[eventHandlers.click] CameraRig not available. Cannot animate to tile.");
+                  error("[eventHandlers.click] CameraAnimator not initialized. Cannot animate globe to tile.");
                 }
             }
         });
@@ -218,19 +210,20 @@ export function setupRootEventListeners() {
         error('[eventHandlers.setup] Renderer or renderer.domElement not available for click listener setup.');
     }
 
-    const finalCam = getCamera();
-    const finalPGroup = getPlanetGroup();
-    const finalCameraRig = getCameraRig(); 
-    const finalRend = getRenderer();
-    const finalWConfig = getWorldConfig();
+    // Initialize other controls (mouse for dragging globe, keyboard for inputs)
+    const cam = getCamera();
+    const pGroup = getPlanetGroup();
+    const orbitControls = getControls(); 
+    const rend = getRenderer();
+    const wConfig = getWorldConfig();
 
-    if (finalCam && finalPGroup && finalCameraRig && finalRend && finalWConfig) {
-        initMouseControls(finalCam, finalPGroup, finalCameraRig, finalRend); // Pass CameraRig to mouseControls
-        initKeyboardControls(finalCam, finalPGroup, finalCameraRig, finalWConfig); // Pass CameraRig to keyboardControls
+    if (cam && pGroup && orbitControls && rend && wConfig) {
+        initMouseControls(cam, pGroup, orbitControls, rend);
+        initKeyboardControls(cam, pGroup, orbitControls, wConfig);
     } else {
         error('[eventHandlers.setup] One or more dependencies for mouse/keyboard control initialization are missing.');
     }
-    return finalCameraRig; // Return CameraRig instance
+    return cameraAnimator; // Return the animator instance for use in other parts of the game (e.g., game.js for UI components).
 }
 
 /**
@@ -251,16 +244,16 @@ export function setupMouseTrackingState() {
 export function reinitializeControls() {
     const cam = getCamera();
     const pGroup = getPlanetGroup();
-    const crInstance = getCameraRig(); // Get CameraRig instance
+    const orbitControls = getControls(); 
     const rend = getRenderer();
     const wConfig = getWorldConfig();
 
-    if (cam && pGroup && crInstance && rend && wConfig) {
+    if (cam && pGroup && orbitControls && rend && wConfig) {
         disposeMouseControls(); 
         disposeKeyboardControls();
-        initMouseControls(cam, pGroup, crInstance, rend); // Pass CameraRig
-        initKeyboardControls(cam, pGroup, crInstance, wConfig); // Pass CameraRig
-        debug('[eventHandlers.reinitialize] Mouse and Keyboard controls re-initialized with CameraRig.');
+        initMouseControls(cam, pGroup, orbitControls, rend);
+        initKeyboardControls(cam, pGroup, orbitControls, wConfig);
+        debug('[eventHandlers.reinitialize] Mouse and Keyboard controls re-initialized.');
     } else {
         error('[eventHandlers.reinitialize] Failed to re-initialize controls due to missing dependencies.');
     }

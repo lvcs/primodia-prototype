@@ -23,11 +23,11 @@ import {
   setupThreeJS,
   setupInitialWorldConfig,
   setupLighting,
-  setupCameraSystem,
+  setupOrbitControls,
   getCamera,
   getRenderer,
   getScene,
-  getCameraRig,
+  getControls,
   getWorldConfig
 } from './core/setup.js';
 
@@ -53,14 +53,13 @@ import { startAnimationLoop } from './core/mainLoop.js';
 
 // These are now mostly obtained via getters from setup.js or planet.js when needed.
 // Let's keep them here if initGame assigns to them for clarity of what initGame establishes.
-let scene, camera, renderer, worldConfig;
+let scene, camera, renderer, controls, worldConfig;
 let worldData; // Will store { meshGroup, cells, config } from generateWorld
 let planetGroup; // This will be worldData.meshGroup
 // let worldConfig; // This is now managed in setup.js and assigned here
 let isMouseDown = false;
 let selectedHighlight = null;
 let gameCameraAnimator = null; // To store the camera animator instance
-let activeCameraRig = null; // To store the CameraRig instance for clarity
 
 // const clock = new THREE.Clock(); // Moved to mainLoop.js
 
@@ -101,16 +100,19 @@ export function initGame() {
     renderGlobeControls(); 
     
     setupLighting(scene);
-    activeCameraRig = setupCameraSystem(camera, scene, worldConfig);
+    controls = setupOrbitControls(camera, renderer, worldConfig);
     
-    setupRootEventListeners();
+    gameCameraAnimator = setupRootEventListeners(); // Store the returned animator
     setupMouseTrackingState();
     
-    const currentCameraRig = getCameraRig();
+    const currentPlanetGroup = getPlanetGroup(); 
+    const currentControls = getControls(); // Get the freshly created OrbitControls
     const currentWorldConfig = getWorldConfig();
 
     const cameraControlsElement = CameraControlsSectionComponent({
-        cameraRig: currentCameraRig,
+        camera: camera,
+        controls: currentControls,
+        cameraAnimator: gameCameraAnimator,
         worldConfig: currentWorldConfig
     });
 
@@ -151,8 +153,8 @@ export function initGame() {
 export function requestPlanetRegeneration(seed) {
     const s = getScene();
     const wc = getWorldConfig();
-    const existingCameraRig = getCameraRig();
-    const pg = getPlanetGroup();
+    const existingControls = getControls(); // OrbitControls
+    const pg = getPlanetGroup(); // Existing planet group
     const sh = getSelectedHighlight();
 
     if (!s || !wc ) { 
@@ -162,8 +164,13 @@ export function requestPlanetRegeneration(seed) {
     debug(`Requesting planet regeneration with seed: ${seed === undefined ? 'Default/Last' : seed}`);
 
     // Pass the seed to generatePlanet
-    generatePlanet(s, wc, null, pg, sh, seed);
+    const planetResult = generatePlanet(s, wc, existingControls, pg, sh, seed);
+    // planetGroup = planetResult.planetGroup; // generatePlanet now updates the planetGroup directly via setPlanetGroup
+    // worldData = planetResult.worldData; // generatePlanet now updates worldData directly via setWorldData
 
+    const newPlanetGroup = getPlanetGroup(); 
+    const newControls = getControls(); 
+    const cam = getCamera();
     updateComponentUIDisplay();
     
     reinitializeControls();
