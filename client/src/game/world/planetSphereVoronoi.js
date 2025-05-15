@@ -411,12 +411,12 @@ export const sphereSettings = {
   numPlates: Const.DEFAULT_TECHTONIC_PLATES,
   viewMode: 'terrain',
   elevationBias: Const.DEFAULT_ELEVATION_BIAS,
-  radius: Const.DEFAULT_GLOBE_RADIUS
+  // radius: Const.DEFAULT_GLOBE_RADIUS // Radius is now a global constant: Const.GLOBE_RADIUS
 };
 
 // Main function to generate the planet geometry
 export function generatePlanetGeometryGroup(config) {
-    const { radius = 10 } = config;
+    const { radius = Const.GLOBE_RADIUS } = config; // Default to the global constant if not provided
     const N = sphereSettings.numPoints;
     const jitter = sphereSettings.jitter;
     const algorithm = sphereSettings.algorithm;

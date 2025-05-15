@@ -72,19 +72,6 @@ export function renderGlobeControls() {
   });
   panel.appendChild(ControlSection({ label: 'Jitter', children: [jitterSlider, jitterValue] }));
 
-  // Globe size (radius)
-  const radValue = document.createElement('span');
-  radValue.textContent = sphereSettings.radius || '';
-  const radSlider = SliderControl({
-    min: Const.MIN_GLOBE_RADIUS, 
-    max: Const.MAX_GLOBE_RADIUS, 
-    step: Const.STEP_GLOBE_RADIUS, 
-    value: sphereSettings.radius,
-    onInput: e => radValue.textContent = e.target.value,
-    onChange: e => { sphereSettings.radius = +e.target.value; generateAndDisplayPlanet(); }
-  });
-  panel.appendChild(ControlSection({ label: 'Globe Size', children: [radSlider, radValue] }));
-
   // Map Type select
   const mapOptions = Object.entries(MapRegistry).map(([key, {description}]) => ({ value: key, label: key }));
   const mapSelect = SelectControl({

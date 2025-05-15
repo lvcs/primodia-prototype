@@ -254,3 +254,51 @@ input[type="checkbox"] {
   margin-right: 0.5rem;
 }
 
+/* On-screen Zoom Controls */
+#zoom-controls-container {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100; /* Ensure it's above the canvas */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 0.5rem;
+  border-radius: 5px;
+}
+
+.zoom-btn {
+  background-color: #444;
+  color: #e6e6e6;
+  border: 1px solid #666;
+  border-radius: 3px;
+  padding: 0.3rem 0.6rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 30px; /* Fixed width */
+  height: 30px; /* Fixed height */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.zoom-btn:hover {
+  background-color: #555;
+}
+
+.zoom-display {
+  color: #e6e6e6;
+  font-size: 0.8rem;
+  background-color: rgba(0,0,0,0.3);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Ensure main.css is properly imported or linked if these styles don't apply */
+

@@ -8,8 +8,13 @@ import { Terrains } from './world/registries/TerrainRegistry.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './debug.js';
 import * as Const from '../config/gameConstants.js'; // Import constants
-import { keyBindings } from '../config/key_bindings.js'; // Updated path
-import { ExtendedOrbitControls } from '../libs/controls/ExtendedOrbitControls.js'; // Import our extended controls
+// Keybindings are now used by keyboardControls.js, not directly here.
+// import { getActionForKey, Actions } from '../config/keybindings.js'; 
+
+// Import new control modules
+import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';
+import { initKeyboardControls, handleKeyboardInput, disposeKeyboardControls } from './controls/keyboardControls.js';
+import { ZoomControlsComponent, updateUIDisplay as updateComponentUIDisplay } from '../ui/components/ZoomControls.js'; // Corrected import path, renamed update function
 
 let scene, camera, renderer, controls;
 let worldData; // Will store { meshGroup, cells, config } from generateWorld
@@ -17,6 +22,18 @@ let planetGroup; // This will be worldData.meshGroup
 let worldConfig;
 let isMouseDown = false;
 let selectedHighlight = null;
+
+const clock = new THREE.Clock(); // For deltaTime
+
+// State for mouse panning - MOVED to mouseControls.js
+// let isDragging = false;
+// const previousMousePosition = {
+// x: 0,
+// y: 0
+// };
+
+// State for keyboard controls - MOVED to keyboardControls.js
+// const activeKeys = new Set();
 
 export function initGame() {
   try {
@@ -26,16 +43,34 @@ export function initGame() {
     setupThreeJS();
     setupWorldConfig();
     // Initialize controls before planet generation so sliders have correct values
-    const pointsSlider = document.getElementById('points-slider');
-    if (pointsSlider) {
-      pointsSlider.max = sphereSettings.numPoints;
-      updateControlValues(); // Set initial values without generating planet
-    }
+    // const pointsSlider = document.getElementById('points-slider'); // This line might be from old code
+    // if (pointsSlider) {                                           // if points-slider isn't relevant, remove
+    //   pointsSlider.max = sphereSettings.numPoints;             // these three lines
+    // }
+    // updateControlValues(); // This seems to be for the main control panel, ensure it runs if needed for other sliders
+    
     generateAndDisplayPlanet(); 
     setupLighting();
-    setupControls();
-    setupEventListeners();
-    setupKeyboardControls(); // Added call
+    setupControls(); // Sets up OrbitControls
+    setupEventListeners(); // Sets up mouse/keyboard listeners
+    
+    // Initialize UI Zoom Controls after camera and OrbitControls are ready
+    // initZoomControls(camera, controls, worldConfig); // Old initialization
+    // updateZoomDisplay(); // Old initial display update
+
+    // Ensure planetGroup is initialized before creating ZoomControlsComponent if it depends on it directly
+    // Since planetGroup is initialized within generateAndDisplayPlanet, this ordering should be okay.
+    const zoomControlsElement = ZoomControlsComponent(camera, controls, worldConfig, planetGroup);
+    const uiOverlay = document.getElementById('ui-overlay') || document.body;
+    uiOverlay.appendChild(zoomControlsElement);
+    // Ensure pointer events are enabled for the zoom controls container if ui-overlay has pointer-events: none;
+    // This is handled by the CSS for #zoom-controls-container if it's a direct child or has its own pointer-events: auto.
+    if (uiOverlay.id === 'ui-overlay' && getComputedStyle(uiOverlay).pointerEvents === 'none') {
+        zoomControlsElement.style.pointerEvents = 'auto'; // Allow interaction if parent is non-interactive
+    }
+
+    updateComponentUIDisplay(camera, controls, planetGroup); // Initial display update using the component's exported function
+
     setupSocketConnection();
     setupMouseTracking();
     animate();
@@ -70,7 +105,7 @@ function setupThreeJS() {
 
 function setupWorldConfig() {
   worldConfig = {
-    radius: Const.DEFAULT_GLOBE_RADIUS, // Use constant for initial radius
+    radius: Const.GLOBE_RADIUS, // Use the new fixed global constant
     detail: Const.DEFAULT_WORLD_DETAIL, 
   };
   debug('Initial worldConfig set:', worldConfig);
@@ -78,13 +113,19 @@ function setupWorldConfig() {
 
 export function generateAndDisplayPlanet() {
   try {
-    // Synchronize worldConfig.radius with sphereSettings.radius
-    let radiusChanged = false;
-    if (sphereSettings.radius !== undefined && sphereSettings.radius !== worldConfig.radius) {
-      worldConfig.radius = sphereSettings.radius;
-      radiusChanged = true;
-      debug(`Globe radius changed to: ${worldConfig.radius}`);
-    }
+    // Synchronize worldConfig.radius with sphereSettings.radius - REMOVED
+    // let radiusChanged = false;
+    // if (sphereSettings.radius !== undefined && sphereSettings.radius !== worldConfig.radius) {
+    //   worldConfig.radius = sphereSettings.radius;
+    //   radiusChanged = true;
+    //   debug(`Globe radius changed to: ${worldConfig.radius}`);
+    // }
+
+    // worldConfig.radius is now fixed, so radiusChanged logic is no longer needed for it.
+    // However, other parts of generateAndDisplayPlanet might still rely on a 'radiusChanged' concept
+    // if other settings could trigger a full control re-setup. For now, assume radius is the primary one.
+    // If !controls, it implies first run, so setupControls will be called.
+    let controlsNeedSetup = !controls;
 
     debug(`Generating planet with config: ${JSON.stringify(worldConfig)}`);
     
@@ -111,6 +152,10 @@ export function generateAndDisplayPlanet() {
     
     if (worldData && worldData.meshGroup) {
       planetGroup = worldData.meshGroup;
+      // Initialize userData for physics based rotation
+      planetGroup.userData.angularVelocity = new THREE.Vector3(0, 0, 0);
+      planetGroup.userData.targetAngularVelocity = new THREE.Vector3(0, 0, 0);
+      planetGroup.userData.isBeingDragged = false;
       scene.add(planetGroup);
       debug('Planet mesh group added to scene.');
     } else {
@@ -132,11 +177,16 @@ export function generateAndDisplayPlanet() {
     
     // If radius changed, controls need to be re-setup
     // Also, setup controls after the first planet generation.
-    if (radiusChanged || !controls) { // !controls implies first run
+    // if (radiusChanged || !controls) { // !controls implies first run
+    //     setupControls(); 
+    // }
+    // Simplified: setup controls only if they haven't been set up yet.
+    // Any dynamic changes that require control re-setup would need their own flag.
+    if (controlsNeedSetup) {
         setupControls(); 
     }
 
-    addPlanetaryGlow(worldConfig.radius);
+    addPlanetaryGlow(worldConfig.radius); // This will use the fixed radius
 
     // Apply current view mode colors
     if(sphereSettings.viewMode==='plates'){
@@ -176,17 +226,25 @@ function setupLighting() {
 }
 
 function setupControls() {
+  // If controls exist, dispose of them first
   if (controls) {
     controls.dispose();
+    disposeMouseControls(); 
+    disposeKeyboardControls();
   }
-  controls = new ExtendedOrbitControls(camera, renderer.domElement);
-  
-  controls.enableDamping = false;
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.enablePan = false;
+  // worldConfig.radius is now fixed from GLOBE_RADIUS
   controls.minDistance = worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
   controls.maxDistance = worldConfig.radius * Const.CAMERA_MAX_DISTANCE_FACTOR;
-  controls.rotateSpeed = 1.0;
-  
-  camera.position.set(0, worldConfig.radius * Const.CAMERA_INITIAL_POS_Y_FACTOR, worldConfig.radius * Const.CAMERA_INITIAL_POS_Z_FACTOR);
+
+  camera.position.set(
+    0, 
+    worldConfig.radius * Const.CAMERA_INITIAL_POS_Y_FACTOR, 
+    worldConfig.radius * Const.CAMERA_INITIAL_POS_Z_FACTOR
+  );
+  controls.target.set(0, 0, 0);
   controls.update();
 }
 
@@ -318,78 +376,24 @@ function setupEventListeners() {
       // ... existing code ...
     }
   });
-}
 
-function setupKeyboardControls() {
-  const baseZoomScale = 1.1; // Constant zoom factor for keyboard
-  const baseKeyboardRotationAngle = 0.03; // Base angle for keyboard rotation, will be scaled by zoom
+  // Initialize new control modules
+  // Pass necessary dependencies: camera, planetGroup, controls (OrbitControls), renderer, worldConfig
+  // Ensure planetGroup and worldConfig are initialized before this call if accessed within init functions
+  // It's safer to call these after planetGroup and worldConfig are definitely set up.
+  // Let's assume they are available when setupEventListeners is called after generateAndDisplayPlanet and setupControls.
   
-  const pressedKeys = new Set();
-  
-  // This function is called within the modified animate loop
-  function updateKeyboardControls() {
-    if (!controls) return;
-    
-    // Ensure minDistance is up-to-date (for close zoom)
-    controls.minDistance = worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
-    
-    const zoomScale = baseZoomScale; // Use constant zoom scale
+  initMouseControls(camera, planetGroup, controls, renderer);
+  initKeyboardControls(camera, planetGroup, controls, worldConfig);
 
-    // Calculate dynamic rotation angle for keyboard based on zoom
-    const currentDistance = controls.getDistance();
-    const keyboardRotationReferenceDistance = worldConfig.radius * 3; // Reference distance for scaling
-    let rotationScaleFactor = currentDistance / keyboardRotationReferenceDistance;
-    rotationScaleFactor = Math.max(0.2, Math.min(3.0, rotationScaleFactor)); // Clamp scale factor (e.g., 0.2x to 3x)
-    const actualKeyboardRotationAngle = baseKeyboardRotationAngle * rotationScaleFactor;
+  // Mouse Panning Listeners - MOVED to mouseControls.js
+  // renderer.domElement.addEventListener('mousedown', (event) => { ... });
+  // document.addEventListener('mousemove', (event) => { ... });
+  // document.addEventListener('mouseup', (event) => { ... });
 
-    // Apply zoom (if keys are pressed)
-    if (pressedKeys.has(keyBindings.ZOOM_IN)) {
-      controls.dollyIn(zoomScale);
-    }
-    if (pressedKeys.has(keyBindings.ZOOM_OUT)) {
-      controls.dollyOut(zoomScale);
-    }
-    
-    // Apply rotations (if keys are pressed)
-    if (pressedKeys.has(keyBindings.ROTATE_WEST)) {
-      controls.rotateLeft(actualKeyboardRotationAngle);
-    }
-    if (pressedKeys.has(keyBindings.ROTATE_EAST)) {
-      controls.rotateLeft(-actualKeyboardRotationAngle);
-    }
-    if (pressedKeys.has(keyBindings.ROTATE_NORTH)) {
-      controls.rotateUp(actualKeyboardRotationAngle);
-    }
-    if (pressedKeys.has(keyBindings.ROTATE_SOUTH)) {
-      controls.rotateUp(-actualKeyboardRotationAngle);
-    }
-  }
-  
-  // Override animate to include keyboard updates
-  const originalAnimate = animate;
-  animate = function() { // Make sure this refers to the global animate
-    updateKeyboardControls();
-    originalAnimate();
-  };
-
-  // Key down/up listeners remain the same (handling pressedKeys set and preventDefault)
-  window.addEventListener('keydown', (event) => {
-    if (!pressedKeys.has(event.key)) {
-      // Optional: Minimal debug log only on first press, if needed
-      // if ([keyBindings.ROTATE_NORTH, ...].includes(event.key)) { debug('Key pressed:', event.key); }
-    }
-    pressedKeys.add(event.key);
-    if ([keyBindings.ROTATE_NORTH, keyBindings.ROTATE_SOUTH, keyBindings.ROTATE_EAST, keyBindings.ROTATE_WEST, 
-         keyBindings.ZOOM_IN, keyBindings.ZOOM_OUT].includes(event.key)) {
-      event.preventDefault();
-    }
-  });
-
-  window.addEventListener('keyup', (event) => {
-    pressedKeys.delete(event.key);
-  });
-
-  debug('Keyboard controls setup: Dynamic rotation, constant zoom.');
+  // Keyboard Navigation Listeners - MOVED to keyboardControls.js
+  // document.addEventListener('keydown', (event) => { ... });
+  // document.addEventListener('keyup', (event) => { ... });
 }
 
 function setupMouseTracking() {
@@ -400,7 +404,15 @@ function setupMouseTracking() {
 
 function animate() {
   requestAnimationFrame(animate);
-  controls.update();
+  const deltaTime = clock.getDelta();
+
+  handleKeyboardInput(); // Updates targetAngularVelocity (from keyboardControls.js)
+  updatePlanetRotation(deltaTime); // Apply smooth rotation and damping
+  updateComponentUIDisplay(camera, controls, planetGroup); // Update zoom and velocity display each frame
+
+  if (controls && controls.enableDamping) {
+    controls.update();
+  }
   renderer.render(scene, camera);
 }
 
@@ -464,4 +476,49 @@ export function updatePlanetColors() {
     colorsAttr.array[i*3+2] = rgb[2];
   }
   colorsAttr.needsUpdate = true;
-} 
+}
+
+// New function for smooth planet rotation
+function updatePlanetRotation(deltaTime) {
+  if (!planetGroup || !planetGroup.userData) return;
+
+  const { angularVelocity, targetAngularVelocity, isBeingDragged } = planetGroup.userData;
+
+  if (isBeingDragged) {
+    // When mouse is dragging, rotation is handled directly by mouseControls.js
+    // We just ensure angularVelocity is zeroed so it doesn't fight when drag ends.
+    // angularVelocity should have been zeroed on mousedown by mouseControls.
+    return;
+  }
+
+  // Smoothly interpolate current angular velocity towards target (driven by keyboard)
+  angularVelocity.lerp(targetAngularVelocity, Const.KEYBOARD_ROTATION_ACCELERATION_FACTOR);
+
+  // Apply damping
+  angularVelocity.multiplyScalar(Math.pow(Const.GLOBE_ANGULAR_DAMPING_FACTOR, deltaTime * 60)); // Frame-rate independent damping
+
+  // Stop rotation if speed is very low to prevent indefinite small drifts
+  const minSpeed = 0.0001;
+  if (angularVelocity.lengthSq() < minSpeed * minSpeed) {
+    angularVelocity.set(0, 0, 0);
+  }
+
+  // Apply rotation based on current angular velocity
+  if (angularVelocity.lengthSq() > 0) {
+    // We need to rotate around each world axis by the component of angularVelocity for that axis.
+    // This is a simplification. Proper quaternion integration would be more robust for complex rotations.
+    if (Math.abs(angularVelocity.x) > minSpeed) {
+        planetGroup.rotateOnWorldAxis(new THREE.Vector3(1,0,0), angularVelocity.x * deltaTime);
+    }
+    if (Math.abs(angularVelocity.y) > minSpeed) {
+        planetGroup.rotateOnWorldAxis(new THREE.Vector3(0,1,0), angularVelocity.y * deltaTime);
+    }
+    if (Math.abs(angularVelocity.z) > minSpeed) {
+        planetGroup.rotateOnWorldAxis(new THREE.Vector3(0,0,1), angularVelocity.z * deltaTime);
+    }
+    if (controls) controls.update(); // OrbitControls might need update if target moves (though planet moves here)
+  }
+}
+
+// Add this new function to handle keyboard inputs - MOVED to keyboardControls.js
+// function handleKeyboardInput() { ... } 
