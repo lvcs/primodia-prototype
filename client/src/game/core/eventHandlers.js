@@ -1,7 +1,7 @@
 // Event listeners for window resize, mouse clicks (tile selection), etc. 
 
 import * as THREE from 'three';
-import { debug, error } from '@/game/utils/debug.js'; // Path updated
+import { debug, error, updateTileDebugInfo } from '@/game/utils/debug.js'; // Path updated, added updateTileDebugInfo
 import { classifyTerrain } from '@/game/world/planetSphereVoronoi.js'; // Path updated
 import { initMouseControls, disposeMouseControls } from '@/game/controls/mouseControls.js'; // Path updated
 import { initKeyboardControls, disposeKeyboardControls } from '@/game/controls/keyboardControls.js'; // Path updated
@@ -14,15 +14,13 @@ import { Camera } from '@/camera/Camera.js'; // <<< CHANGED TO NAMED IMPORT
 
 // Factor to slightly scale highlight geometry to prevent z-fighting.
 const HIGHLIGHT_SCALE_FACTOR = 1.003;
-// Maximum mouse movement (in pixels) allowed during a mousedown/mouseup sequence to be considered a click.
-const MAX_DRAG_DIST_FOR_CLICK = 10; 
-// Maximum time (in milliseconds) a mousedown can last to still be considered part of a click.
-const MAX_DRAG_TIME_FOR_CLICK = 250; 
+const MAX_DRAG_DIST_FOR_CLICK = 10; // pixels
+const MAX_DRAG_TIME_FOR_CLICK = 250; // milliseconds
 
 let selectedHighlight = null;
-let cameraAnimator = null; // Instance of the Camera class from @/camera/Camera.js
+let cameraAnimator = null; // <<< ADDED CAMERA ANIMATOR INSTANCE HOLDER
 
-// Variables to track mouse press state to distinguish a click from a drag operation.
+// Variables to track mouse press for distinguishing click from drag
 let mouseDownTime;
 let mouseDownPosition = new THREE.Vector2();
 
@@ -30,31 +28,25 @@ export function getSelectedHighlight() {
     return selectedHighlight;
 }
 
-/**
- * Sets up root event listeners for the application, including window resize and canvas interactions.
- * Initializes the CameraAnimator for globe and camera animations.
- * @returns {Camera | null} The initialized Camera animator instance, or null if initialization failed.
- */
 export function setupRootEventListeners() {
-    const cameraInstance = getCamera();
-    const rendererInstance = getRenderer();
-    const planetGroupInstance = getPlanetGroup();
-    const orbitControlsInstance = getControls();
-    const worldConfigInstance = getWorldConfig();
+    const cameraInstance = getCamera(); // Renamed for clarity
+    const rendererInstance = getRenderer(); // Renamed for clarity
+    const planetGroupInstance = getPlanetGroup(); // Renamed for clarity
+    const orbitControlsInstance = getControls(); // <<< GET ORBITCONTROLS
+    const worldConfigInstance = getWorldConfig();   // <<< GET WORLDCONFIG
 
-    // Instantiate the Camera animator which handles globe rotations and camera tilt.
+    // Instantiate the Camera animator if we have the necessary components
     if (cameraInstance && planetGroupInstance && orbitControlsInstance && worldConfigInstance) {
       cameraAnimator = new Camera(
         cameraInstance,
         planetGroupInstance,
-        orbitControlsInstance,
-        worldConfigInstance.radius
+        orbitControlsInstance,      // <<< PASS ORBITCONTROLS
+        worldConfigInstance.radius  // <<< PASS GLOBERADIUS
       );
     } else {
-      error("Failed to initialize CameraAnimator in setupRootEventListeners: Missing one or more core components.");
+      error("Failed to initialize CameraAnimator: Missing main camera, planet group, orbit controls, or world config.");
     }
     
-    // Handles window resize to keep camera and renderer updated.
     window.addEventListener('resize', () => {
         const cam = getCamera(); 
         const rend = getRenderer();
@@ -65,16 +57,14 @@ export function setupRootEventListeners() {
     });
 
     const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2(); // For converting screen coords to normalized device coords
+    const mouse = new THREE.Vector2();
 
     if (rendererInstance && rendererInstance.domElement) {
-        // Listener for mousedown to record start time and position for click vs. drag detection.
         rendererInstance.domElement.addEventListener('mousedown', (event) => {
             mouseDownTime = Date.now();
             mouseDownPosition.set(event.clientX, event.clientY);
         });
 
-        // Listener for click events on the renderer's canvas.
         rendererInstance.domElement.addEventListener('click', (event) => {
             const cam = getCamera();
             const rend = getRenderer();
@@ -83,30 +73,26 @@ export function setupRootEventListeners() {
             const wData = getWorldData();
 
             if (!rend || !cam || !wConfig || !pGroup || !wData || !wData.globe) {
-                error('[eventHandlers.click] Missing dependencies for click event processing.');
+                error('Missing dependencies for click event');
                 return;
             }
 
-            // Calculate normalized device coordinates from screen click.
             const rect = rend.domElement.getBoundingClientRect();
             mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-            // Check if this "click" was actually the end of a drag.
             const pressDuration = Date.now() - mouseDownTime;
             const moveDistance = mouseDownPosition.distanceTo(new THREE.Vector2(event.clientX, event.clientY));
 
             if (moveDistance > MAX_DRAG_DIST_FOR_CLICK || pressDuration > MAX_DRAG_TIME_FOR_CLICK) {
-                debug('[eventHandlers.click] Drag detected, click-to-rotate globe animation skipped.');
-                return; // Interpreted as a drag, so don't proceed with click-specific actions.
+                debug('Drag detected, click-to-rotate animation skipped.');
+                return; // It was a drag, not a click
             }
 
-            // Perform raycasting to find intersected objects on the globe.
             raycaster.setFromCamera(mouse, cam);
-            const intersections = raycaster.intersectObject(pGroup, true); // true for recursive check
-            if (intersections.length === 0) return; // No intersection with the planet group.
+            const intersections = raycaster.intersectObject(pGroup, true);
+            if (intersections.length === 0) return;
 
-            // Prioritize intersection with the main globe mesh if multiple objects are hit.
             let mainIntersect = intersections[0];
             for (let i = 0; i < intersections.length; i++) {
                 if (intersections[i].object.userData.isMainMesh) {
@@ -115,17 +101,16 @@ export function setupRootEventListeners() {
                 }
             }
 
-            // Extract tile information from the intersection point.
-            const point = mainIntersect.point.clone().sub(pGroup.position); // Point relative to planet group center
+            const point = mainIntersect.point.clone().sub(pGroup.position);
+            const radius = wConfig.radius;
             const normal = point.clone().normalize();
             const lat = Math.asin(normal.y) * (180 / Math.PI);
             const lon = Math.atan2(normal.z, normal.x) * (180 / Math.PI);
-            
             let tileId = null;
             const attr = mainIntersect.object.geometry.getAttribute('tileId');
-            if (attr && mainIntersect.faceIndex !== undefined) {
-                const idx = mainIntersect.faceIndex * 3; // Assuming non-indexed BufferGeometry with 3 vertices per face for tileId attribute
-                tileId = attr.array[idx]; // This might need adjustment based on how tileId is stored (per vertex or per face)
+            if (attr) {
+                const idx = mainIntersect.faceIndex * 3;
+                tileId = attr.array[idx];
             }
 
             let terrain = classifyTerrain(normal, RandomService.nextFloat.bind(RandomService)); 
@@ -139,17 +124,18 @@ export function setupRootEventListeners() {
                 plateId = mainIntersect.object.userData.tilePlate[tileId];
             }
 
-            // Remove previous highlight and create a new one for the clicked tile.
             if (selectedHighlight) {
                 pGroup.remove(selectedHighlight);
                 if (selectedHighlight.geometry) selectedHighlight.geometry.dispose();
                 selectedHighlight = null;
             }
+
             if (mainIntersect.object.userData.tileEdges && mainIntersect.object.userData.tileEdges[tileId]) {
                 const posArr = mainIntersect.object.userData.tileEdges[tileId];
                 const scaled = [];
                 for (let i = 0; i < posArr.length; i += 3) {
-                    const vec = new THREE.Vector3(posArr[i], posArr[i+1], posArr[i+2]).normalize().multiplyScalar(wConfig.radius * HIGHLIGHT_SCALE_FACTOR);
+                    const vx = posArr[i], vy = posArr[i+1], vz = posArr[i+2];
+                    const vec = new THREE.Vector3(vx, vy, vz).normalize().multiplyScalar(wConfig.radius * HIGHLIGHT_SCALE_FACTOR);
                     scaled.push(vec.x, vec.y, vec.z);
                 }
                 const geo = new THREE.BufferGeometry();
@@ -160,57 +146,63 @@ export function setupRootEventListeners() {
                 pGroup.add(selectedHighlight);
             }
 
-            // Update debug UI with clicked tile information.
             const elevation = mainIntersect.object.userData.tileElevation ? mainIntersect.object.userData.tileElevation[tileId] : null;
             const moisture = mainIntersect.object.userData.tileMoisture ? mainIntersect.object.userData.tileMoisture[tileId] : null;
-            debug(`[eventHandlers.click] Tile ${tileId} – Terr:${terrain} Plate:${plateId} Elev:${elevation?.toFixed(2)} Moist:${moisture?.toFixed(2)} Lat:${lat.toFixed(2)}° Lon:${lon.toFixed(2)}°`);
-            const statusDiv = document.getElementById('debug-status');
-            if (statusDiv) {
-                const clickedTileForUI = wData.globe.getTile(tileId);
-                const areaForUI = clickedTileForUI?.area !== undefined ? clickedTileForUI.area.toFixed(4) : 'N/A';
-                const currentSeed = RandomService.getCurrentSeed();
-                statusDiv.innerHTML =
-                    `Seed: ${currentSeed === undefined ? 'N/A' : currentSeed}<br>` +
-                    `--- Tile Info ---<br>` +
-                    `ID: ${tileId}<br>` +
-                    `Terr: ${terrain}<br>` +
-                    `Plate: ${plateId}<br>` +
-                    `Area: ${areaForUI}<br>` +
-                    `Elev: ${elevation?.toFixed(2)}<br>` +
-                    `Moist: ${moisture?.toFixed(2)}<br>` +
-                    `Lat: ${lat.toFixed(2)}°<br>` +
-                    `Lon: ${lon.toFixed(2)}°`;
-            }
 
-            // If a valid tile was clicked and the cameraAnimator is available, trigger globe rotation.
+            debug(`Tile ${tileId} – Terr:${terrain} Plate:${plateId} Elev:${elevation?.toFixed(2)} Moist:${moisture?.toFixed(2)} Lat:${lat.toFixed(2)}° Lon:${lon.toFixed(2)}°`);
+
+            const clickedTileForUI = wData.globe.getTile(tileId);
+            const areaForUI = clickedTileForUI?.area !== undefined ? clickedTileForUI.area.toFixed(4) : 'N/A';
+            const currentSeed = RandomService.getCurrentSeed(); // Get current seed
+            const tileInfoHtml =
+                `Seed: ${currentSeed === undefined ? 'N/A' : currentSeed}<br>` + // Display seed
+                `--- Tile Info ---<br>` +
+                `ID: ${tileId}<br>` +
+                `Terr: ${terrain}<br>` +
+                `Plate: ${plateId}<br>` +
+                `Area: ${areaForUI}<br>` +
+                `Elev: ${elevation?.toFixed(2)}<br>` +
+                `Moist: ${moisture?.toFixed(2)}<br>` +
+                `Lat: ${lat.toFixed(2)}°<br>` +
+                `Lon: ${lon.toFixed(2)}°`;
+            
+            updateTileDebugInfo(tileInfoHtml); // New way: Use the dedicated function
+
             const clickedTile = wData.globe.getTile(tileId);
             if (clickedTile) {
-                // ... (extensive debug logging for clickedTile, can be kept or summarized)
+                let debugMsg = `Tile clicked: ID=${clickedTile.id}, Terrain=${clickedTile.terrain.id}, Center=(${clickedTile.center.map(c => c.toFixed(2))})`;
+                if (clickedTile.neighbors) {
+                    debugMsg += `, Neighbors=[${clickedTile.neighbors.join(',')}]`;
+                }
+                if (clickedTile.area !== undefined) {
+                    debugMsg += `, Area=${clickedTile.area.toFixed(4)}`;
+                }
+                if (clickedTile.plateId !== null) {
+                    debugMsg += `, PlateID=${clickedTile.plateId}`;
+                }
+                debugMsg += `, Elevation=${clickedTile.elevation.toFixed(2)}, Moisture=${clickedTile.moisture.toFixed(2)}`;
+                debug(debugMsg);
+
+                // <<< --- INTEGRATE CAMERA ANIMATION HERE --- >>>
                 if (cameraAnimator) {
+                  // The Tile object from Tile.js has 'lat' and 'lon' getters.
+                  // The Camera class expects 'latitude' and 'longitude'.
                   const tileDataForCamera = {
                     latitude: clickedTile.lat,
                     longitude: clickedTile.lon
                   };
-                  // This call to cameraAnimator.animateTo will rotate the GLOBE MODEL
-                  // so the clicked tile faces the camera.
-                  cameraAnimator.animateTo(tileDataForCamera, (success) => {
-                    debug(`[eventHandlers.click] Globe animation to tile ${success ? 'complete' : 'interrupted'}.`);
-
-                    if (success) {
-                      // After the globe faces the camera, move camera to an isometric close-up.
-                      cameraAnimator.zoomToTile(tileDataForCamera, 45, wConfig.radius * 1.5, 1000);
-                    }
+                  cameraAnimator.animateTo(tileDataForCamera, () => {
+                    debug("Camera animation to tile complete.");
                   });
                 } else {
-                  error("[eventHandlers.click] CameraAnimator not initialized. Cannot animate globe to tile.");
+                  error("CameraAnimator not initialized. Cannot animate to tile.");
                 }
             }
         });
     } else {
-        error('[eventHandlers.setup] Renderer or renderer.domElement not available for click listener setup.');
+        error('Renderer or renderer.domElement not available for click listener setup.');
     }
 
-    // Initialize other controls (mouse for dragging globe, keyboard for inputs)
     const cam = getCamera();
     const pGroup = getPlanetGroup();
     const orbitControls = getControls(); 
@@ -221,26 +213,17 @@ export function setupRootEventListeners() {
         initMouseControls(cam, pGroup, orbitControls, rend);
         initKeyboardControls(cam, pGroup, orbitControls, wConfig);
     } else {
-        error('[eventHandlers.setup] One or more dependencies for mouse/keyboard control initialization are missing.');
+        error('One or more dependencies for control (mouse/keyboard) initialization are missing in setupRootEventListeners.');
     }
-    return cameraAnimator; // Return the animator instance for use in other parts of the game (e.g., game.js for UI components).
+    return cameraAnimator; // <<< RETURN THE INSTANCE
 }
 
-/**
- * Sets up global mouse state tracking. Currently, this function is mostly a placeholder
- * as the primary click vs. drag logic is handled within the renderer's mousedown/click listeners.
- */
 export function setupMouseTrackingState() {
-    // Original global isMouseDown tracking. Can be removed if not used elsewhere,
-    // as click/drag differentiation is now more localized.
-    // window.addEventListener('mousedown', () => { isMouseDown = true; });
+    // window.addEventListener('mousedown', () => { isMouseDown = true; }); // Potentially redundant if not used elsewhere
     // window.addEventListener('mouseup', () => { isMouseDown = false; });
     // window.addEventListener('mouseleave', () => { isMouseDown = false; });
 }
 
-/**
- * Reinitializes mouse and keyboard controls. Useful after major state changes like planet regeneration.
- */
 export function reinitializeControls() {
     const cam = getCamera();
     const pGroup = getPlanetGroup();
@@ -253,8 +236,8 @@ export function reinitializeControls() {
         disposeKeyboardControls();
         initMouseControls(cam, pGroup, orbitControls, rend);
         initKeyboardControls(cam, pGroup, orbitControls, wConfig);
-        debug('[eventHandlers.reinitialize] Mouse and Keyboard controls re-initialized.');
+        debug('Mouse and Keyboard controls re-initialized.');
     } else {
-        error('[eventHandlers.reinitialize] Failed to re-initialize controls due to missing dependencies.');
+        error('Failed to re-initialize controls due to missing dependencies.');
     }
 } 

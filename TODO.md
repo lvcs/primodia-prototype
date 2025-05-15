@@ -166,6 +166,7 @@
 - [ ] Enforce Single Responsibility Principle (SRP) across Codebase
 - [ ] Adopt Composition over Inheritance (Consider ECS for Game Entities)
 - [ ] Promote Modularity & Decoupling via Clear API Boundaries
+- [ ] Decouple THREE.js from debug utility
 - [ ] Implement Robust Error Handling & Logging Mechanisms
 - [ ] Follow Good Git Version Control Practices (Conventional Commits)
 - [ ] Conduct Regular Code Reviews

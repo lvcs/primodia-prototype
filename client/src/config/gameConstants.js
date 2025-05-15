@@ -10,8 +10,8 @@ export const STEP_NUMBER_OF_GLOBE_TILES = 50; // From UI slider step
 
 // Tectonic Plates
 export const MIN_TECHTONIC_PLATES = 4;    // From UI slider min
-export const MAX_TECHTONIC_PLATES = 64;    // From UI slider max
-export const DEFAULT_TECHTONIC_PLATES = 16; // From sphereSettings default
+export const MAX_TECHTONIC_PLATES = 512;    // From UI slider max
+export const DEFAULT_TECHTONIC_PLATES = 256; // From sphereSettings default
 export const STEP_TECHTONIC_PLATES = 1;     // From UI slider step
 
 // Jitter

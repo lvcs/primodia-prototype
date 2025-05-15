@@ -185,16 +185,35 @@ export function generatePlates(globe, numPlates = 16) {
 
   let head = 0; // Use a head index for efficient queue processing instead of splice
   while(head < queue.length) {
-    const currentTileId = queue[head++]; // Dequeue
+    // Randomly pick an item from the unprocessed part of the queue (from index head to queue.length - 1)
+    const unprocessedCount = queue.length - head;
+    // Generate a random index within the unprocessed part of the queue
+    const randomIndexInUnprocessedPortion = Math.floor(RandomService.nextFloat() * unprocessedCount);
+    const actualIndexInQueue = head + randomIndexInUnprocessedPortion;
+    
+    const selectedTileId = queue[actualIndexInQueue]; // Get the randomly selected tile
+
+    // Swap this randomly selected tile with the element at the current 'head' position
+    queue[actualIndexInQueue] = queue[head];
+    queue[head] = selectedTileId; 
+    // Now, queue[head] holds the selectedTileId, which we will process next.
+
+    const currentTileId = queue[head]; // The tile to process
     const currentPlateId = tilePlate[currentTileId];
     const tile = globe.getTile(currentTileId);
 
+    head++; // Advance head, as queue[head-1] (formerly queue[head]) is now being processed
+
     if (!tile) continue;
 
-    tile.neighbors.forEach(neighborId => {
+    // Create a mutable copy of neighbors and shuffle them for more local randomness
+    const neighbors = [...tile.neighbors]; 
+    RandomService.shuffleArray(neighbors); 
+
+    neighbors.forEach(neighborId => {
       if (tilePlate[neighborId] === undefined) { // If neighbor not yet assigned
         tilePlate[neighborId] = currentPlateId;
-        queue.push(neighborId);
+        queue.push(neighborId); // Add to queue for later processing
       }
     });
   }
