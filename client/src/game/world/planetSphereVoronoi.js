@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
 import { MapTypes, defaultMapType, generateMapTerrain } from './registries/MapTypeRegistry.js';
-import { debug } from '../debug.js';
+import { debug } from '../utils/debug.js';
 import { terrainById } from './registries/TerrainRegistry.js';
 import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
 import { Terrains } from './registries/TerrainRegistry.js';
 import * as Const from '../../config/gameConstants.js'; // Import constants
+import RandomService from '../core/RandomService.js'; // Added import
 
 // Cache for random lat/lon offsets
 const _randomLat = [];
@@ -15,7 +16,7 @@ const _randomLon = [];
 const TerrainType = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
 const terrainColors = Object.fromEntries(Object.values(Terrains).map(t=>[t.id,t.color]));
 
-function generateFibonacciSphere1(N, jitter) {
+function generateFibonacciSphere1(N, jitter, randomFloat) {
     const points = [];
     const phi = Math.PI * (Math.sqrt(5) - 1); // golden ratio
     
@@ -32,8 +33,8 @@ function generateFibonacciSphere1(N, jitter) {
         const z = Math.sin(theta) * radius;
         
         if (jitter > 0) {
-            const angle = Math.random() * Math.PI * 2;
-            const amount = Math.random() * jitter;
+            const angle = randomFloat() * Math.PI * 2;
+            const amount = randomFloat() * jitter;
             const rx = Math.cos(angle) * amount;
             const rz = Math.sin(angle) * amount;
             
@@ -53,7 +54,7 @@ function generateFibonacciSphere1(N, jitter) {
     return points;
 }
 
-function generateFibonacciSphere2(N, jitter) {
+function generateFibonacciSphere2(N, jitter, randomFloat) {
     const points = [];
     const dlong = Math.PI * (3-Math.sqrt(5)); // ~2.39996323
     
@@ -70,8 +71,8 @@ function generateFibonacciSphere2(N, jitter) {
         const z = Math.sin(theta) * radius;
         
         if (jitter > 0) {
-            const angle = Math.random() * Math.PI * 2;
-            const amount = Math.random() * jitter;
+            const angle = randomFloat() * Math.PI * 2;
+            const amount = randomFloat() * jitter;
             const rx = Math.cos(angle) * amount;
             const rz = Math.sin(angle) * amount;
             
@@ -177,9 +178,9 @@ function addSouthPoleTriangles(southPoleOriginalIndex, delaunatorInstance, origi
 }
 
 // Function to determine terrain type based on vertex position
-function determineTerrainType(position) {
+function determineTerrainType(position, randomFloat) {
     // First check if there's a map-specific algorithm
-    const mapBasedTerrain = generateMapTerrain(sphereSettings.mapType, position);
+    const mapBasedTerrain = generateMapTerrain(sphereSettings.mapType, position, randomFloat);
     if (mapBasedTerrain) {
         return mapBasedTerrain;
     }
@@ -196,13 +197,13 @@ function determineTerrainType(position) {
     } else if (y > 0.8) {
         return TerrainType.SNOW; // North pole
     } else if (y < -0.5) {
-        return Math.random() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
+        return randomFloat() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
     } else if (y < -0.2) {
         if (noiseValue > 0.05) return TerrainType.FOREST;
         if (noiseValue < -0.05) return TerrainType.HILLS;
         return TerrainType.PLAINS;
     } else if (y < 0.2) {
-        const rand = Math.random();
+        const rand = randomFloat();
         if (rand < 0.4) return TerrainType.OCEAN;
         if (rand < 0.6) return TerrainType.COAST;
         if (noiseValue > 0.05) return TerrainType.JUNGLE;
@@ -213,7 +214,7 @@ function determineTerrainType(position) {
         if (noiseValue < -0.05) return TerrainType.HILLS;
         return TerrainType.PLAINS;
     } else {
-        return Math.random() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
+        return randomFloat() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
     }
 }
 
@@ -269,7 +270,7 @@ function generateDelaunayGeometry(xyz, delaunay) {
         const centroid = new THREE.Vector3(centroidX, centroidY, centroidZ).normalize();
         
         // Determine terrain type based on position
-        const terrainType = determineTerrainType(centroid);
+        const terrainType = determineTerrainType(centroid, RandomService.nextFloat.bind(RandomService));
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[t] = terrainType;
 
@@ -355,7 +356,7 @@ function generateVoronoiGeometry(points, delaunay) {
         }).sort((a, b) => a.angle - b.angle);
 
         // Determine terrain type based on vertex position
-        const terrainType = determineTerrainType(normal);
+        const terrainType = determineTerrainType(normal, RandomService.nextFloat.bind(RandomService));
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[v] = terrainType;
         
@@ -422,10 +423,15 @@ export function generatePlanetGeometryGroup(config) {
     const algorithm = sphereSettings.algorithm;
     const drawMode = sphereSettings.drawMode;
     
-    // Generate points using selected algorithm
-    const points = algorithm === 2 ? 
-        generateFibonacciSphere2(N, jitter) : 
-        generateFibonacciSphere1(N, jitter);
+    let points;
+    // Bind RandomService.nextFloat for convenience
+    const randomFloat = RandomService.nextFloat.bind(RandomService);
+
+    if(algorithm === 1){
+        points = generateFibonacciSphere1(N, jitter, randomFloat);
+    } else {
+        points = generateFibonacciSphere2(N, jitter, randomFloat);
+    }
     
     // Project points for triangulation
     const { projected, southPoleIndex, originalIndicesMap } = stereographicProjection(points);

@@ -4,9 +4,12 @@ import { SliderControl } from './components/SliderControl.js';
 import { SelectControl } from './components/SelectControl.js';
 import { ToggleControl } from './components/ToggleControl.js';
 import { sphereSettings, DrawMode } from '../game/world/planetSphereVoronoi.js';
-import { generateAndDisplayPlanet, updatePlanetColors } from '../game/game.js';
+import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '../game/game.js';
 import { MapRegistry } from '../game/world/registries/MapTypeRegistry.js';
 import * as Const from '../config/gameConstants.js'; // Import constants
+import RandomService from '../game/core/RandomService.js'; // Import RandomService
+
+let seedInputField; // To store the reference to the input field for updates
 
 // Stub: you can fill in logic to match current sphereSettings & event hooks
 export function renderGlobeControls() {
@@ -21,7 +24,7 @@ export function renderGlobeControls() {
     if (sphereSettings.drawMode === val) btn.classList.add('active');
     btn.onclick = () => {
       sphereSettings.drawMode = val;
-      generateAndDisplayPlanet();
+      requestPlanetRegeneration();
       renderGlobeControls();
     };
     return btn;
@@ -36,7 +39,7 @@ export function renderGlobeControls() {
     if (sphereSettings.algorithm === num) btn.classList.add('active');
     btn.onclick = () => {
       sphereSettings.algorithm = num;
-      generateAndDisplayPlanet();
+      requestPlanetRegeneration();
       renderGlobeControls();
     };
     return btn;
@@ -54,7 +57,7 @@ export function renderGlobeControls() {
     onInput: e => ptsValue.textContent = e.target.value,
     onChange: e => {
       sphereSettings.numPoints = +e.target.value;
-      generateAndDisplayPlanet();
+      requestPlanetRegeneration();
     }
   });
   panel.appendChild(ControlSection({ label: 'Number of Points', children: [ptsSlider, ptsValue] }));
@@ -68,7 +71,7 @@ export function renderGlobeControls() {
     step: Const.STEP_JITTER, 
     value: sphereSettings.jitter,
     onInput: e => jitterValue.textContent = parseFloat(e.target.value).toFixed(2),
-    onChange: e => { sphereSettings.jitter = +e.target.value; generateAndDisplayPlanet(); }
+    onChange: e => { sphereSettings.jitter = +e.target.value; requestPlanetRegeneration(); }
   });
   panel.appendChild(ControlSection({ label: 'Jitter', children: [jitterSlider, jitterValue] }));
 
@@ -76,7 +79,7 @@ export function renderGlobeControls() {
   const mapOptions = Object.entries(MapRegistry).map(([key, {description}]) => ({ value: key, label: key }));
   const mapSelect = SelectControl({
     options: mapOptions, value: sphereSettings.mapType,
-    onChange: e => { sphereSettings.mapType = e.target.value; generateAndDisplayPlanet(); }
+    onChange: e => { sphereSettings.mapType = e.target.value; requestPlanetRegeneration(); }
   });
   panel.appendChild(ControlSection({ label: 'Map Type', children: mapSelect }));
 
@@ -84,7 +87,7 @@ export function renderGlobeControls() {
   const outlineToggle = ToggleControl({
     id: 'outline-toggle', checked: sphereSettings.outlineVisible,
     labelText: 'Show Outlines',
-    onChange: e => { sphereSettings.outlineVisible = e.target.checked; updatePlanetColors(); }
+    onChange: e => { sphereSettings.outlineVisible = e.target.checked; triggerPlanetColorUpdate(); }
   });
   panel.appendChild(ControlSection({ label: '', children: outlineToggle }));
 
@@ -97,7 +100,7 @@ export function renderGlobeControls() {
     step: Const.STEP_TECHTONIC_PLATES, 
     value: sphereSettings.numPlates,
     onInput: e => platesValue.textContent = e.target.value,
-    onChange: e => { sphereSettings.numPlates = +e.target.value; generateAndDisplayPlanet(); }
+    onChange: e => { sphereSettings.numPlates = +e.target.value; requestPlanetRegeneration(); }
   });
   panel.appendChild(ControlSection({ label: 'Number of Plates', children: [platesSlider, platesValue] }));
 
@@ -110,9 +113,33 @@ export function renderGlobeControls() {
     step: Const.STEP_ELEVATION_BIAS, 
     value: sphereSettings.elevationBias,
     onInput: e => elevValue.textContent = parseFloat(e.target.value).toFixed(2),
-    onChange: e => { sphereSettings.elevationBias = +e.target.value; updatePlanetColors(); }
+    onChange: e => { sphereSettings.elevationBias = +e.target.value; triggerPlanetColorUpdate(); }
   });
   panel.appendChild(ControlSection({ label: 'Elevation Bias', children: [elevSlider, elevValue] }));
+
+  // World Seed Section
+  const currentSeed = RandomService.getCurrentSeed() || 'Default';
+  seedInputField = TextInputControl({
+    id: 'map-seed-input',
+    label: 'Map Seed:',
+    value: sphereSettings.currentSeed !== undefined ? sphereSettings.currentSeed : (RandomService.getCurrentSeed() || '')
+  });
+
+  const regenerateButton = ButtonControl({
+    id: 'regenerate-world-button',
+    label: 'Regenerate World',
+    onClick: () => {
+      let seedValue = seedInputField.getValue();
+      let seed = parseInt(seedValue, 10);
+      if (isNaN(seed)) {
+        seed = undefined;
+      }
+      sphereSettings.currentSeed = seed;
+      requestPlanetRegeneration(seed);
+      seedInputField.setValue(RandomService.getCurrentSeed() || '');
+    }
+  });
+  panel.appendChild(ControlSection({ label: 'World Seed', children: [seedInputField.getControl(), regenerateButton.getControl()] }));
 
   // View selector
   const viewOptions = [
@@ -123,7 +150,44 @@ export function renderGlobeControls() {
   ];
   const viewSelect = SelectControl({
     options: viewOptions, value: sphereSettings.viewMode,
-    onChange: e => { sphereSettings.viewMode = e.target.value; updatePlanetColors(); }
+    onChange: e => { sphereSettings.viewMode = e.target.value; triggerPlanetColorUpdate(); }
   });
   panel.appendChild(ControlSection({ label: 'View', children: viewSelect }));
+
+  // Update seed input with the actually used seed after generation if it changed
+  if (seedInputField && sphereSettings.currentSeed !== undefined) {
+    seedInputField.setValue(sphereSettings.currentSeed);
+  } else if (seedInputField) {
+    seedInputField.setValue(RandomService.getCurrentSeed() || '');
+  }
+}
+
+// Helper function to create simple ButtonControl if not existing
+function ButtonControl({ id, label, onClick }) {
+  const button = document.createElement('button');
+  button.id = id;
+  button.textContent = label;
+  button.classList.add('control-btn');
+  button.onclick = onClick;
+  return { getControl: () => button };
+}
+
+// Helper function to create simple TextInputControl if not existing
+function TextInputControl({ id, label, value }) {
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('text-input-control');
+  const labelEl = document.createElement('label');
+  labelEl.htmlFor = id;
+  labelEl.textContent = label;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.id = id;
+  input.value = value;
+  wrapper.appendChild(labelEl);
+  wrapper.appendChild(input);
+  return {
+    getControl: () => wrapper,
+    getValue: () => input.value,
+    setValue: (val) => input.value = val
+  };
 } 

@@ -141,9 +141,10 @@ export const defaultMapType = MapTypes.CONTINENTS;
  * Generate map terrain based on map type and position
  * @param {string} mapType - The map type ID from MapTypes
  * @param {THREE.Vector3} position - Normalized position vector on the sphere
+ * @param {function(): number} randomFloat - A function that returns a random float [0,1) for seeded randomness.
  * @returns {string|null} - Terrain type ID or null for default handling
  */
-export function generateMapTerrain(mapType, position) {
+export function generateMapTerrain(mapType, position, randomFloat) {
   const mapConfig = MapRegistry[mapType];
   
   if (!mapConfig) return null;
@@ -208,7 +209,7 @@ export function generateMapTerrain(mapType, position) {
   
   // Apply terrain distribution weighted randomization for other map types
   // This is a simplified implementation - real games would use more deterministic approaches
-  const roll = Math.random();
+  const roll = randomFloat(); // Use the passed randomFloat function
   let cumulativeChance = 0;
   
   for (const [terrain, chance] of Object.entries(distribution)) {

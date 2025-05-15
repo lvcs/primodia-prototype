@@ -4,13 +4,21 @@ import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
 import { terrainById } from './registries/TerrainRegistry.js';
 import { generatePlates } from './platesGenerator.js';
+import RandomService from '../core/RandomService.js';
 
 /**
  * Generates globe mesh (legacy) plus OO WorldGlobe description.
  * @param {{radius:number}} config
  * @returns {{ meshGroup: THREE.Group, globe: WorldGlobe, config: any }}
  */
-export function generateWorld(config){
+export function generateWorld(config, seed){
+  // Initialize the global random service with the provided seed.
+  // All subsequent procedural generation steps will use this seeded PRNG.
+  RandomService.initialize(seed);
+
+  // Bind RandomService.nextFloat for convenience where needed in this scope or passed down
+  const randomFloat = RandomService.nextFloat.bind(RandomService);
+
   const meshGroup = generatePlanetGeometryGroup(config);
   const mainMesh = meshGroup.children.find(c=>c.userData && c.userData.isMainMesh);
   if(!mainMesh){
@@ -44,7 +52,7 @@ export function generateWorld(config){
     const id = parseInt(idStr,10);
     const centerVec = sums[id].divideScalar(counts[id]).normalize();
     const center = [centerVec.x, centerVec.y, centerVec.z];
-    const terrId = tileTerrain[id] || classifyTerrain(centerVec);
+    const terrId = tileTerrain[id] || classifyTerrain(centerVec, randomFloat);
     const terrain = terrainById(terrId) || terrainById('PLAINS');
     
     // Calculate actual area
@@ -63,17 +71,19 @@ export function generateWorld(config){
     });
   }
 
-  // Generate tectonic plates and elevations
+  // Generate tectonic plates and elevations using the now-initialized RandomService.
   const numPlates = sphereSettings.numPlates || 16;
+  // generatePlates will internally use RandomService for its random choices.
   const { plates, tilePlate } = generatePlates(globe, numPlates);
 
   // Store tilePlate mapping in mainMesh for coloring later
   if(mainMesh){
     mainMesh.userData.tilePlate = tilePlate;
-    // Generate plate colors
+    // Generate plate colors using the seeded PRNG for consistency.
     const plateColors = {};
     plates.forEach(p=>{
-      const color = new THREE.Color().setHSL(Math.random(), 0.6, 0.5);
+      // Use RandomService for reproducible colors if the seed is the same.
+      const color = new THREE.Color().setHSL(RandomService.nextFloat(), 0.6, 0.5);
       plateColors[p.id] = color.getHex();
     });
     mainMesh.userData.plateColors = plateColors;

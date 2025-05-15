@@ -1,23 +1,108 @@
 import * as THREE from 'three';
 import Plate from './model/Plate.js';
+import RandomService from '../core/RandomService.js';
+
+// --- Tectonic Plate Generation Constants ---
+
+// Percentage chance for a new plate to be oceanic (0.0 to 1.0).
+const OCEANIC_PLATE_CHANCE = 0.7;
+// Min/max base elevation for oceanic plates.
+const OCEANIC_BASE_ELEVATION_MIN = -0.6;
+const OCEANIC_BASE_ELEVATION_MAX = -0.3;
+// Min/max base elevation for continental plates.
+const CONTINENTAL_BASE_ELEVATION_MIN = 0.05;
+const CONTINENTAL_BASE_ELEVATION_MAX = 0.25;
+
+// --- Elevation Calculation Constants (Inspired by Red Blob Games) ---
+
+// Defines how strongly plates must converge to form major features like mountains or deep trenches.
+// Negative values indicate convergence. Article used -0.75; current value is less extreme.
+const STRONG_CONVERGENCE_THRESHOLD = -0.4;
+// Target elevation for major mountain ranges resulting from plate collisions.
+const MOUNTAIN_ELEVATION = 0.7;
+// Target elevation for coastlines on the edge of land plates (e.g., beaches).
+const COASTLINE_LOWER_ELEVATION = 0.0;
+// Target elevation for coastlines on the edge of ocean plates (e.g., continental shelves, shallow ridges).
+const COASTLINE_HIGHER_ELEVATION = -0.15;
+// Target elevation for mid-ocean ridges formed by strong oceanic-oceanic plate convergence.
+const OCEAN_RIDGE_ELEVATION = -0.1;
+// Offset subtracted from an oceanic plate's base elevation to form deep ocean trenches.
+const DEEP_OCEAN_TRENCH_OFFSET = -0.3;
+// Default elevation for typical ocean floor when oceanic plates are not strongly converging.
+const DEFAULT_OCEAN_FLOOR = -0.4;
+
+// --- Elevation Priority Constants ---
+// Used to determine which geological feature's elevation "wins" when multiple interactions affect a tile.
+// Higher numbers indicate higher priority.
+const PRIORITY_BASE = 0;                 // Base elevation of the plate.
+const PRIORITY_OCEAN_FLOOR = 1;          // Standard ocean floor.
+const PRIORITY_COAST_RIDGE_TRENCH = 2;   // Coastlines, oceanic ridges, or trenches.
+const PRIORITY_MOUNTAIN = 3;             // Major mountain ranges.
+
+// --- Elevation Smoothing Constants ---
+// Number of passes for the elevation smoothing algorithm.
+const ELEVATION_SMOOTHING_PASSES = 3;
+// Blending factor for original elevation during smoothing (0.0 to 1.0). Higher retains more original features.
+const ELEVATION_SMOOTHING_ORIGINAL_WEIGHT = 0.6;
+// Blending factor for averaged elevation during smoothing (0.0 to 1.0).
+const ELEVATION_SMOOTHING_AVERAGED_WEIGHT = 0.4;
+
+// --- Noise Generation Constants ---
+// Multipliers for the sine function in noise3 to create chaotic patterns.
+const NOISE3_X_MULTIPLIER = 12.9898;
+const NOISE3_Y_MULTIPLIER = 78.233;
+const NOISE3_Z_MULTIPLIER = 37.719;
+
+// Default number of octaves for Fractional Brownian Motion (fBm) noise.
+const FBM_DEFAULT_OCTAVES = 4;
+// Initial amplitude for the first octave of fBm noise.
+const FBM_INITIAL_AMPLITUDE = 0.5;
+// Persistence factor for fBm noise; controls how much detail is added with each octave.
+// Typically between 0 and 1. Higher values mean rougher noise.
+const FBM_PERSISTENCE = 0.5;
+// Initial frequency for the first octave of fBm noise.
+const FBM_INITIAL_FREQUENCY = 1;
+
+// --- Moisture Generation Constants ---
+// Range for base moisture assigned to each tectonic plate.
+const PLATE_MOISTURE_BASE_MIN = 0.2;
+const PLATE_MOISTURE_BASE_MAX = 0.8; // Max = PLATE_MOISTURE_BASE_MIN + 0.6 (from original code)
+// Multipliers for noise3 to generate moisture variation within a plate.
+const MOISTURE_NOISE_X_MULTIPLIER = 23.4;
+const MOISTURE_NOISE_Y_MULTIPLIER = 17.8;
+const MOISTURE_NOISE_Z_MULTIPLIER = 11.2;
+// Amplitude of the moisture noise effect (scaled by this value).
+const MOISTURE_NOISE_AMPLITUDE = 0.4;
+// Offset for the moisture noise (centers the noise effect around 0; e.g. if amplitude is 0.4, noise ranges from -0.2 to 0.2).
+const MOISTURE_NOISE_OFFSET = MOISTURE_NOISE_AMPLITUDE / 2;
+
+// Default moisture value for tiles that somehow end up unassigned to a plate.
+const DEFAULT_TILE_MOISTURE = 0.5;
+
 
 // Utility hash-based pseudo-noise (simple and fast)
+// Generates a deterministic pseudo-random value between 0 and 1 based on 3D input coordinates.
+// Uses sine function with arbitrary multipliers for chaotic behavior.
+// TODO: Define magic numbers as constants
 function noise3(x, y, z) {
-  const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719);
+  const s = Math.sin(x * NOISE3_X_MULTIPLIER + y * NOISE3_Y_MULTIPLIER + z * NOISE3_Z_MULTIPLIER);
   return s - Math.floor(s); // Returns a value between 0 and 1
 }
 
 // Fractional Brownian Motion (fBm) noise for more natural-looking terrain variations
-function fbmNoise(vec, octaves = 4) {
+// Combines multiple "octaves" of the basic noise3 function at different frequencies and amplitudes
+// to create more complex and natural-looking patterns.
+// TODO: Define magic numbers/defaults as constants
+function fbmNoise(vec, octaves = FBM_DEFAULT_OCTAVES) {
   let total = 0;
-  let frequency = 1;
-  let amplitude = 0.5;
-  const persistence = 0.5; // How much detail is added with each octave
+  let frequency = FBM_INITIAL_FREQUENCY;
+  let amplitude = FBM_INITIAL_AMPLITUDE;
+  // const persistence = FBM_PERSISTENCE; // Renamed from FBM_PERSISTENCE to avoid conflict with the loop var
 
   for (let i = 0; i < octaves; i++) {
     total += noise3(vec.x * frequency, vec.y * frequency, vec.z * frequency) * amplitude;
     frequency *= 2; // Double frequency for finer detail
-    amplitude *= persistence; // Reduce amplitude for finer detail
+    amplitude *= FBM_PERSISTENCE; // Reduce amplitude for finer detail
   }
   return total; // Typically 0 to ~1, sum of amplitudes
 }
@@ -39,33 +124,37 @@ export function generatePlates(globe, numPlates = 16) {
   // 1. Create Plates: Randomly select seed tiles for each plate.
   const seedIds = [];
   const availableTileIds = [...tileIds]; // Clone to allow modification
-  while (seedIds.length < numPlates && availableTileIds.length > 0) {
-    const randomIndex = Math.floor(Math.random() * availableTileIds.length);
-    const candidate = availableTileIds.splice(randomIndex, 1)[0]; // Remove to avoid duplicates
-    seedIds.push(candidate);
+  RandomService.shuffleArray(availableTileIds);
+  for (let i = 0; i < numPlates && i < availableTileIds.length; i++) {
+    seedIds.push(availableTileIds[i]);
   }
   if (seedIds.length < numPlates) {
-    console.warn(`Could only create ${seedIds.length} plates out of ${numPlates} requested.`);
+    console.warn(`Could only create ${seedIds.length} plates out of ${numPlates} requested (not enough unique tiles).`);
   }
 
   const plates = seedIds.map((seedId, idx) => {
     const seedTile = globe.getTile(seedId);
-    if (!seedTile) { // Should not happen if tileIds are valid
+    if (!seedTile) {
         console.error("Seed tile not found for ID:", seedId);
-        // Provide a fallback Plate to prevent crashes, though this indicates a deeper issue
-        return new Plate({ id: idx, seedTileId: seedId, center: [0,0,0], motion: [0,0,0], isOceanic: true, baseElevation: -0.5 });
+        // Provide a fallback Plate to prevent crashes
+        const fallbackMotion = new THREE.Vector3(RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5).normalize();
+        return new Plate({
+            id: idx, seedTileId: seedId, center: [0,0,0], 
+            motion: [fallbackMotion.x, fallbackMotion.y, fallbackMotion.z],
+            isOceanic: RandomService.nextFloat() < OCEANIC_PLATE_CHANCE,
+            baseElevation: OCEANIC_BASE_ELEVATION_MIN 
+        });
     }
     const center = seedTile.center;
     // Generate a random motion vector for the plate, tangent to the sphere surface at its center.
-    const randomVec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+    const randomVec = new THREE.Vector3(RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5).normalize();
     const motion = new THREE.Vector3().fromArray(center).cross(randomVec).normalize(); // Cross product ensures perpendicular motion vector
 
     // Determine if the plate is oceanic or continental and assign a base elevation.
-    // These values are inspired by typical Earth elevations.
-    const isOceanic = Math.random() < 0.7; // 70% chance of being an oceanic plate
+    const isOceanic = RandomService.nextFloat() < OCEANIC_PLATE_CHANCE;
     const baseElevation = isOceanic
-      ? (Math.random() * 0.3 - 0.6) // Oceanic: -0.6 to -0.3 (deeper)
-      : (Math.random() * 0.2 + 0.05); // Continental: 0.05 to 0.25 (higher)
+      ? (RandomService.nextFloat() * (OCEANIC_BASE_ELEVATION_MAX - OCEANIC_BASE_ELEVATION_MIN) + OCEANIC_BASE_ELEVATION_MIN)
+      : (RandomService.nextFloat() * (CONTINENTAL_BASE_ELEVATION_MAX - CONTINENTAL_BASE_ELEVATION_MIN) + CONTINENTAL_BASE_ELEVATION_MIN);
 
     return new Plate({
       id: idx,
@@ -91,9 +180,12 @@ export function generatePlates(globe, numPlates = 16) {
     }
   });
 
-  while (queue.length > 0) {
-    const randIdx = Math.floor(Math.random() * queue.length);
-    const currentTileId = queue.splice(randIdx, 1)[0];
+  // Shuffle the initial queue to make the flood fill order less dependent on plate creation order.
+  RandomService.shuffleArray(queue);
+
+  let head = 0; // Use a head index for efficient queue processing instead of splice
+  while(head < queue.length) {
+    const currentTileId = queue[head++]; // Dequeue
     const currentPlateId = tilePlate[currentTileId];
     const tile = globe.getTile(currentTileId);
 
@@ -119,6 +211,8 @@ export function generatePlates(globe, numPlates = 16) {
   });
 
   // 3. (Optional but good) Recalculate Plate Centers: Based on the average position of their assigned tiles.
+  // This step refines the plate's conceptual center to be the geometric average of all its tiles,
+  // which can be more representative than the initial seed tile, especially for irregularly shaped plates.
   plates.forEach(p => {
     const assignedTileCenters = [];
     globe.tiles.forEach(tile => {
@@ -137,21 +231,24 @@ export function generatePlates(globe, numPlates = 16) {
 
 
   // 4. Assign Tile Elevations based on Plate Interactions and Noise
+  // This section iterates through each tile and determines its elevation.
+  // For boundary tiles, elevation is based on the interaction between its plate and neighboring plates.
+  // For interior tiles, elevation is based on the plate's base elevation.
   // Constants for elevation effects, inspired by Red Blob Games article's logic.
   // These values define the "target" elevation for different geological features.
-  const STRONG_CONVERGENCE_THRESHOLD = -0.4; // How much plates must push together for major features. (Article used -0.75, this is less extreme)
-  const MOUNTAIN_ELEVATION = 0.7;            // Elevation for major mountain ranges.
-  const COASTLINE_LOWER_ELEVATION = 0.0;     // Elevation for coastlines on the edge of land plates (e.g. beaches).
-  const COASTLINE_HIGHER_ELEVATION = -0.15;   // Elevation for coastlines on edge of ocean plates (e.g. continental shelf / shallow ridges).
-  const OCEAN_RIDGE_ELEVATION = -0.1;        // Elevation for mid-ocean ridges (O+O strong convergence).
-  const DEEP_OCEAN_TRENCH_OFFSET = -0.3;     // Added to ocean plate base for trenches.
-  const DEFAULT_OCEAN_FLOOR = -0.4;          // Typical ocean floor depth for O+O non-strong convergence.
+  // const STRONG_CONVERGENCE_THRESHOLD = -0.4; // How much plates must push together for major features. (Article used -0.75, this is less extreme)
+  // const MOUNTAIN_ELEVATION = 0.7;            // Elevation for major mountain ranges.
+  // const COASTLINE_LOWER_ELEVATION = 0.0;     // Elevation for coastlines on the edge of land plates (e.g. beaches).
+  // const COASTLINE_HIGHER_ELEVATION = -0.15;   // Elevation for coastlines on edge of ocean plates (e.g. continental shelf / shallow ridges).
+  // const OCEAN_RIDGE_ELEVATION = -0.1;        // Elevation for mid-ocean ridges (O+O strong convergence).
+  // const DEEP_OCEAN_TRENCH_OFFSET = -0.3;     // Added to ocean plate base for trenches.
+  // const DEFAULT_OCEAN_FLOOR = -0.4;          // Typical ocean floor depth for O+O non-strong convergence.
 
   // Elevation priorities: Higher number means this feature "wins" over lower priority ones.
-  const PRIORITY_BASE = 0;
-  const PRIORITY_OCEAN_FLOOR = 1;
-  const PRIORITY_COAST_RIDGE_TRENCH = 2;
-  const PRIORITY_MOUNTAIN = 3;
+  // const PRIORITY_BASE = 0;
+  // const PRIORITY_OCEAN_FLOOR = 1;
+  // const PRIORITY_COAST_RIDGE_TRENCH = 2;
+  // const PRIORITY_MOUNTAIN = 3;
 
   globe.tiles.forEach(tile => {
     const currentPlate = plates[tile.plate];
@@ -237,10 +334,10 @@ export function generatePlates(globe, numPlates = 16) {
     }); // End neighbor loop
 
     if (!isBoundaryTile) {
-      // Interior tile: Apply FBM noise to the plate's base elevation.
-      // Noise range approx -0.1 to +0.1 for fbmNoise*0.2-0.1
-      const noiseVal = fbmNoise(tileCenterVec, 4) * 0.2 - 0.1;
-      finalElevation = currentPlate.baseElevation + noiseVal;
+      // Interior tile: Set to plate's base elevation.
+      // Noise was causing horizontal line artifacts.
+      // Smoothing passes will help blend this with boundary elevations.
+      finalElevation = currentPlate.baseElevation;
     }
     
     // Clamp elevation to be within [-1, 1] range.
@@ -248,10 +345,11 @@ export function generatePlates(globe, numPlates = 16) {
   }); // End tiles loop
 
   // 5. Smooth Elevations: Apply a few passes of simple averaging with neighbors.
-  // This helps blend harsh transitions and create more natural slopes.
-  const smoothingPasses = 3;
-  for (let pass = 0; pass < smoothingPasses; pass++) {
-    const newElevations = new Map();
+  // This helps blend harsh transitions between different elevation zones (e.g., mountains and coasts)
+  // and creates more natural-looking slopes across the terrain.
+  // const smoothingPasses = 3;
+  for (let pass = 0; pass < ELEVATION_SMOOTHING_PASSES; pass++) {
+    const newElevations = new Map(); // Temporarily stores newly calculated elevations for this pass.
     globe.tiles.forEach(tile => {
       let elevationSum = tile.elevation;
       let neighborCount = 1;
@@ -265,24 +363,27 @@ export function generatePlates(globe, numPlates = 16) {
       newElevations.set(tile.id, elevationSum / neighborCount);
     });
 
-    // Blend current elevation with the new smoothed elevation to retain some features.
+    // Blend current elevation with the new smoothed elevation to retain some features from before smoothing,
+    // while also incorporating the averaged values for a smoother overall look.
     globe.tiles.forEach(tile => {
-      tile.elevation = (tile.elevation * 0.6) + (newElevations.get(tile.id) * 0.4);
+      tile.elevation = (tile.elevation * ELEVATION_SMOOTHING_ORIGINAL_WEIGHT) + (newElevations.get(tile.id) * ELEVATION_SMOOTHING_AVERAGED_WEIGHT);
     });
   }
 
   // 6. Assign Moisture (Simple placeholder logic)
-  // This is a very basic model; more sophisticated climate simulation would be needed for realistic moisture.
-  const plateMoistureBase = plates.map(() => Math.random() * 0.6 + 0.2); // Base moisture per plate (0.2-0.8)
+  // This is a very basic model for distributing moisture. A more sophisticated climate simulation
+  // would be needed for realistic moisture patterns (e.g., considering wind, mountains, large water bodies).
+  // TODO: Define magic numbers as constants
+  const plateMoistureBase = plates.map(() => RandomService.nextFloat() * (PLATE_MOISTURE_BASE_MAX - PLATE_MOISTURE_BASE_MIN) + PLATE_MOISTURE_BASE_MIN);
   globe.tiles.forEach(tile => {
     if (tile.plate === undefined || !plates[tile.plate]) {
-        tile.moisture = 0.5; // Default if plate info is missing
+        tile.moisture = DEFAULT_TILE_MOISTURE; // Default if plate info is missing
         return;
     }
     const baseMoisture = plateMoistureBase[tile.plate];
     // Add some noise based on location for variation within a plate.
-    const moistureNoise = noise3(tile.center[0] * 23.4, tile.center[1] * 17.8, tile.center[2] * 11.2) * 0.4 - 0.2; // Range -0.2 to 0.2
-    tile.moisture = Math.max(0, Math.min(1, baseMoisture + moistureNoise));
+    const moistureNoiseVal = noise3(tile.center[0] * MOISTURE_NOISE_X_MULTIPLIER, tile.center[1] * MOISTURE_NOISE_Y_MULTIPLIER, tile.center[2] * MOISTURE_NOISE_Z_MULTIPLIER) * MOISTURE_NOISE_AMPLITUDE - MOISTURE_NOISE_OFFSET;
+    tile.moisture = Math.max(0, Math.min(1, baseMoisture + moistureNoiseVal));
   });
 
   return { plates, tilePlate };

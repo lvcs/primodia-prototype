@@ -41,10 +41,10 @@ export function createDebugUI() {
   
   // Add debug info
   debugPanel.innerHTML = `<h3>Debug Info</h3>
-    <button id="debug-clear-cache">Clear Cache</button>
-    <button id="debug-reload">Reload</button>
-    <button id="debug-verbose">Toggle Verbose</button>
-    <div id="debug-status"></div>
+    <button id=\"debug-clear-cache\">Clear Cache</button>
+    <button id=\"debug-reload\">Reload</button>
+    <button id=\"debug-verbose\">Toggle Verbose</button>
+    <div id=\"debug-status\"></div>
   `;
   
   document.body.appendChild(debugPanel);
