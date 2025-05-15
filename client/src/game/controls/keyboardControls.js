@@ -54,11 +54,16 @@ export function handleKeyboardInput() {
     const baseTargetSpeed = Const.KEYBOARD_TARGET_ANGULAR_SPEED;
     // Scale speed by zoom: faster when zoomed out, slower when zoomed in.
     // Lerp between a min speed (e.g., 20% of base) and full base speed.
-    const effectiveTargetSpeed = THREE.MathUtils.lerp(
-        baseTargetSpeed * 0.2, // Slower when zoomed in
-        baseTargetSpeed,       // Full speed when zoomed out
-        zoomFactor
-    );
+    // const effectiveTargetSpeed = THREE.MathUtils.lerp(
+    //     baseTargetSpeed * 0.2, // Slower when zoomed in
+    //     baseTargetSpeed,       // Full speed when zoomed out
+    //     zoomFactor
+    // );
+
+    // New scaling logic similar to mouse controls:
+    const speedAtMinZoom = baseTargetSpeed * Const.KEYBOARD_SPEED_SCALE_AT_MIN_ZOOM;
+    const speedAtMaxZoom = baseTargetSpeed * Const.KEYBOARD_SPEED_SCALE_AT_MAX_ZOOM;
+    const effectiveTargetSpeed = THREE.MathUtils.lerp(speedAtMinZoom, speedAtMaxZoom, zoomFactor);
 
     let needsOrbitControlsUpdate = false;
     let rotationApplied = false;

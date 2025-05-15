@@ -56,8 +56,9 @@ export const PLANETARY_GLOW_COLOR = 0x5c95ff;
 // Camera and Controls
 export const MOUSE_PAN_SPEED = 0.0025; // Sensitivity of mouse panning (halved from 0.005)
 export const KEYBOARD_ZOOM_SPEED = 0.1; // Amount to zoom in/out per key press
-export const KEYBOARD_ROTATE_SPEED_MIN = 0.01; // Radians per key press when fully zoomed in
-export const KEYBOARD_ROTATE_SPEED_MAX = 0.05; // Radians per key press when fully zoomed out
+// New: Keyboard rotation speed scaling factors based on zoom
+export const KEYBOARD_SPEED_SCALE_AT_MIN_ZOOM = 0.1; // e.g., 1% of base speed at max zoom-in
+export const KEYBOARD_SPEED_SCALE_AT_MAX_ZOOM = 4.0;  // e.g., 200% of base speed at max zoom-out
 
 // Globe Rotation Damping and Inertia
 export const GLOBE_ANGULAR_DAMPING_FACTOR = 0.95; // Factor to slow down globe rotation each frame (e.g., 0.95 = 5% slowdown)
