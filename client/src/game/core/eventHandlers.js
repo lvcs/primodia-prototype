@@ -10,20 +10,42 @@ import { initKeyboardControls, disposeKeyboardControls } from '@/game/controls/k
 import { getCamera, getRenderer, getWorldConfig, getControls } from './setup.js'; // Path updated (sibling in core/)
 import { getPlanetGroup, getWorldData } from '@/game/planet.js'; // Path updated
 import RandomService from './RandomService.js'; // Import RandomService
+import { Camera } from '@/camera/Camera.js'; // <<< CHANGED TO NAMED IMPORT
 
 // Factor to slightly scale highlight geometry to prevent z-fighting.
 const HIGHLIGHT_SCALE_FACTOR = 1.003;
+const MAX_DRAG_DIST_FOR_CLICK = 10; // pixels
+const MAX_DRAG_TIME_FOR_CLICK = 250; // milliseconds
 
 let selectedHighlight = null;
-let isMouseDown = false; // Tracks mouse button state globally
+let cameraAnimator = null; // <<< ADDED CAMERA ANIMATOR INSTANCE HOLDER
+
+// Variables to track mouse press for distinguishing click from drag
+let mouseDownTime;
+let mouseDownPosition = new THREE.Vector2();
 
 export function getSelectedHighlight() {
     return selectedHighlight;
 }
 
 export function setupRootEventListeners() {
-    const camera = getCamera();
-    const renderer = getRenderer();
+    const cameraInstance = getCamera(); // Renamed for clarity
+    const rendererInstance = getRenderer(); // Renamed for clarity
+    const planetGroupInstance = getPlanetGroup(); // Renamed for clarity
+    const orbitControlsInstance = getControls(); // <<< GET ORBITCONTROLS
+    const worldConfigInstance = getWorldConfig();   // <<< GET WORLDCONFIG
+
+    // Instantiate the Camera animator if we have the necessary components
+    if (cameraInstance && planetGroupInstance && orbitControlsInstance && worldConfigInstance) {
+      cameraAnimator = new Camera(
+        cameraInstance,
+        planetGroupInstance,
+        orbitControlsInstance,      // <<< PASS ORBITCONTROLS
+        worldConfigInstance.radius  // <<< PASS GLOBERADIUS
+      );
+    } else {
+      error("Failed to initialize CameraAnimator: Missing main camera, planet group, orbit controls, or world config.");
+    }
     
     window.addEventListener('resize', () => {
         const cam = getCamera(); 
@@ -37,8 +59,13 @@ export function setupRootEventListeners() {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    if (renderer && renderer.domElement) {
-        renderer.domElement.addEventListener('click', (event) => {
+    if (rendererInstance && rendererInstance.domElement) {
+        rendererInstance.domElement.addEventListener('mousedown', (event) => {
+            mouseDownTime = Date.now();
+            mouseDownPosition.set(event.clientX, event.clientY);
+        });
+
+        rendererInstance.domElement.addEventListener('click', (event) => {
             const cam = getCamera();
             const rend = getRenderer();
             const wConfig = getWorldConfig();
@@ -53,6 +80,14 @@ export function setupRootEventListeners() {
             const rect = rend.domElement.getBoundingClientRect();
             mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            const pressDuration = Date.now() - mouseDownTime;
+            const moveDistance = mouseDownPosition.distanceTo(new THREE.Vector2(event.clientX, event.clientY));
+
+            if (moveDistance > MAX_DRAG_DIST_FOR_CLICK || pressDuration > MAX_DRAG_TIME_FOR_CLICK) {
+                debug('Drag detected, click-to-rotate animation skipped.');
+                return; // It was a drag, not a click
+            }
 
             raycaster.setFromCamera(mouse, cam);
             const intersections = raycaster.intersectObject(pGroup, true);
@@ -148,6 +183,21 @@ export function setupRootEventListeners() {
                 }
                 debugMsg += `, Elevation=${clickedTile.elevation.toFixed(2)}, Moisture=${clickedTile.moisture.toFixed(2)}`;
                 debug(debugMsg);
+
+                // <<< --- INTEGRATE CAMERA ANIMATION HERE --- >>>
+                if (cameraAnimator) {
+                  // The Tile object from Tile.js has 'lat' and 'lon' getters.
+                  // The Camera class expects 'latitude' and 'longitude'.
+                  const tileDataForCamera = {
+                    latitude: clickedTile.lat,
+                    longitude: clickedTile.lon
+                  };
+                  cameraAnimator.animateTo(tileDataForCamera, () => {
+                    debug("Camera animation to tile complete.");
+                  });
+                } else {
+                  error("CameraAnimator not initialized. Cannot animate to tile.");
+                }
             }
         });
     } else {
@@ -169,9 +219,9 @@ export function setupRootEventListeners() {
 }
 
 export function setupMouseTrackingState() {
-    window.addEventListener('mousedown', () => { isMouseDown = true; });
-    window.addEventListener('mouseup', () => { isMouseDown = false; });
-    window.addEventListener('mouseleave', () => { isMouseDown = false; });
+    // window.addEventListener('mousedown', () => { isMouseDown = true; }); // Potentially redundant if not used elsewhere
+    // window.addEventListener('mouseup', () => { isMouseDown = false; });
+    // window.addEventListener('mouseleave', () => { isMouseDown = false; });
 }
 
 export function reinitializeControls() {

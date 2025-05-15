@@ -16,15 +16,10 @@ export const getWorldData = () => worldData;
 
 export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _existingPlanetGroup, _existingSelectedHighlight, seed) {
   let currentWorldConfig = { ..._worldConfig }; // Use a copy to avoid direct mutation if not intended
-  let currentControls = _controls;
-  let currentSelectedHighlight = _existingSelectedHighlight;
+  // let currentControls = _controls; // _controls is not directly used in a way that requires it to be a mutable let here
+  // let currentSelectedHighlight = _existingSelectedHighlight; // Same for _existingSelectedHighlight
   
   try {
-    // Check if OrbitControls have been initialized yet. Passed via _controls.
-    // This function might be called to regenerate the planet, potentially needing to re-setup controls
-    // if critical parameters like radius changed. However, radius is now fixed.
-    // let controlsNeedSetup = !currentControls;
-
     debug(`Generating planet with config: ${JSON.stringify(currentWorldConfig)}`);
     
     if (_existingPlanetGroup) {
@@ -36,14 +31,8 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
           else obj.material.dispose();
         }
       });
-      // planetGroup = null; // Don't nullify the passed one, let caller manage its reference if needed
     }
-    if (currentSelectedHighlight) { // If a highlight exists, remove it before regenerating planet
-        // This assumes selectedHighlight is part of the planetGroup or scene that might be cleared
-        // For now, we assume it might be added to planetGroup, so let planetGroup disposal handle it.
-        // If it's added to scene directly, it needs separate handling or be passed to be removed from scene.
-        // The original code added it to planetGroup.
-    }
+    // currentSelectedHighlight is not directly used after this point, its removal is tied to _existingPlanetGroup logic implicitly
 
     const oldGlowMesh = _scene.children.find(child => child.userData && child.userData.isGlow);
     if (oldGlowMesh) {
@@ -56,24 +45,52 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     
     if (worldData && worldData.meshGroup) {
       planetGroup = worldData.meshGroup;
-      planetGroup.userData.angularVelocity = new THREE.Vector3(0, 0, 0);
-      planetGroup.userData.targetAngularVelocity = new THREE.Vector3(0, 0, 0);
-      planetGroup.userData.isBeingDragged = false;
+      planetGroup.rotation.y = 0; // Initialize Y rotation
+      // Initialize userData if not already present from generateWorld (meshGroup should ideally have it)
+      planetGroup.userData = {
+        ...planetGroup.userData, // Preserve existing userData from meshGroup
+        angularVelocity: new THREE.Vector3(0, 0, 0),
+        targetAngularVelocity: new THREE.Vector3(0, 0, 0),
+        isBeingDragged: false
+      };
+
+      // Add Polar Axis Helpers (Thicker Cylinders)
+      const poleMarkerHeight = currentWorldConfig.radius * 0.20; // Length of the pole marker
+      const poleMarkerRadius = currentWorldConfig.radius * 0.03; // Thickness of the pole marker
+      const poleOffset = currentWorldConfig.radius * 0.02;   // Small offset from pole surface
+
+      const poleGeometry = new THREE.CylinderGeometry(poleMarkerRadius, poleMarkerRadius, poleMarkerHeight, 8);
+      
+      // North Pole Helper (Blue)
+      const northPoleMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+      const northPoleMarker = new THREE.Mesh(poleGeometry, northPoleMaterial);
+      // Position the cylinder: its origin is at its center. Base should be at radius + offset.
+      northPoleMarker.position.y = currentWorldConfig.radius + poleOffset + (poleMarkerHeight / 2);
+      planetGroup.add(northPoleMarker);
+
+      // South Pole Helper (Red)
+      const southPoleMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+      const southPoleMarker = new THREE.Mesh(poleGeometry, southPoleMaterial); // Re-use geometry
+      // Position the cylinder: its origin is at its center. Base (top of cylinder for south) should be at -(radius + offset).
+      southPoleMarker.position.y = -(currentWorldConfig.radius + poleOffset + (poleMarkerHeight / 2));
+      planetGroup.add(southPoleMarker);
+
       _scene.add(planetGroup);
       debug('Planet mesh group added to scene.');
     } else {
       error('Failed to generate planet mesh group. worldData:', worldData);
-      const fallbackGeo = new THREE.SphereGeometry(currentWorldConfig.radius, 32, 32);
-      const fallbackMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-      planetGroup = new THREE.Mesh(fallbackGeo, fallbackMat);
-      // Initialize userData for the fallback planetGroup
-      planetGroup.userData = {
+      const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 10;
+      const fallbackGeometry = new THREE.SphereGeometry(fallbackRadius, 32, 32);
+      const fallbackMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+      planetGroup = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
+      planetGroup.rotation.y = 0; // Initialize Y rotation for fallback
+      planetGroup.userData = { // Initialize userData for the fallback planetGroup
         angularVelocity: new THREE.Vector3(0, 0, 0),
         targetAngularVelocity: new THREE.Vector3(0, 0, 0),
         isBeingDragged: false
-        // Add any other userData properties that might be accessed
       };
       _scene.add(planetGroup);
+      worldData = null; 
     }
 
     if (worldData && worldData.cells) {
@@ -81,34 +98,31 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     }
     
     addPlanetaryGlow(_scene, currentWorldConfig.radius);
-
-    // Always update planet colors after generation to reflect the current sphereSettings.viewMode
     updatePlanetColors(); 
 
     debug('Planet generation and display complete.');
-    return { planetGroup, worldData }; // Return the new planet group and world data
+    return { planetGroup, worldData };
 
   } catch (err) {
-    // Log the full error object, its message, and stack for better debugging
     console.error('Caught error in generateAndDisplayPlanet. Original error object:', err);
-    if (err && err.message) {
-      error('Error in generateAndDisplayPlanet (message): ', err.message);
-    }
-    if (err && err.stack) {
-      console.error('Error stack trace:', err.stack);
-    }
-    // Keep the original generic error log as well, or replace if preferred
+    if (err && err.message) error('Error in generateAndDisplayPlanet (message): ', err.message);
+    if (err && err.stack) console.error('Error stack trace:', err.stack);
     error('Error in generateAndDisplayPlanet: Processing fallback.'); 
 
     if (_existingPlanetGroup) _scene.remove(_existingPlanetGroup);
-    // Ensure planetGroup is assigned a fallback if error occurs before assignment
-    const fallbackRadius = currentWorldConfig?.radius || worldConfig?.radius || 10;
+    const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 10;
     const fallbackGeometry = new THREE.SphereGeometry(fallbackRadius, 32, 32);
     const fallbackMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
     planetGroup = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
+    planetGroup.rotation.y = 0; // Initialize Y rotation for catch block fallback
+    planetGroup.userData = { // Initialize userData for the catch block fallback planetGroup
+        angularVelocity: new THREE.Vector3(0, 0, 0),
+        targetAngularVelocity: new THREE.Vector3(0, 0, 0),
+        isBeingDragged: false
+    };
     _scene.add(planetGroup);
-    worldData = null; // Reset worldData on error
-    return { planetGroup, worldData }; // Return fallback
+    worldData = null; 
+    return { planetGroup, worldData };
   }
 }
 

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tweenjs/tween.js": "^25.0.0",
     "d3-geo-voronoi": "^2.1.0",
     "delaunator": "^5.0.0",
     "simplex-noise": "^4.0.3",
