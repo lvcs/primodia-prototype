@@ -2,8 +2,8 @@
 import * as THREE from 'three';
 import { handleKeyboardInput } from '@/game/controls/keyboardControls.js'; // Path updated
 import { updatePlanetRotation, getPlanetGroup } from '@/game/planet.js'; // Path updated
-import { updateUIDisplay as updateComponentUIDisplay } from '@/ui/components/ZoomControls.js'; // Path is already correct relative to core/
-import { getCamera, getRenderer, getScene, getControls } from './setup.js'; // Path updated (now sibling in core/)
+import { updateCameraControlsUI as updateComponentUIDisplay } from '@/ui/components/CameraControlsSection.js'; // New import
+import { getCamera, getRenderer, getScene, getCameraRig } from './setup.js'; // Path updated (now sibling in core/)
 
 const clock = new THREE.Clock();
 let animationFrameId = null; // To potentially stop the loop if needed
@@ -16,23 +16,20 @@ function animate() {
     const camera = getCamera();
     const renderer = getRenderer();
     const scene = getScene();
-    const controls = getControls(); // OrbitControls
+    const cameraRig = getCameraRig();
     const planetGroup = getPlanetGroup();
 
     // Ensure all critical components are available
-    if (!camera || !renderer || !scene || !controls || !planetGroup) {
+    if (!camera || !renderer || !scene || !cameraRig || !planetGroup) {
         // console.error("Animation loop: Missing critical components.");
         // Consider stopping the loop or logging less frequently if this occurs often
         return;
     }
 
     handleKeyboardInput(); // From keyboardControls.js
-    updatePlanetRotation(deltaTime, controls); // Pass OrbitControls for its potential update
-    updateComponentUIDisplay(camera, controls, planetGroup);
+    updatePlanetRotation(deltaTime);
+    updateComponentUIDisplay(); // New parameter-less signature
 
-    if (controls.enableDamping) {
-        controls.update();
-    }
     renderer.render(scene, camera);
 }
 

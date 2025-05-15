@@ -1,29 +1,62 @@
 .control-section {
   margin-bottom: 1rem;
+  /* padding: 10px; */ /* Padding removed as per user request */
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 5px;
+  width: 280px; /* Consistent width for control sections */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 .control-label {
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.1rem;
+  color: #eee; /* Assuming a dark background */
 }
 .control-options {
   display: flex;
   gap: 0.5rem;
 }
 .control-content {
+  /* Styles for the content area within a control section if needed */
 }
 .control-slider {
   width: 100%;
+  flex-grow: 1; /* Allow slider to take available space in flex container */
 }
 .control-select {
   width: 100%;
 }
-.control-btn {
-  padding: 0.25rem 0.5rem;
-  border: none;
+
+/* Renamed from .control-btn to .control-button for consistency with JS usage */
+.control-button {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid #555;
   background-color: #444;
   color: white;
   cursor: pointer;
+  border-radius: 3px;
+  font-size: 1em; /* Ensure consistent font size with other text */
 }
-.control-btn.active {
-  background-color: #888;
+.control-button:hover {
+  background-color: #555;
+}
+.control-button.active {
+  background-color: #666;
+}
+
+.control-text-label {
+  color: #ddd;
+  font-size: 0.9em;
+  margin-right: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.control-value-display {
+  color: #fff;
+  font-size: 0.9em;
+  min-width: 40px; /* Adjust as needed for Dist/Tilt values */
+  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Align text to the right if min-width is larger */
 } 

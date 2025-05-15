@@ -1,20 +1,22 @@
 // Three.js scene, camera, renderer, lighting, and initial controls setup 
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; // REMOVED
+import { CameraRig } from '@/camera/CameraRig.js'; // CORRECTED PATH using alias
 import * as Const from '@/config/gameConstants.js'; // Updated path
+import * as CamConfig from '@/camera/cameraConfig.js'; // ADDED for CameraRig initial distance
 import { debug } from '@/game/utils/debug.js'; // Updated path
 
-// Module-level variables for scene, camera, renderer, controls, and worldConfig
-// These will be initialized by the functions in this module.
-let scene, camera, renderer, controls;
+// Module-level variables for scene, camera, renderer, controls (now CameraRig), and worldConfig
+let scene, camera, renderer, cameraRig; // CHANGED controls to cameraRig
 let worldConfig;
 
 export function setupThreeJS() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(Const.SCENE_BACKGROUND_COLOR);
   camera = new THREE.PerspectiveCamera(Const.CAMERA_FOV, window.innerWidth / window.innerHeight, Const.CAMERA_NEAR_PLANE, Const.CAMERA_FAR_PLANE);
-  camera.position.set(0, 0, 25); // Initial Z will be overridden by setupControls based on radius
-  camera.lookAt(0, 0, 0);
+  // Initial camera position is now set by CameraRig itself based on its own config.
+  // camera.position.set(0, 0, 25); // This will be handled by CameraRig
+  // camera.lookAt(0, 0, 0); // This will be handled by CameraRig
   renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -46,24 +48,17 @@ export function setupLighting(_scene) { // Accept scene as parameter
   _scene.add(hemisphereLight);
 }
 
-export function setupOrbitControls(_camera, _renderer, _worldConfig) { // Renamed to avoid conflict
-  if (controls) {
-    controls.dispose();
+// ADDED function to setup CameraRig
+export function setupCameraSystem(_camera, _scene, _worldConfig) {
+  if (cameraRig) {
+    // If there's a way to dispose of CameraRig (e.g., remove its group from scene),
+    // do it here. For now, assume it's fresh or re-assignable.
+    // cameraRig.dispose(); 
   }
-  controls = new OrbitControls(_camera, _renderer.domElement);
-  controls.enableDamping = true;
-  controls.enablePan = false;
-  controls.minDistance = _worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
-  controls.maxDistance = _worldConfig.radius * Const.CAMERA_MAX_DISTANCE_FACTOR;
-
-  _camera.position.set(
-    0,
-    _worldConfig.radius * Const.CAMERA_INITIAL_POS_Y_FACTOR,
-    _worldConfig.radius * Const.CAMERA_INITIAL_POS_Z_FACTOR
-  );
-  controls.target.set(0, 0, 0);
-  controls.update();
-  return controls; // Return the created controls
+  // CameraRig constructor takes: threeJsCamera, scene, globeRadius
+  cameraRig = new CameraRig(_camera, _scene, _worldConfig.radius);
+  // Initial position/orientation is handled within CameraRig constructor using CamConfig constants.
+  return cameraRig;
 }
 
 // Getter functions for other modules to access these core components if needed,
@@ -71,5 +66,6 @@ export function setupOrbitControls(_camera, _renderer, _worldConfig) { // Rename
 export const getScene = () => scene;
 export const getCamera = () => camera;
 export const getRenderer = () => renderer;
-export const getControls = () => controls;
+// export const getControls = () => controls; // OLD getter for OrbitControls
+export const getCameraRig = () => cameraRig; // NEW getter for CameraRig
 export const getWorldConfig = () => worldConfig; 

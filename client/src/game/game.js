@@ -15,7 +15,7 @@ import RandomService from './core/RandomService.js'; // Added to ensure it's her
 // Import new control modules
 import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';
 import { initKeyboardControls, handleKeyboardInput, disposeKeyboardControls } from './controls/keyboardControls.js';
-import { ZoomControlsComponent, updateUIDisplay as updateComponentUIDisplay } from '@/ui/components/ZoomControls.js';
+import { CameraControlsSectionComponent, updateCameraControlsUI as updateComponentUIDisplay } from '@/ui/components/CameraControlsSection.js';
 import { renderGlobeControls } from '@/ui/index.js'; // Import renderGlobeControls
 
 // Import setup functions
@@ -23,11 +23,11 @@ import {
   setupThreeJS,
   setupInitialWorldConfig,
   setupLighting,
-  setupOrbitControls,
+  setupCameraSystem,
   getCamera,
   getRenderer,
   getScene,
-  getControls,
+  getCameraRig,
   getWorldConfig
 } from './core/setup.js';
 
@@ -53,12 +53,14 @@ import { startAnimationLoop } from './core/mainLoop.js';
 
 // These are now mostly obtained via getters from setup.js or planet.js when needed.
 // Let's keep them here if initGame assigns to them for clarity of what initGame establishes.
-let scene, camera, renderer, controls, worldConfig;
+let scene, camera, renderer, worldConfig;
 let worldData; // Will store { meshGroup, cells, config } from generateWorld
 let planetGroup; // This will be worldData.meshGroup
 // let worldConfig; // This is now managed in setup.js and assigned here
 let isMouseDown = false;
 let selectedHighlight = null;
+let gameCameraAnimator = null; // To store the camera animator instance
+let activeCameraRig = null; // To store the CameraRig instance for clarity
 
 // const clock = new THREE.Clock(); // Moved to mainLoop.js
 
@@ -99,23 +101,25 @@ export function initGame() {
     renderGlobeControls(); 
     
     setupLighting(scene);
-    controls = setupOrbitControls(camera, renderer, worldConfig);
+    activeCameraRig = setupCameraSystem(camera, scene, worldConfig);
     
-    setupRootEventListeners(); 
+    setupRootEventListeners();
     setupMouseTrackingState();
     
-    const currentPlanetGroup = getPlanetGroup(); 
-    const currentControls = getControls(); // Get the freshly created OrbitControls
+    const currentCameraRig = getCameraRig();
     const currentWorldConfig = getWorldConfig();
 
-    const zoomControlsElement = ZoomControlsComponent(camera, currentControls, currentWorldConfig, currentPlanetGroup);
+    const cameraControlsElement = CameraControlsSectionComponent({
+        cameraRig: currentCameraRig,
+        worldConfig: currentWorldConfig
+    });
+
     const uiOverlay = document.getElementById('ui-overlay') || document.body;
-    uiOverlay.appendChild(zoomControlsElement);
+    uiOverlay.appendChild(cameraControlsElement);
     if (uiOverlay.id === 'ui-overlay' && getComputedStyle(uiOverlay).pointerEvents === 'none') {
-        zoomControlsElement.style.pointerEvents = 'auto';
+        cameraControlsElement.style.pointerEvents = 'auto';
     }
 
-    updateComponentUIDisplay(camera, currentControls, currentPlanetGroup);
     setupSocketConnection();
     startAnimationLoop(); // Start the animation loop from mainLoop.js
     
@@ -147,8 +151,8 @@ export function initGame() {
 export function requestPlanetRegeneration(seed) {
     const s = getScene();
     const wc = getWorldConfig();
-    const existingControls = getControls(); // OrbitControls
-    const pg = getPlanetGroup(); // Existing planet group
+    const existingCameraRig = getCameraRig();
+    const pg = getPlanetGroup();
     const sh = getSelectedHighlight();
 
     if (!s || !wc ) { 
@@ -158,14 +162,9 @@ export function requestPlanetRegeneration(seed) {
     debug(`Requesting planet regeneration with seed: ${seed === undefined ? 'Default/Last' : seed}`);
 
     // Pass the seed to generatePlanet
-    const planetResult = generatePlanet(s, wc, existingControls, pg, sh, seed);
-    // planetGroup = planetResult.planetGroup; // generatePlanet now updates the planetGroup directly via setPlanetGroup
-    // worldData = planetResult.worldData; // generatePlanet now updates worldData directly via setWorldData
+    generatePlanet(s, wc, null, pg, sh, seed);
 
-    const newPlanetGroup = getPlanetGroup(); 
-    const newControls = getControls(); 
-    const cam = getCamera();
-    updateComponentUIDisplay(cam, newControls, newPlanetGroup);
+    updateComponentUIDisplay();
     
     reinitializeControls();
     debug('Planet regeneration complete.');

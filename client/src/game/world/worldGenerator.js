@@ -74,19 +74,32 @@ export function generateWorld(config, seed){
   // Generate tectonic plates and elevations using the now-initialized RandomService.
   // Calculate numPlates based on numPoints (sphereSettings.numPoints)
   // Linear relationship: (480 points, 4 plates), (128000 points, 32 plates)
-  const N = sphereSettings.numPoints;
-  const m = (32 - 4) / (128000 - 480); // slope
-  const c_intercept = 4 - m * 480; // y-intercept
-  let calculatedNumPlates = m * N + c_intercept;
-  calculatedNumPlates = Math.round(calculatedNumPlates);
-  calculatedNumPlates = Math.max(4, Math.min(32, calculatedNumPlates)); // Clamp between 4 and 32
+  // const N = sphereSettings.numPoints;
+  // const m = (32 - 4) / (128000 - 480); // slope
+  // const c_intercept = 4 - m * 480; // y-intercept
+  // let calculatedNumPlates = m * N + c_intercept;
+  // calculatedNumPlates = Math.round(calculatedNumPlates);
+  // calculatedNumPlates = Math.max(4, Math.min(32, calculatedNumPlates)); // Clamp between 4 and 32
 
   // TODO: Make number of tectonic plates slightly random in relation to the number of points.
   // For example, add a small random +/- variation to calculatedNumPlates, ensuring it stays within reasonable min/max bounds.
 
-  const numPlatesToUse = calculatedNumPlates;
+  // const numPlatesToUse = calculatedNumPlates; // Old way: calculated from numPoints
+  // Use the value directly from sphereSettings, which is controlled by the UI slider
+  let numPlatesToUse = sphereSettings.numPlates;
+  // Ensure it's within a reasonable range if not already clamped by UI/constants
+  // (Assuming MIN_TECHTONIC_PLATES and MAX_TECHTONIC_PLATES are defined and used by the slider)
+  // For safety, we can re-apply a clamp here if needed, though ideally the constants are the source of truth.
+  // numPlatesToUse = Math.max(Const.MIN_TECHTONIC_PLATES || 2, Math.min(numPlatesToUse, Const.MAX_TECHTONIC_PLATES || 50));
+  // The SliderControl in ui/index.js already uses MIN_TECHTONIC_PLATES and MAX_TECHTONIC_PLATES from Const,
+  // so sphereSettings.numPlates should already be within this valid range.
+
   // generatePlates will internally use RandomService for its random choices.
   const { plates, tilePlate } = generatePlates(globe, numPlatesToUse);
+
+  // DEBUG: Log the generated tectonic plates
+  console.log('[worldGenerator] Generated Tectonic Plates:', plates);
+  console.log(`[worldGenerator] Number of plates requested by UI: ${sphereSettings.numPlates}, Number of plates used for generation: ${numPlatesToUse}, Actual plates generated: ${plates.length}`);
 
   // Store tilePlate mapping in mainMesh for coloring later
   if(mainMesh){
