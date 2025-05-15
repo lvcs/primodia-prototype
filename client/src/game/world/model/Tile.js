@@ -40,6 +40,7 @@ export default class Tile {
     this.temperature = temperature;
     this.area = area;
     this.plateId = null;
+    this.isOceanConnected = false;
   }
 
   /**

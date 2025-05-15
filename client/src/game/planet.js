@@ -4,7 +4,9 @@ import { debug, error } from './utils/debug.js';
 import * as Const from '../config/gameConstants.js';
 import { sphereSettings } from './world/planetSphereVoronoi.js'; // Only sphereSettings.viewMode, elevationBias used
 import { generateWorld } from './world/worldGenerator.js';
-import { Terrains } from './world/registries/TerrainRegistry.js';
+import { Terrains, getColorForTerrain } from './world/registries/TerrainRegistry.js';
+import { getColorForTemperature } from './world/registries/TemperatureRegistry.js'; // Import new registry function
+import { getColorForMoisture } from './world/registries/MoistureRegistry.js'; // Import new registry function
 
 // Module-level variables for planet data
 let planetGroup; // Stores the main THREE.Group for the planet
@@ -168,14 +170,7 @@ export function updatePlanetColors() {
     const h=hex[hex.length-1]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
   }
 
-  function moistureRGB(val){
-    const stops=[1,0.8,0.6,0.4,0.2,0];
-    const hex=[0x75FB4C,0x7BD851,0x88B460,0x839169,0x6C6E65,0x6C6E65];
-    for(let i=0;i<stops.length;i++){
-      if(val>=stops[i]){ const h=hex[i]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255]; }
-    }
-    const h=hex[hex.length-1]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
-  }
+  const tempColor = new THREE.Color(); // For color conversion, if not already defined
 
   for(let i=0;i<tileIds.count;i++){
     const tId = tileIds.array[i];
@@ -189,10 +184,21 @@ export function updatePlanetColors() {
        rgb = elevationRGB(elev);
     } else if(sphereSettings.viewMode==='moisture'){
        const moist = mainMesh.userData.tileMoisture ? mainMesh.userData.tileMoisture[tId] : 0;
-       rgb = moistureRGB(moist);
-    } else {
+       tempColor.setHex(getColorForMoisture(moist)); // Use new function
+       rgb = [tempColor.r, tempColor.g, tempColor.b];
+    } else if (sphereSettings.viewMode === 'temperature') {
+        const tile = worldData?.globe?.getTile(tId);
+        if (tile && tile.temperature !== undefined) {
+            tempColor.setHex(getColorForTemperature(tile.temperature));
+            rgb = [tempColor.r, tempColor.g, tempColor.b];
+        } else {
+            rgb = [0.5, 0.5, 0.5]; // Default grey for missing temp data
+        }
+    } else { // Default to terrain view
        const terr = tileTerrain[tId];
-       rgb = terrainColorCache[terr] || [1,1,1];
+       const elevation = mainMesh.userData.tileElevation ? mainMesh.userData.tileElevation[tId] : 0;
+       const terrainColorHex = getColorForTerrain(terr, elevation);
+       rgb = hexToRgbArr(terrainColorHex);
     }
     colorsAttr.array[i*3] = rgb[0];
     colorsAttr.array[i*3+1] = rgb[1];

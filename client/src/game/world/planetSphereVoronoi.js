@@ -2,10 +2,9 @@ import * as THREE from 'three';
 import Delaunator from 'delaunator';
 import { MapTypes, defaultMapType, generateMapTerrain } from './registries/MapTypeRegistry.js';
 import { debug } from '../utils/debug.js';
-import { terrainById } from './registries/TerrainRegistry.js';
+import { terrainById, Terrains } from './registries/TerrainRegistry.js';
 import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
-import { Terrains } from './registries/TerrainRegistry.js';
 import * as Const from '../../config/gameConstants.js'; // Import constants
 import RandomService from '../core/RandomService.js'; // Added import
 
@@ -13,7 +12,7 @@ import RandomService from '../core/RandomService.js'; // Added import
 const _randomLat = [];
 const _randomLon = [];
 
-const TerrainType = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
+const TerrainTypeIds = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
 const terrainColors = Object.fromEntries(Object.values(Terrains).map(t=>[t.id,t.color]));
 
 function generateFibonacciSphere1(N, jitter, randomFloat) {
@@ -196,33 +195,98 @@ function determineTerrainType(position, randomFloat) {
     const noiseValue = Math.sin(position.x * 10) * Math.cos(position.z * 8) * 0.1; // Existing noise
     
     if (y < -0.8) { // South pole
-        return TerrainType.SNOW;
+        return TerrainTypeIds.SNOW;
     } else if (y > 0.8) { // North pole
-        return TerrainType.SNOW;
+        return TerrainTypeIds.SNOW;
     } else if (y < -0.5) {
-        return randomFloat() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
+        return randomFloat() > 0.7 ? TerrainTypeIds.TUNDRA : TerrainTypeIds.PLAINS;
     } else if (y < -0.2) {
-        if (noiseValue > 0.05) return TerrainType.FOREST;
-        if (noiseValue < -0.05) return TerrainType.HILLS;
-        return TerrainType.PLAINS;
+        if (noiseValue > 0.05) return TerrainTypeIds.FOREST;
+        if (noiseValue < -0.05) return TerrainTypeIds.HILLS;
+        return TerrainTypeIds.PLAINS;
     } else if (y < 0.2) { // Equatorial regions
         const rand = randomFloat();
-        if (rand < 0.4) return TerrainType.OCEAN; // Increased chance of ocean for demo
-        if (rand < 0.6) return TerrainType.COAST;
-        if (noiseValue > 0.05) return TerrainType.JUNGLE;
-        if (noiseValue < -0.05) return TerrainType.DESERT;
-        return TerrainType.PLAINS;
+        if (rand < 0.4) return TerrainTypeIds.OCEAN; // Increased chance of ocean for demo
+        if (rand < 0.6) return TerrainTypeIds.COAST;
+        if (noiseValue > 0.05) return TerrainTypeIds.JUNGLE;
+        if (noiseValue < -0.05) return TerrainTypeIds.DESERT;
+        return TerrainTypeIds.PLAINS;
     } else if (y < 0.5) {
-        if (noiseValue > 0.05) return TerrainType.FOREST;
-        if (noiseValue < -0.05) return TerrainType.HILLS;
-        return TerrainType.PLAINS;
+        if (noiseValue > 0.05) return TerrainTypeIds.FOREST;
+        if (noiseValue < -0.05) return TerrainTypeIds.HILLS;
+        return TerrainTypeIds.PLAINS;
     } else { // Approaches North pole
-        return randomFloat() > 0.7 ? TerrainType.TUNDRA : TerrainType.PLAINS;
+        return randomFloat() > 0.7 ? TerrainTypeIds.TUNDRA : TerrainTypeIds.PLAINS;
     }
 }
 
 // Export determineTerrainType for external usage (e.g., picking/debug)
 export { determineTerrainType as classifyTerrain };
+
+// Prepare an ordered list of terrain types for classification
+const orderedTerrainTypes = Object.values(Terrains).sort((a, b) => a.priority - b.priority);
+
+// New function to classify terrain based on tile properties and declarative rules
+export function classifyTileTerrainFromProperties(tile) {
+    if (!tile) {
+        console.warn('[classifyTileTerrainFromProperties] Tile is null, defaulting to GRASSLAND.');
+        return TerrainTypeIds.GRASSLAND; 
+    }
+
+    // console.log(`[Classify] Tile ID: ${tile.id}, Elevation: ${tile.elevation?.toFixed(3)}, Moisture: ${tile.moisture?.toFixed(3)}, Temp: ${tile.temperature?.toFixed(3)}, OceanConn: ${tile.isOceanConnected}, IsLakeCandidate: ${tile.elevation < -0.049 && !tile.isOceanConnected}`); // DEBUG LINE - Commented out
+
+    for (const terrainRule of orderedTerrainTypes) {
+        let match = true;
+        let failReason = [];
+
+        // Elevation check
+        if (tile.elevation < terrainRule.minElevation || tile.elevation > terrainRule.maxElevation) {
+            failReason.push(`Elev (Tile: ${tile.elevation?.toFixed(3)}, RuleMin: ${terrainRule.minElevation ?? '-inf'}, RuleMax: ${terrainRule.maxElevation ?? '+inf'})`);
+            match = false;
+        }
+        // Moisture check
+        if (match && (tile.moisture < terrainRule.minMoisture || tile.moisture > terrainRule.maxMoisture)) {
+            failReason.push(`Moist (Tile: ${tile.moisture?.toFixed(3)}, RuleMin: ${terrainRule.minMoisture ?? '0'}, RuleMax: ${terrainRule.maxMoisture ?? '1'})`);
+            match = false;
+        }
+        // Temperature check
+        if (match && (tile.temperature < terrainRule.minTemp || tile.temperature > terrainRule.maxTemp)) {
+            failReason.push(`Temp (Tile: ${tile.temperature?.toFixed(3)}, RuleMin: ${terrainRule.minTemp ?? '0'}, RuleMax: ${terrainRule.maxTemp ?? '1'})`);
+            match = false;
+        }
+
+        // Lake check
+        if (match && terrainRule.requiresLake) {
+            if (tile.isOceanConnected === false && tile.elevation < -0.049) {
+                // This rule is a candidate, proceed
+            } else {
+                failReason.push(`Lake (Rule requires lake, tile isn't one: oceanConn=${tile.isOceanConnected}, elev=${tile.elevation?.toFixed(3)})`);
+                match = false; 
+            }
+        }
+        
+        // Special handling for OCEAN/COAST (preventing non-connected low areas from being ocean)
+        if (match && (terrainRule.id === 'OCEAN' || terrainRule.id === 'COAST')) {
+            if (tile.isOceanConnected === false && tile.elevation < -0.05) {
+                failReason.push(`Ocean/Coast (Tile is non-ocean-connected water: elev=${tile.elevation?.toFixed(3)})`);
+                match = false; 
+            }
+        }
+
+        if (match) {
+            // console.log(`  [Classify] Tile ID: ${tile.id} Matched rule: ${terrainRule.id}. Returning.`); // DEBUG LINE - Commented out
+            return terrainRule.id;
+        } else {
+            // Only log if it's a land biome we are interested in debugging, to reduce noise - Commented out for now
+            // if (['PLAINS', 'GRASSLAND', 'FOREST', 'JUNGLE', 'BEACH', 'TUNDRA', 'BARE', 'SCORCHED', 'TAIGA', 'TEMPERATE_DESERT', 'SUBTROPICAL_DESERT', 'MARSH'].includes(terrainRule.id)) {
+            //      console.log(`  [Classify] Tile ID: ${tile.id} Rule ${terrainRule.id} (Prio: ${terrainRule.priority}) FAILED due to: ${failReason.join('; ')}`);
+            // }
+        }
+    }
+
+    console.warn(`  [Classify] No rule matched for Tile ID: ${tile.id}. Defaulting to GRASSLAND. Input: Elev: ${tile.elevation?.toFixed(3)}, Moist: ${tile.moisture?.toFixed(3)}, Temp: ${tile.temperature?.toFixed(3)}`); // Keep this warning
+    return TerrainTypeIds.GRASSLAND; 
+}
 
 // Convert terrain hex color to RGB array [0-1, 0-1, 0-1]
 function getTerrainColorRGB(terrainType) {

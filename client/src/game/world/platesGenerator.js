@@ -7,11 +7,11 @@ import RandomService from '../core/RandomService.js';
 // Percentage chance for a new plate to be oceanic (0.0 to 1.0).
 const OCEANIC_PLATE_CHANCE = 0.7;
 // Min/max base elevation for oceanic plates.
-const OCEANIC_BASE_ELEVATION_MIN = -0.6;
-const OCEANIC_BASE_ELEVATION_MAX = -0.3;
+const OCEANIC_BASE_ELEVATION_MIN = -0.9;
+const OCEANIC_BASE_ELEVATION_MAX = -0.5;
 // Min/max base elevation for continental plates.
-const CONTINENTAL_BASE_ELEVATION_MIN = 0.05;
-const CONTINENTAL_BASE_ELEVATION_MAX = 0.25;
+const CONTINENTAL_BASE_ELEVATION_MIN = 0.1;
+const CONTINENTAL_BASE_ELEVATION_MAX = 0.5;
 
 // --- Elevation Calculation Constants (Inspired by Red Blob Games) ---
 
@@ -19,7 +19,7 @@ const CONTINENTAL_BASE_ELEVATION_MAX = 0.25;
 // Negative values indicate convergence. Article used -0.75; current value is less extreme.
 const STRONG_CONVERGENCE_THRESHOLD = -0.4;
 // Target elevation for major mountain ranges resulting from plate collisions.
-const MOUNTAIN_ELEVATION = 0.7;
+const MOUNTAIN_ELEVATION = 1.0;
 // Target elevation for coastlines on the edge of land plates (e.g., beaches).
 const COASTLINE_LOWER_ELEVATION = 0.0;
 // Target elevation for coastlines on the edge of ocean plates (e.g., continental shelves, shallow ridges).
@@ -27,9 +27,9 @@ const COASTLINE_HIGHER_ELEVATION = -0.15;
 // Target elevation for mid-ocean ridges formed by strong oceanic-oceanic plate convergence.
 const OCEAN_RIDGE_ELEVATION = -0.1;
 // Offset subtracted from an oceanic plate's base elevation to form deep ocean trenches.
-const DEEP_OCEAN_TRENCH_OFFSET = -0.3;
+const DEEP_OCEAN_TRENCH_OFFSET = -0.45;
 // Default elevation for typical ocean floor when oceanic plates are not strongly converging.
-const DEFAULT_OCEAN_FLOOR = -0.4;
+const DEFAULT_OCEAN_FLOOR = -0.75;
 
 // --- Elevation Priority Constants ---
 // Used to determine which geological feature's elevation "wins" when multiple interactions affect a tile.
@@ -41,7 +41,7 @@ const PRIORITY_MOUNTAIN = 3;             // Major mountain ranges.
 
 // --- Elevation Smoothing Constants ---
 // Number of passes for the elevation smoothing algorithm.
-const ELEVATION_SMOOTHING_PASSES = 3;
+const ELEVATION_SMOOTHING_PASSES = 2;
 // Blending factor for original elevation during smoothing (0.0 to 1.0). Higher retains more original features.
 const ELEVATION_SMOOTHING_ORIGINAL_WEIGHT = 0.6;
 // Blending factor for averaged elevation during smoothing (0.0 to 1.0).
@@ -72,7 +72,7 @@ const MOISTURE_NOISE_X_MULTIPLIER = 23.4;
 const MOISTURE_NOISE_Y_MULTIPLIER = 17.8;
 const MOISTURE_NOISE_Z_MULTIPLIER = 11.2;
 // Amplitude of the moisture noise effect (scaled by this value).
-const MOISTURE_NOISE_AMPLITUDE = 0.4;
+const MOISTURE_NOISE_AMPLITUDE = 0.05;
 // Offset for the moisture noise (centers the noise effect around 0; e.g. if amplitude is 0.4, noise ranges from -0.2 to 0.2).
 const MOISTURE_NOISE_OFFSET = MOISTURE_NOISE_AMPLITUDE / 2;
 
@@ -253,7 +253,7 @@ export function generatePlates(globe, numPlates = 16) {
   // This section iterates through each tile and determines its elevation.
   // For boundary tiles, elevation is based on the interaction between its plate and neighboring plates.
   // For interior tiles, elevation is based on the plate's base elevation.
-  // Constants for elevation effects, inspired by Red Blob Games article's logic.
+  // Constants for elevation effects, inspired by Red Blob Games' article's logic.
   // These values define the "target" elevation for different geological features.
   // const STRONG_CONVERGENCE_THRESHOLD = -0.4; // How much plates must push together for major features. (Article used -0.75, this is less extreme)
   // const MOUNTAIN_ELEVATION = 0.7;            // Elevation for major mountain ranges.
@@ -389,21 +389,117 @@ export function generatePlates(globe, numPlates = 16) {
     });
   }
 
-  // 6. Assign Moisture (Simple placeholder logic)
-  // This is a very basic model for distributing moisture. A more sophisticated climate simulation
-  // would be needed for realistic moisture patterns (e.g., considering wind, mountains, large water bodies).
-  // TODO: Define magic numbers as constants
-  const plateMoistureBase = plates.map(() => RandomService.nextFloat() * (PLATE_MOISTURE_BASE_MAX - PLATE_MOISTURE_BASE_MIN) + PLATE_MOISTURE_BASE_MIN);
+  // 6. Assign Moisture (Latitudinal gradient modulated by plate and with noise)
+  // Define moisture profile constants for latitude
+  const MOISTURE_EQUATOR_MAX = 0.9;  // Max moisture at the equator
+  const MOISTURE_30_DEG_MIN = 0.1;   // Min moisture at 30 degrees latitude
+  const MOISTURE_60_DEG_MID = 0.5;   // Medium moisture at 60 degrees latitude and towards poles
+
+  // Weights for combining latitudinal and plate-based moisture
+  const LATITUDE_MOISTURE_WEIGHT = 0.7;
+  const PLATE_MOISTURE_WEIGHT = 0.3;
+
+  // Pre-calculate sine values for latitudes
+  const SIN_30_DEG = Math.sin(30 * Math.PI / 180);
+  const SIN_60_DEG = Math.sin(60 * Math.PI / 180);
+
+  // Assign a base moisture influence to each plate
+  const plateMoistureFactors = plates.map(() => 
+    RandomService.nextFloat() * (PLATE_MOISTURE_BASE_MAX - PLATE_MOISTURE_BASE_MIN) + PLATE_MOISTURE_BASE_MIN
+  );
+
   globe.tiles.forEach(tile => {
-    if (tile.plate === undefined || !plates[tile.plate]) {
-        tile.moisture = DEFAULT_TILE_MOISTURE; // Default if plate info is missing
+    if (!tile.center || tile.center.length < 3) {
+        tile.moisture = DEFAULT_TILE_MOISTURE; 
         return;
     }
-    const baseMoisture = plateMoistureBase[tile.plate];
-    // Add some noise based on location for variation within a plate.
-    const moistureNoiseVal = noise3(tile.center[0] * MOISTURE_NOISE_X_MULTIPLIER, tile.center[1] * MOISTURE_NOISE_Y_MULTIPLIER, tile.center[2] * MOISTURE_NOISE_Z_MULTIPLIER) * MOISTURE_NOISE_AMPLITUDE - MOISTURE_NOISE_OFFSET;
-    tile.moisture = Math.max(0, Math.min(1, baseMoisture + moistureNoiseVal));
+
+    // Calculate latitudinal base moisture
+    const absLatY = Math.abs(tile.center[1]); 
+    let latitudinalBaseMoisture;
+    if (absLatY <= SIN_30_DEG) { 
+      const t = absLatY / SIN_30_DEG; 
+      latitudinalBaseMoisture = MOISTURE_EQUATOR_MAX - t * (MOISTURE_EQUATOR_MAX - MOISTURE_30_DEG_MIN);
+    } else if (absLatY <= SIN_60_DEG) { 
+      const t = (absLatY - SIN_30_DEG) / (SIN_60_DEG - SIN_30_DEG); 
+      latitudinalBaseMoisture = MOISTURE_30_DEG_MIN + t * (MOISTURE_60_DEG_MID - MOISTURE_30_DEG_MIN);
+    } else { 
+      latitudinalBaseMoisture = MOISTURE_60_DEG_MID;
+    }
+
+    // Get plate's moisture factor
+    let plateMoistureFactor = DEFAULT_TILE_MOISTURE; // Default if plate info is missing
+    if (tile.plate !== undefined && plates[tile.plate] && plateMoistureFactors[tile.plate] !== undefined) {
+        plateMoistureFactor = plateMoistureFactors[tile.plate];
+    }
+
+    // Combine latitudinal and plate moisture influences
+    const combinedBaseMoisture = (LATITUDE_MOISTURE_WEIGHT * latitudinalBaseMoisture) + 
+                               (PLATE_MOISTURE_WEIGHT * plateMoistureFactor);
+
+    // Add local noise
+    const scaledNoise = noise3(tile.center[0] * MOISTURE_NOISE_X_MULTIPLIER, 
+                               tile.center[1] * MOISTURE_NOISE_Y_MULTIPLIER, 
+                               tile.center[2] * MOISTURE_NOISE_Z_MULTIPLIER);
+    const moistureNoiseVal = (scaledNoise - 0.5) * MOISTURE_NOISE_AMPLITUDE;
+                                   
+    tile.moisture = Math.max(0, Math.min(1, combinedBaseMoisture + moistureNoiseVal));
   });
+
+  // 7. Assign Temperature (Latitude and Elevation based)
+  globe.tiles.forEach(tile => {
+    if (!tile.center || tile.center.length < 3) {
+      tile.temperature = 0.5; // Default for bad data
+      return;
+    }
+    // tile.center[1] is y-coordinate, assuming normalized [-1 (S pole), 1 (N pole)]
+    // Latitude effect: 1.0 at equator (y=0), 0.0 at poles (y= +/-1)
+    const latitudeEffect = 1.0 - Math.abs(tile.center[1]);
+
+    // Elevation effect: Higher elevation means colder.
+    // tile.elevation is typically [-1, 1]. Positive elevation reduces temperature.
+    // The factor 0.25 means 1.0 elevation can reduce temp by up to 0.25.
+    const elevationEffect = tile.elevation > 0 ? tile.elevation * 0.25 : 0;
+    
+    let calculatedTemperature = latitudeEffect - elevationEffect;
+
+    // Further adjustment: Very low elevations (deep water) might be slightly colder than surface water at same latitude
+    if (tile.elevation < -0.5) { // If it's deep ocean
+        calculatedTemperature -= 0.05; // Slightly colder
+    }
+
+    tile.temperature = Math.max(0, Math.min(1, calculatedTemperature));
+  });
+
+  // 8. Identify Ocean-Connected Water Tiles (for Lake differentiation)
+  const SEA_LEVEL = -0.05; // Tiles below this might be ocean or coast
+  const oceanSeedTiles = new Set();
+  globe.tiles.forEach(tile => {
+    tile.isOceanConnected = false; // Reset/initialize
+    if (tile.elevation < SEA_LEVEL) {
+      oceanSeedTiles.add(tile.id);
+    }
+  });
+
+  const oceanQueue = Array.from(oceanSeedTiles); // Renamed from queue
+  let oceanHead = 0; // Renamed from head
+  while(oceanHead < oceanQueue.length) {
+    const currentTileId = oceanQueue[oceanHead++]; // Use renamed variables
+    const currentTile = globe.getTile(currentTileId);
+    if (currentTile) { 
+        currentTile.isOceanConnected = true;
+        currentTile.neighbors.forEach(neighborId => {
+            const neighborTile = globe.getTile(neighborId);
+            if (neighborTile && neighborTile.elevation < SEA_LEVEL && !neighborTile.isOceanConnected && !oceanQueue.includes(neighborId)) {
+                if (!oceanSeedTiles.has(neighborId)) { 
+                    oceanQueue.push(neighborId);
+                    oceanSeedTiles.add(neighborId); 
+                }
+            }
+        });
+    }
+  }
+  // Any tile with elevation < SEA_LEVEL and isOceanConnected = false could be a lake.
 
   return { plates, tilePlate };
 } 

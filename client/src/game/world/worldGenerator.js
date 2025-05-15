@@ -1,10 +1,13 @@
 import * as THREE from 'three';
-import { generatePlanetGeometryGroup, sphereSettings, classifyTerrain } from './planetSphereVoronoi.js';
+import { generatePlanetGeometryGroup, sphereSettings, classifyTerrain, classifyTileTerrainFromProperties, DEFAULT_VIEW_MODE } from './planetSphereVoronoi.js';
 import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
-import { terrainById } from './registries/TerrainRegistry.js';
+import { terrainById, Terrains, getColorForTerrain } from './registries/TerrainRegistry.js';
+import { getColorForTemperature } from './registries/TemperatureRegistry.js';
+import { getColorForMoisture } from './registries/MoistureRegistry.js';
 import { generatePlates } from './platesGenerator.js';
 import RandomService from '../core/RandomService.js';
+import * as Const from '../../config/gameConstants.js';
 
 /**
  * Generates globe mesh (legacy) plus OO WorldGlobe description.
@@ -59,7 +62,16 @@ export function generateWorld(config, seed){
     const sphericalExcess = tileSphericalExcesses[id] !== undefined ? tileSphericalExcesses[id] : 0.0;
     const area = sphericalExcess * sphereRadius * sphereRadius;
     
-    globe.addTile(new Tile({ id, terrain, center, neighbors: [], area }));
+    const tile = new Tile({ id, terrain, center, neighbors: [], area });
+    // Initial terrain classification based on simple geometry (e.g., from planetSphereVoronoi)
+    // This initialTerrain might come from mainMesh.userData.tileTerrain[tileId] if set during geometry generation
+    const initialTerrainIdFromGeometry = mainMesh.userData.tileTerrain ? mainMesh.userData.tileTerrain[id] : undefined;
+    tile.terrain = initialTerrainIdFromGeometry || classifyTileTerrainFromProperties(tile); // Fallback if needed, though tile lacks elevation etc. here
+
+    // Set a very basic color or leave for later; full classification needs elevation/moisture
+    // tile.color = Terrains[tile.terrain] ? (typeof Terrains[tile.terrain].color === 'number' ? Terrains[tile.terrain].color : Terrains[tile.terrain].color.default) : 0xffffff;
+    
+    globe.addTile(tile);
   });
 
   // Use neighbor map from mesh if provided
@@ -112,6 +124,103 @@ export function generateWorld(config, seed){
       plateColors[p.id] = color.getHex();
     });
     mainMesh.userData.plateColors = plateColors;
+  }
+
+  // Re-classify terrain for each tile and update mesh colors
+  if (mainMesh && mainMesh.geometry.getAttribute('color')) {
+    const colorsAttribute = mainMesh.geometry.getAttribute('color');
+    const idsAttribute = mainMesh.geometry.getAttribute('tileId'); 
+    const newTileTerrain = {}; 
+
+    // First, update terrain type for each tile in the globe object
+    globe.tiles.forEach(tile => {
+      // Use the new classification function that takes the whole tile object
+      const newTerrainId = classifyTileTerrainFromProperties(tile);
+      tile.terrain = terrainById(newTerrainId); 
+      newTileTerrain[tile.id] = newTerrainId; 
+    });
+    mainMesh.userData.tileTerrain = newTileTerrain; 
+
+    // After all tile properties (elevation, moisture, final terrain ID) are set,
+    // calculate and store the definitive color for each tile.
+    globe.tiles.forEach(tile => {
+      if (tile.terrain && tile.terrain.id) { // Ensure terrain and its id are set
+        // console.log(`Coloring Tile ID: ${tile.id}, Terrain ID: ${tile.terrain.id}, Elevation: ${tile.elevation}`); // DEBUG LINE - Commented out
+        // Use getColorForTerrain with the tile's actual elevation
+        tile.color = getColorForTerrain(tile.terrain.id, tile.elevation);
+        // console.log(`Assigned color: 0x${tile.color.toString(16)}`); // DEBUG LINE - Commented out
+      } else {
+        tile.color = 0x808080; // Default grey if terrain is not properly set
+        // console.warn(`Tile ${tile.id} missing terrain or terrain.id for color calculation. Defaulting to grey.`); // DEBUG LINE - Commented out, can be re-enabled if needed
+      }
+      // Optionally, update mainMesh.userData.tileColors if it's used directly elsewhere.
+      // This might be redundant if rendering always pulls from globe.tiles[tileId].color.
+      if (mainMesh && mainMesh.userData.tileColors) { // Assuming tileColors is an object {[id]: color}
+          mainMesh.userData.tileColors[tile.id] = tile.color;
+      }
+    });
+
+    // Update vertex colors
+    const tempColor = new THREE.Color(); // For color conversion
+
+    if (sphereSettings.viewMode === 'temperature') {
+      for (let i = 0; i < idsAttribute.count; i++) {
+        const tileId = idsAttribute.getX(i);
+        const tile = globe.getTile(tileId);
+        if (tile && tile.temperature !== undefined) {
+          tempColor.setHex(getColorForTemperature(tile.temperature));
+          colorsAttribute.setXYZ(i, tempColor.r, tempColor.g, tempColor.b);
+        }
+      }
+    } else if (sphereSettings.viewMode === 'elevation') {
+      for (let i = 0; i < idsAttribute.count; i++) {
+        const tileId = idsAttribute.getX(i);
+        const tile = globe.getTile(tileId); 
+        const elev = tile ? tile.elevation : (mainMesh.userData.tileElevation ? mainMesh.userData.tileElevation[tileId] : 0);
+        const biasedElev = elev + sphereSettings.elevationBias;
+        if (biasedElev < -0.5) tempColor.setHex(0x0000FF); 
+        else if (biasedElev < 0) tempColor.setHex(0x00BFFF); 
+        else if (biasedElev < 0.3) tempColor.setHex(0x90EE90); 
+        else if (biasedElev < 0.6) tempColor.setHex(0x32CD32); 
+        else tempColor.setHex(0x8B4513); 
+        colorsAttribute.setXYZ(i, tempColor.r, tempColor.g, tempColor.b);
+      }
+    } else if (sphereSettings.viewMode === 'moisture') {
+      for (let i = 0; i < idsAttribute.count; i++) {
+        const tileId = idsAttribute.getX(i);
+        const tile = globe.getTile(tileId);
+        if (tile && tile.moisture !== undefined) {
+            tempColor.setHex(getColorForMoisture(tile.moisture));
+            colorsAttribute.setXYZ(i, tempColor.r, tempColor.g, tempColor.b);
+        } else {
+            colorsAttribute.setXYZ(i, 0.5, 0.5, 0.5); 
+        }
+      }
+    } else if (sphereSettings.viewMode === 'plates') {
+      for (let i = 0; i < idsAttribute.count; i++) {
+        const tileId = idsAttribute.getX(i); 
+        const plateId = mainMesh.userData.tilePlate ? mainMesh.userData.tilePlate[tileId] : null;
+        if (plateId !== null && mainMesh.userData.plateColors && mainMesh.userData.plateColors[plateId] !== undefined) {
+            tempColor.setHex(mainMesh.userData.plateColors[plateId]);
+            colorsAttribute.setXYZ(i, tempColor.r, tempColor.g, tempColor.b);
+        } else {
+            colorsAttribute.setXYZ(i, 0.3, 0.3, 0.3); // Default color for unassigned/missing plate color
+        }
+      }
+    } else { // Default to terrain view
+      for (let i = 0; i < idsAttribute.count; i++) {
+        const tileId = idsAttribute.getX(i);
+        const tile = globe.getTile(tileId); // Get the tile object
+        if (tile && tile.color !== undefined) { // Check if the tile and its pre-calculated color exist
+            tempColor.setHex(tile.color); // Use the stored tile.color
+            colorsAttribute.setXYZ(i, tempColor.r, tempColor.g, tempColor.b);
+        } else {
+            // Fallback for missing tile or if tile.color was somehow not set
+            colorsAttribute.setXYZ(i, 0.2, 0.2, 0.2); 
+        }
+      }
+    }
+    colorsAttribute.needsUpdate = true; // IMPORTANT: Notify Three.js to update the colors
   }
 
   if(mainMesh){

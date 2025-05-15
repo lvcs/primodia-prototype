@@ -158,7 +158,8 @@ export function renderGlobeControls() {
     { value: 'terrain', label: 'Terrain' },
     { value: 'plates', label: 'Tectonic Plates' },
     { value: 'elevation', label: 'Elevation' },
-    { value: 'moisture', label: 'Moisture' }
+    { value: 'moisture', label: 'Moisture' },
+    { value: 'temperature', label: 'Temperature' }
   ];
   const viewSelect = SelectControl({
     options: viewOptions, value: sphereSettings.viewMode,
