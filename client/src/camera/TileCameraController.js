@@ -1,90 +1,75 @@
 import * as THREE from 'three';
-import { BaseCameraController } from './BaseCameraController.js';
-import { TILE_VIEW_TILT_ANGLE, TILE_VIEW_SPHERE_DISTANCE, TILE_VIEW_ZOOM } from '@/config/gameConstants.js';
 
 /**
- * Controls the camera when focusing on a specific tile (area) on the globe.
- * Inherits common camera logic from BaseCameraController.
+ * Controls the globe rotation when focusing on a specific tile (area) on the globe.
+ * The camera always looks at (0,0,0); the globe is rotated so the tile center is at (0,0,globeRadius).
  */
-export class TileCameraController extends BaseCameraController {
+export class TileCameraController {
   /**
-   * Create a controller for tile view.
-   * @param {THREE.Camera} threeJsCamera - The camera object from Three.js.
+   * @param {THREE.Object3D} planetGroup - The globe mesh/group to control.
    * @param {number} globeRadius - The radius of the globe.
    */
-  constructor(threeJsCamera, globeRadius) {
-    // Call the parent class constructor to set up the camera and globe radius
-    super(threeJsCamera, globeRadius);
+  constructor(planetGroup, globeRadius) {
+    this.planetGroup = planetGroup;
+    this.globeRadius = globeRadius;
+    this.rotationX = planetGroup ? planetGroup.rotation.x : 0;
+    this.rotationY = planetGroup ? planetGroup.rotation.y : 0;
   }
 
   /**
-   * Animate the camera to focus on a specific tile (latitude/longitude) on the globe.
-   * The camera will be a fixed distance from the globe center, at a fixed tilt, always looking at the tile.
+   * Convert latitude and longitude to a 3D position on the globe's surface.
+   * @param {number} latitude - The latitude in degrees.
+   * @param {number} longitude - The longitude in degrees.
+   * @returns {THREE.Vector3} The 3D position on the globe's surface.
+   */
+  latLonToWorld(latitude, longitude) {
+    const latRad = THREE.MathUtils.degToRad(latitude);
+    const lonRad = THREE.MathUtils.degToRad(longitude);
+    const x = this.globeRadius * Math.cos(latRad) * Math.cos(lonRad);
+    const y = this.globeRadius * Math.sin(latRad);
+    const z = this.globeRadius * Math.cos(latRad) * Math.sin(lonRad);
+    return new THREE.Vector3(x, y, z);
+  }
+
+  /**
+   * Animate the globe rotation so the tile at (latitude, longitude) is at (0,0,globeRadius).
    * @param {{latitude: number, longitude: number}} tile - The tile to focus on.
-   * @param {Function} [onComplete] - Optional callback when animation finishes.
+   * @param {Function} [onComplete] - Optional callback when rotation finishes.
    */
   animateToTile(tile, onComplete = () => {}) {
-    // 1. Get the tile's world position (on the surface)
-    const tilePos = this.latLonToWorld(tile.latitude, tile.longitude);
-
-    // 2. Get the direction from the globe center to the tile
-    const direction = tilePos.clone().normalize();
-
-    // 3. Set the camera position to be TILE_VIEW_SPHERE_DISTANCE * globeRadius away from the center, along this direction
-    const cameraDistance = TILE_VIEW_SPHERE_DISTANCE;
-    const cameraPos = direction.multiplyScalar(cameraDistance);
-
-    // Store the camera's current position as the animation start
-    const startPos = this.threeJsCamera.position.clone();
-    // The camera should look at the globe center at the end
-    const endPos = cameraPos.clone();
-    const endTarget = new THREE.Vector3(0, 0, 0);
-    // The camera's up direction should always be straight up (y-axis)
-    const startUp = new THREE.Vector3(0, 1, 0);
-    const endUp = new THREE.Vector3(0, 1, 0);
-    // Animate the camera from its current state to the new state
-    this.animateCamera({
-      startPos,
-      endPos,
-      startTarget: endTarget,
-      endTarget,
-      startUp,
-      endUp,
-      onUpdate: (pos, target, up) => {
-        // Update the camera's position
-        this.threeJsCamera.position.copy(pos);
-        // Update the camera's up direction
-        this.threeJsCamera.up.copy(up);
-        // Make the camera look at the target (globe center)
-        this.threeJsCamera.lookAt(target);
-        // Ensure the camera is not rotated around the y or z axes
-        this.threeJsCamera.rotation.z = 0;
-        this.threeJsCamera.rotation.y = 0;
-        // Set the camera's zoom level if supported
-        if ('zoom' in this.threeJsCamera) {
-          this.threeJsCamera.zoom = TILE_VIEW_ZOOM;
-          this.threeJsCamera.updateProjectionMatrix();
-        }
-      },
-      onComplete,
-    });
+    console.log('Animating to tile:', tile);
+    if (!this.planetGroup) return;
+    // Compute the world position of the tile center
+    const tilePos = this.latLonToWorld(tile.latitude, tile.longitude).normalize();
+    // The target position is (0,0,1) (normalized)
+    const target = new THREE.Vector3(0, 0, 1);
+    // Compute the quaternion that rotates tilePos to target
+    const targetQuat = new THREE.Quaternion().setFromUnitVectors(tilePos, target);
+    const startQuat = this.planetGroup.quaternion.clone();
+    const duration = 500; // ms
+    const startTime = performance.now();
+    const animate = (now) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      this.planetGroup.quaternion.copy(startQuat).slerp(targetQuat, t);
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        this.planetGroup.quaternion.copy(targetQuat);
+        this.rotationX = this.planetGroup.rotation.x;
+        this.rotationY = this.planetGroup.rotation.y;
+        if (onComplete) onComplete(true);
+      }
+    };
+    requestAnimationFrame(animate);
   }
 
   /**
    * Get the tilt angle of the camera relative to the tile it is looking at.
-   * The tilt is how much the camera is angled from looking straight down/up.
-   * @returns {number} The tilt angle in degrees.
+   * For now, always returns 0 since camera always looks at 0,0,0.
+   * @returns {number}
    */
   getTilt() {
-    // Get the camera's current position
-    const pos = this.threeJsCamera.position;
-    // Get the direction the camera is looking in
-    const target = this.threeJsCamera.getWorldDirection(new THREE.Vector3()).add(pos);
-    // Calculate the direction vector from the camera to the target
-    const dir = target.clone().sub(pos).normalize();
-    // The tilt angle is the angle between this direction and the 'up' direction (y-axis)
-    const tiltRad = Math.acos(dir.y);
-    // Convert the tilt from radians to degrees for easier understanding
-    return THREE.MathUtils.radToDeg(tiltRad);
+    return 0;
   }
 } 

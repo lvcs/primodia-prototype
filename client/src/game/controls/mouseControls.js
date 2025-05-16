@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as Const from '../../config/gameConstants.js';
-import GlobeRotationController from './globeRotationController.js';
+import { GlobeCameraController } from '@/camera/GlobeCameraController.js';
 
 // --- State ---
 let isDragging = false;
@@ -15,7 +15,7 @@ export function initMouseControls(camera, planetGroup, controls, renderer, contr
     localPlanetGroup = planetGroup;
     localControls = controls;
     localRenderer = renderer;
-    globeRotationController = controller || new GlobeRotationController(localPlanetGroup);
+    globeRotationController = controller || new GlobeCameraController(localPlanetGroup);
     globeRotationController.syncFromObject();
     localRenderer.domElement.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mousemove', onMouseMove);

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as Const from '../../config/gameConstants.js';
 import { getActionForKey, Actions } from '../../config/keybindings.js';
-import GlobeRotationController from './globeRotationController.js';
+import { GlobeCameraController } from '@/camera/GlobeCameraController.js';
 
 // --- State ---
 const activeKeys = new Set();
@@ -15,7 +15,7 @@ export function initKeyboardControls(camera, planetGroup, controls, worldConfig,
     localPlanetGroup = planetGroup;
     localControls = controls;
     localWorldConfig = worldConfig;
-    globeRotationController = controller || new GlobeRotationController(localPlanetGroup);
+    globeRotationController = controller || new GlobeCameraController(localPlanetGroup);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 }

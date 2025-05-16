@@ -5,7 +5,7 @@ import { debug, error, updateTileDebugInfo } from '@/game/utils/debug.js'; // Pa
 import { classifyTerrain } from '@/game/world/planetSphereVoronoi.js'; // Path updated
 import { initMouseControls, disposeMouseControls } from '@/game/controls/mouseControls.js'; // Path updated
 import { initKeyboardControls, disposeKeyboardControls } from '@/game/controls/keyboardControls.js'; // Path updated
-import GlobeRotationController from '@/game/controls/globeRotationController.js';
+import { GlobeCameraController } from '@/camera/GlobeCameraController.js';
 
 // Import getters for shared state
 import { getCamera, getRenderer, getWorldConfig, getControls } from './setup.js'; // Path updated (sibling in core/)
@@ -74,7 +74,7 @@ export function setupRootEventListeners() {
         worldConfigInstance.radius  // <<< PASS GLOBERADIUS
       );
       window.cameraAnimator = cameraAnimator; // Make globally accessible
-      globeRotationController = new GlobeRotationController(planetGroupInstance);
+      globeRotationController = new GlobeCameraController(planetGroupInstance);
       window.globeRotationController = globeRotationController;
       addGlobeViewButton(cameraAnimator); // Add the Globe View button
     } else {

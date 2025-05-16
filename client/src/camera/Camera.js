@@ -30,9 +30,9 @@ export class Camera {
     // Store the target tile (if in tile mode)
     this.tileTarget = null;
     // Create a controller for globe view
-    this.globeController = new GlobeCameraController(threeJsCamera, globeRadius);
+    this.globeController = new GlobeCameraController(globeModel);
     // Create a controller for tile view
-    this.tileController = new TileCameraController(threeJsCamera, globeRadius);
+    this.tileController = new TileCameraController(globeModel, globeRadius);
   }
 
   /**
@@ -41,10 +41,12 @@ export class Camera {
    * @param {THREE.Vector3|null} tileCenter - The center of the tile to focus on (if in tile mode).
    */
   setMode(mode, tileCenter = null) {
-    // Set the camera mode
     this.cameraMode = mode;
-    // If in tile mode and a tile center is provided, store a copy of it; otherwise, clear the tile target
     this.tileTarget = (mode === 'tile' && tileCenter) ? tileCenter.clone() : null;
+    // Enable or disable orbit controls based on mode
+    if (this.orbitControls) {
+      this.orbitControls.enabled = (mode === 'globe');
+    }
   }
 
   /**
