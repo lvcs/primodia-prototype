@@ -1,20 +1,22 @@
 import * as THREE from 'three';
 import * as Const from '../../config/gameConstants.js';
-import CameraOrbitController from './CameraOrbitController.js';
+import GlobeRotationController from './globeRotationController.js';
 
 // --- State ---
 let isDragging = false;
 const previousMousePosition = { x: 0, y: 0 };
-let localControls, localCamera, localRenderer, orbitController;
+let localControls, localCamera, localPlanetGroup, localRenderer, globeRotationController;
 
 /**
- * Initialize mouse controls for camera orbit.
+ * Initialize mouse controls for globe rotation.
  */
-export function initMouseControls(camera, controls, renderer, controller) {
+export function initMouseControls(camera, planetGroup, controls, renderer, controller) {
     localCamera = camera;
+    localPlanetGroup = planetGroup;
     localControls = controls;
     localRenderer = renderer;
-    orbitController = controller;
+    globeRotationController = controller || new GlobeRotationController(localPlanetGroup);
+    globeRotationController.syncFromObject();
     localRenderer.domElement.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
@@ -29,20 +31,21 @@ function onMouseDown(event) {
     if (localControls) localControls.enabled = false;
     previousMousePosition.x = event.clientX;
     previousMousePosition.y = event.clientY;
+    globeRotationController.syncFromObject();
 }
 
 /**
- * Handle mouse move event to orbit the camera.
+ * Handle mouse move event to rotate the globe.
  */
 function onMouseMove(event) {
-    if (!isDragging) return;
+    if (!isDragging || !localPlanetGroup) return;
     if (window.cameraAnimator && window.cameraAnimator.isAnimating) return;
     const deltaX = event.clientX - previousMousePosition.x;
     const deltaY = event.clientY - previousMousePosition.y;
     let currentRotationSpeed = Const.MOUSE_PAN_SPEED;
     // Adjust rotation speed based on zoom level
     if (localControls && localControls.target && localCamera && localCamera.position) {
-        const currentDistance = localCamera.position.length();
+        const currentDistance = localCamera.position.distanceTo(localControls.target);
         const minZoomDist = localControls.minDistance;
         const maxZoomDist = localControls.maxDistance;
         const zoomFactor = THREE.MathUtils.clamp((currentDistance - minZoomDist) / (maxZoomDist - minZoomDist), 0, 1);
@@ -50,10 +53,13 @@ function onMouseMove(event) {
         const speedAtMaxZoomOut = Const.MOUSE_PAN_SPEED * 2;
         currentRotationSpeed = THREE.MathUtils.lerp(speedAtMaxZoomIn, speedAtMaxZoomOut, zoomFactor);
     }
-    // Update camera orbit
-    if (orbitController) {
-        orbitController.rotate(deltaY * currentRotationSpeed, deltaX * currentRotationSpeed);
-    }
+    // Update rotation
+    const { x, y } = globeRotationController.getRotation();
+    const maxTilt = Math.PI / 2;
+    let newX = x + deltaY * currentRotationSpeed;
+    let newY = y + deltaX * currentRotationSpeed;
+    newX = Math.max(-maxTilt, Math.min(maxTilt, newX));
+    globeRotationController.setRotation(newX, newY);
     previousMousePosition.x = event.clientX;
     previousMousePosition.y = event.clientY;
 }
@@ -64,6 +70,9 @@ function onMouseMove(event) {
 function onMouseUp(event) {
     if (event.button !== 0) return;
     isDragging = false;
+    if (localPlanetGroup && localPlanetGroup.userData) {
+        localPlanetGroup.userData.isBeingDragged = false;
+    }
     if (localControls) localControls.enabled = true;
 }
 

@@ -35,6 +35,7 @@ import {
 import {
     generateAndDisplayPlanet as generatePlanet,
     updatePlanetColors,
+    updatePlanetRotation,
     getPlanetGroup, // To pass to other modules like controls or UI if they need it directly
     getWorldData
 } from './planet.js';

@@ -205,4 +205,35 @@ export function updatePlanetColors() {
     colorsAttr.array[i*3+2] = rgb[2];
   }
   colorsAttr.needsUpdate = true;
+}
+
+export function updatePlanetRotation(deltaTime, _controls) { // Pass controls if it needs to be updated
+  if (!planetGroup || !planetGroup.userData) return;
+
+  const { angularVelocity, targetAngularVelocity, isBeingDragged } = planetGroup.userData;
+
+  if (isBeingDragged) {
+    return;
+  }
+
+  angularVelocity.lerp(targetAngularVelocity, Const.KEYBOARD_ROTATION_ACCELERATION_FACTOR);
+  angularVelocity.multiplyScalar(Math.pow(Const.GLOBE_ANGULAR_DAMPING_FACTOR, deltaTime * 60));
+
+  const minSpeed = 0.0001;
+  if (angularVelocity.lengthSq() < minSpeed * minSpeed) {
+    angularVelocity.set(0, 0, 0);
+  }
+
+  if (angularVelocity.lengthSq() > 0) {
+    if (Math.abs(angularVelocity.x) > minSpeed) {
+        planetGroup.rotateOnWorldAxis(new THREE.Vector3(1,0,0), angularVelocity.x * deltaTime);
+    }
+    if (Math.abs(angularVelocity.y) > minSpeed) {
+        planetGroup.rotateOnWorldAxis(new THREE.Vector3(0,1,0), angularVelocity.y * deltaTime);
+    }
+    if (Math.abs(angularVelocity.z) > minSpeed) {
+        planetGroup.rotateOnWorldAxis(new THREE.Vector3(0,0,1), angularVelocity.z * deltaTime);
+    }
+    if (_controls) _controls.update(); // Update OrbitControls if planet moves
+  }
 } 

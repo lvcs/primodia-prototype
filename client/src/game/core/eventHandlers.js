@@ -5,7 +5,7 @@ import { debug, error, updateTileDebugInfo } from '@/game/utils/debug.js'; // Pa
 import { classifyTerrain } from '@/game/world/planetSphereVoronoi.js'; // Path updated
 import { initMouseControls, disposeMouseControls } from '@/game/controls/mouseControls.js'; // Path updated
 import { initKeyboardControls, disposeKeyboardControls } from '@/game/controls/keyboardControls.js'; // Path updated
-import CameraOrbitController from '@/game/controls/CameraOrbitController.js';
+import GlobeRotationController from '@/game/controls/globeRotationController.js';
 
 // Import getters for shared state
 import { getCamera, getRenderer, getWorldConfig, getControls } from './setup.js'; // Path updated (sibling in core/)
@@ -20,7 +20,7 @@ const MAX_DRAG_TIME_FOR_CLICK = 250; // milliseconds
 
 let selectedHighlight = null;
 let cameraAnimator = null; // <<< ADDED CAMERA ANIMATOR INSTANCE HOLDER
-let orbitController = null;
+let globeRotationController = null;
 
 // Variables to track mouse press for distinguishing click from drag
 let mouseDownTime;
@@ -74,12 +74,8 @@ export function setupRootEventListeners() {
         worldConfigInstance.radius  // <<< PASS GLOBERADIUS
       );
       window.cameraAnimator = cameraAnimator; // Make globally accessible
-      // Initialize orbit controller with camera, default radius, phi, theta
-      const initialRadius = cameraInstance.position.length();
-      const initialPhi = Math.acos(cameraInstance.position.y / initialRadius);
-      const initialTheta = Math.atan2(cameraInstance.position.z, cameraInstance.position.x);
-      orbitController = new CameraOrbitController(cameraInstance, initialRadius, initialPhi, initialTheta);
-      window.orbitController = orbitController;
+      globeRotationController = new GlobeRotationController(planetGroupInstance);
+      window.globeRotationController = globeRotationController;
       addGlobeViewButton(cameraAnimator); // Add the Globe View button
     } else {
       error("Failed to initialize CameraAnimator: Missing main camera, planet group, orbit controls, or world config.");
@@ -247,8 +243,8 @@ export function setupRootEventListeners() {
     const wConfig = getWorldConfig();
 
     if (cam && pGroup && orbitControls && rend && wConfig) {
-        initMouseControls(cam, orbitControls, rend, orbitController);
-        initKeyboardControls(cam, orbitControls, wConfig, orbitController);
+        initMouseControls(cam, pGroup, orbitControls, rend, globeRotationController);
+        initKeyboardControls(cam, pGroup, orbitControls, wConfig, globeRotationController);
     } else {
         error('One or more dependencies for control (mouse/keyboard) initialization are missing in setupRootEventListeners.');
     }
@@ -271,8 +267,8 @@ export function reinitializeControls() {
     if (cam && pGroup && orbitControls && rend && wConfig) {
         disposeMouseControls(); 
         disposeKeyboardControls();
-        initMouseControls(cam, orbitControls, rend, orbitController);
-        initKeyboardControls(cam, orbitControls, wConfig, orbitController);
+        initMouseControls(cam, pGroup, orbitControls, rend, globeRotationController);
+        initKeyboardControls(cam, pGroup, orbitControls, wConfig, globeRotationController);
         debug('Mouse and Keyboard controls re-initialized.');
     } else {
         error('Failed to re-initialize controls due to missing dependencies.');
