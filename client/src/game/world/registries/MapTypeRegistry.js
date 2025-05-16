@@ -68,8 +68,7 @@ export const MapRegistry = {
     description: 'Lots of small islands.',
     waterCutoff: -0.2,
     terrainDistribution: {
-      [TerrainType.OCEAN]: 0.80,
-      [TerrainType.COAST]: 0.05,
+      [TerrainType.OCEAN]: 0.85,
       [TerrainType.PLAINS]: 0.05,
       [TerrainType.FOREST]: 0.03,
       [TerrainType.HILLS]: 0.03,
@@ -83,8 +82,7 @@ export const MapRegistry = {
     description: 'Mix of small-to-medium islands.',
     waterCutoff: -0.1,
     terrainDistribution: {
-      [TerrainType.OCEAN]: 0.70,
-      [TerrainType.COAST]: 0.08,
+      [TerrainType.OCEAN]: 0.78,
       [TerrainType.PLAINS]: 0.10,
       [TerrainType.FOREST]: 0.05,
       [TerrainType.HILLS]: 0.03,
@@ -111,8 +109,7 @@ export const MapRegistry = {
     description: 'Tons of small inland lakes.',
     waterCutoff: 0,
     terrainDistribution: {
-      [TerrainType.OCEAN]: 0.10,
-      [TerrainType.COAST]: 0.20,
+      [TerrainType.OCEAN]: 0.30,
       [TerrainType.PLAINS]: 0.30,
       [TerrainType.FOREST]: 0.20,
       [TerrainType.HILLS]: 0.10,
@@ -166,7 +163,7 @@ export function generateMapTerrain(mapType, position, randomFloat) {
     const continentVal = (Math.sin(x * 2.5) * Math.cos(z * 2.5) + Math.cos(y * 3)) * 0.5;
     
     if (continentVal < -0.2) return TerrainType.OCEAN;
-    if (continentVal < -0.1) return TerrainType.COAST;
+    if (continentVal < -0.1) return TerrainType.OCEAN;
     if (continentVal < 0.1) return TerrainType.PLAINS;
     if (continentVal < 0.2 && noise > 0) return TerrainType.FOREST;
     if (continentVal < 0.3 && noise < 0) return TerrainType.HILLS;
@@ -180,7 +177,7 @@ export function generateMapTerrain(mapType, position, randomFloat) {
     
     if (x < -0.5 && distFromCenter > 0.7) return TerrainType.OCEAN;
     if (distFromCenter > 0.85) return TerrainType.OCEAN;
-    if (distFromCenter > 0.8) return TerrainType.COAST;
+    if (distFromCenter > 0.8) return TerrainType.OCEAN;
     
     // Interior terrain varies based on latitude (y)
     if (y > 0.7) return TerrainType.TUNDRA;
@@ -199,7 +196,7 @@ export function generateMapTerrain(mapType, position, randomFloat) {
     const islandNoise = (Math.sin(x * 20) * Math.cos(z * 20) + Math.sin(y * 20) * Math.cos(x * 20)) * 0.5;
     
     if (islandNoise < 0.3) return TerrainType.OCEAN;
-    if (islandNoise < 0.35) return TerrainType.COAST;
+    if (islandNoise < 0.35) return TerrainType.OCEAN;
     
     // Island interiors vary
     if (islandNoise < 0.4) return TerrainType.PLAINS;

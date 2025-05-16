@@ -10,19 +10,22 @@ const ICE_SNOW_PRIORITY = 5;
 // Discrete colors provided by user
 const discreteColors = {
     OCEAN: {
-        default: 0x447599, // Shallowest ocean color from the new preferred set
+        default: 0x1D4179, // Shallowest ocean color
         variants: [
-            { maxElevation: -0.82, color: 0x0B0D15 }, // Deepest
-            { maxElevation: -0.74, color: 0x101426 },
-            { maxElevation: -0.66, color: 0x161C36 },
-            { maxElevation: -0.58, color: 0x1D2546 },
-            { maxElevation: -0.50, color: 0x2E3869 },
-            { maxElevation: -0.42, color: 0x374F89 },
-            { maxElevation: -0.34, color: 0x3D6392 },
-            { maxElevation: -0.25, color: 0x447599 }  // Shallowest part of OCEAN range
+            { maxElevation: -0.82, color: 0x0B0033 }, // Deepest
+            { maxElevation: -0.75, color: 0x0A0233 },
+            { maxElevation: -0.68, color: 0x080335 },
+            { maxElevation: -0.61, color: 0x060437 },
+            { maxElevation: -0.54, color: 0x05053C },
+            { maxElevation: -0.47, color: 0x060A42 },
+            { maxElevation: -0.40, color: 0x081049 },
+            { maxElevation: -0.33, color: 0x0B1852 },
+            { maxElevation: -0.26, color: 0x0E1F5B },
+            { maxElevation: -0.19, color: 0x122965 },
+            { maxElevation: -0.12, color: 0x17346F },
+            { maxElevation: -0.05, color: 0x1D4179 }  // Shallowest
         ]
     },
-    COAST: 0x33335a,
     LAKESHORE: 0x225588,
     LAKE: 0x336699,
     MARSH: 0x2f6666,
@@ -57,8 +60,7 @@ const discreteColors = {
 };
 
 export const Terrains = {
-  OCEAN:      new TerrainType({ id:'OCEAN',      name:'Ocean',         color:discreteColors.OCEAN, baseType:'WATER', priority: WATER_PRIORITY, maxElevation: -0.25 }), // Deepest parts
-  COAST:      new TerrainType({ id:'COAST',      name:'Coast',         color:discreteColors.COAST, baseType:'WATER', priority: WATER_PRIORITY + 1, minElevation: -0.251, maxElevation: -0.05 }), // Shallower ocean
+  OCEAN:      new TerrainType({ id:'OCEAN',      name:'Ocean',         color:discreteColors.OCEAN, baseType:'WATER', priority: WATER_PRIORITY, maxElevation: -0.05 }), // Deepest parts, now includes coast
   LAKE:       new TerrainType({ id:'LAKE',       name:'Lake',          color:discreteColors.LAKE, baseType:'WATER', priority: WATER_PRIORITY + 2, minElevation: -0.049, requiresLake: true }), // Inland water, above general sea level if not ocean connected
   LAKESHORE:  new TerrainType({ id:'LAKESHORE',  name:'Lakeshore',     color:discreteColors.LAKESHORE, baseType:'LAND',  priority: LAND_BASE_PRIORITY, maxElevation: 0.05, requiresLake: true }), // Land immediately bordering a lake
 

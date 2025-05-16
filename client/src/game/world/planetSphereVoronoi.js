@@ -265,10 +265,10 @@ export function classifyTileTerrainFromProperties(tile) {
             }
         }
         
-        // Special handling for OCEAN/COAST (preventing non-connected low areas from being ocean)
-        if (match && (terrainRule.id === 'OCEAN' || terrainRule.id === 'COAST')) {
+        // Special handling for OCEAN (preventing non-connected low areas from being ocean)
+        if (match && (terrainRule.id === 'OCEAN')) {
             if (tile.isOceanConnected === false && tile.elevation < -0.05) {
-                failReason.push(`Ocean/Coast (Tile is non-ocean-connected water: elev=${tile.elevation?.toFixed(3)})`);
+                failReason.push(`Ocean (Tile is non-ocean-connected water: elev=${tile.elevation?.toFixed(3)})`);
                 match = false; 
             }
         }
