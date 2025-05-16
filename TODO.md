@@ -174,3 +174,7 @@
 ## VII. Future-Proofing & Maintainability (from ROADMAP.MD)
 - [ ] Adhere to Domain-Driven Design (DDD) Principles for Game Engine
 - [ ] Architect Engine for Extensibility & Moddability (Plugin System Consideration)
+
+## VIII. Additional TODOs
+- [ ] Get mouse inertia right (globe drag momentum)
+- [ ] Implement performance improvements for quicker load

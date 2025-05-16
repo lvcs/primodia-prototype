@@ -56,6 +56,14 @@ export function setupOrbitControls(_camera, _renderer, _worldConfig) { // Rename
   controls.minDistance = _worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
   controls.maxDistance = _worldConfig.radius * Const.CAMERA_MAX_DISTANCE_FACTOR;
 
+  // Allow full rotation around the X-axis (polar angle)
+  controls.minPolarAngle = 0; // Min angle from the zenith (Y-axis up)
+  controls.maxPolarAngle = Math.PI; // Max angle from the zenith (Y-axis up)
+
+  // Azimuthal rotation (around Y-axis) is unrestricted by default.
+  // controls.minAzimuthAngle = -Infinity; // Default
+  // controls.maxAzimuthAngle = Infinity;  // Default
+
   _camera.position.set(
     0,
     _worldConfig.radius * Const.CAMERA_INITIAL_POS_Y_FACTOR,

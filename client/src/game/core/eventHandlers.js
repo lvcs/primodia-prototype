@@ -5,6 +5,7 @@ import { debug, error, updateTileDebugInfo } from '@/game/utils/debug.js'; // Pa
 import { classifyTerrain } from '@/game/world/planetSphereVoronoi.js'; // Path updated
 import { initMouseControls, disposeMouseControls } from '@/game/controls/mouseControls.js'; // Path updated
 import { initKeyboardControls, disposeKeyboardControls } from '@/game/controls/keyboardControls.js'; // Path updated
+import CameraOrbitController from '@/game/controls/CameraOrbitController.js';
 
 // Import getters for shared state
 import { getCamera, getRenderer, getWorldConfig, getControls } from './setup.js'; // Path updated (sibling in core/)
@@ -19,6 +20,7 @@ const MAX_DRAG_TIME_FOR_CLICK = 250; // milliseconds
 
 let selectedHighlight = null;
 let cameraAnimator = null; // <<< ADDED CAMERA ANIMATOR INSTANCE HOLDER
+let orbitController = null;
 
 // Variables to track mouse press for distinguishing click from drag
 let mouseDownTime;
@@ -26,6 +28,34 @@ let mouseDownPosition = new THREE.Vector2();
 
 export function getSelectedHighlight() {
     return selectedHighlight;
+}
+
+// Add Globe View button to UI overlay (top right)
+function addGlobeViewButton(cameraAnimator) {
+    let globeBtn = document.getElementById('globe-view-btn');
+    if (!globeBtn) {
+        globeBtn = document.createElement('button');
+        globeBtn.id = 'globe-view-btn';
+        globeBtn.textContent = 'Globe View';
+        globeBtn.style.position = 'absolute';
+        globeBtn.style.top = '20px';
+        globeBtn.style.right = '20px';
+        globeBtn.style.zIndex = '2000';
+        globeBtn.style.padding = '0.5rem 1.2rem';
+        globeBtn.style.background = '#444';
+        globeBtn.style.color = 'white';
+        globeBtn.style.border = '1px solid #888';
+        globeBtn.style.borderRadius = '5px';
+        globeBtn.style.fontSize = '1.1rem';
+        globeBtn.style.cursor = 'pointer';
+        globeBtn.style.display = 'none';
+        globeBtn.addEventListener('click', () => {
+            cameraAnimator.animateToGlobe();
+            globeBtn.style.display = 'none';
+        });
+        document.body.appendChild(globeBtn);
+    }
+    return globeBtn;
 }
 
 export function setupRootEventListeners() {
@@ -43,6 +73,14 @@ export function setupRootEventListeners() {
         orbitControlsInstance,      // <<< PASS ORBITCONTROLS
         worldConfigInstance.radius  // <<< PASS GLOBERADIUS
       );
+      window.cameraAnimator = cameraAnimator; // Make globally accessible
+      // Initialize orbit controller with camera, default radius, phi, theta
+      const initialRadius = cameraInstance.position.length();
+      const initialPhi = Math.acos(cameraInstance.position.y / initialRadius);
+      const initialTheta = Math.atan2(cameraInstance.position.z, cameraInstance.position.x);
+      orbitController = new CameraOrbitController(cameraInstance, initialRadius, initialPhi, initialTheta);
+      window.orbitController = orbitController;
+      addGlobeViewButton(cameraAnimator); // Add the Globe View button
     } else {
       error("Failed to initialize CameraAnimator: Missing main camera, planet group, orbit controls, or world config.");
     }
@@ -183,16 +221,15 @@ export function setupRootEventListeners() {
                 debugMsg += `, Elevation=${clickedTile.elevation.toFixed(2)}, Moisture=${clickedTile.moisture.toFixed(2)}`;
                 debug(debugMsg);
 
-                // <<< --- INTEGRATE CAMERA ANIMATION HERE --- >>>
                 if (cameraAnimator) {
-                  // The Tile object from Tile.js has 'lat' and 'lon' getters.
-                  // The Camera class expects 'latitude' and 'longitude'.
                   const tileDataForCamera = {
                     latitude: clickedTile.lat,
                     longitude: clickedTile.lon
                   };
-                  cameraAnimator.animateTo(tileDataForCamera, () => {
-                    debug("Camera animation to tile complete.");
+                  cameraAnimator.animateToTile(tileDataForCamera, () => {
+                    // Always show Globe View button after animating to a tile
+                    const globeBtn = document.getElementById('globe-view-btn');
+                    if (globeBtn) globeBtn.style.display = 'block';
                   });
                 } else {
                   error("CameraAnimator not initialized. Cannot animate to tile.");
@@ -210,8 +247,8 @@ export function setupRootEventListeners() {
     const wConfig = getWorldConfig();
 
     if (cam && pGroup && orbitControls && rend && wConfig) {
-        initMouseControls(cam, pGroup, orbitControls, rend);
-        initKeyboardControls(cam, pGroup, orbitControls, wConfig);
+        initMouseControls(cam, orbitControls, rend, orbitController);
+        initKeyboardControls(cam, orbitControls, wConfig, orbitController);
     } else {
         error('One or more dependencies for control (mouse/keyboard) initialization are missing in setupRootEventListeners.');
     }
@@ -234,8 +271,8 @@ export function reinitializeControls() {
     if (cam && pGroup && orbitControls && rend && wConfig) {
         disposeMouseControls(); 
         disposeKeyboardControls();
-        initMouseControls(cam, pGroup, orbitControls, rend);
-        initKeyboardControls(cam, pGroup, orbitControls, wConfig);
+        initMouseControls(cam, orbitControls, rend, orbitController);
+        initKeyboardControls(cam, orbitControls, wConfig, orbitController);
         debug('Mouse and Keyboard controls re-initialized.');
     } else {
         error('Failed to re-initialize controls due to missing dependencies.');

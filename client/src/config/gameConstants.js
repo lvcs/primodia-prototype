@@ -11,7 +11,7 @@ export const STEP_NUMBER_OF_GLOBE_TILES = 50; // From UI slider step
 // Tectonic Plates
 export const MIN_TECHTONIC_PLATES = 4;    // From UI slider min
 export const MAX_TECHTONIC_PLATES = 512;    // From UI slider max
-export const DEFAULT_TECHTONIC_PLATES = 256; // From sphereSettings default
+export const DEFAULT_TECHTONIC_PLATES = 128; // From sphereSettings default
 export const STEP_TECHTONIC_PLATES = 1;     // From UI slider step
 
 // Jitter
@@ -62,6 +62,11 @@ export const KEYBOARD_SPEED_SCALE_AT_MAX_ZOOM = 4.0;  // e.g., 200% of base spee
 
 // Globe Rotation Damping and Inertia
 export const GLOBE_ANGULAR_DAMPING_FACTOR = 0.95; // Factor to slow down globe rotation each frame (e.g., 0.95 = 5% slowdown)
-export const KEYBOARD_TARGET_ANGULAR_SPEED = 1.0; // Target angular speed (radians/sec) when a rotation key is held
+export const KEYBOARD_TARGET_ANGULAR_SPEED = 0.0075; // Target angular speed (radians/sec) when a rotation key is held (reduced from 1.0)
 export const KEYBOARD_ROTATION_ACCELERATION_FACTOR = 0.1; // How quickly globe reaches target speed from keyboard (0-1)
 export const MOUSE_RELEASE_INERTIA_FACTOR = 30.0; // Multiplier for mouse delta to initial angular velocity on release 
+
+// Tile View Angle
+export const TILE_VIEW_TILT_ANGLE = -Math.PI / 4; // -45 degrees 
+export const TILE_VIEW_SPHERE_DISTANCE = 10.75; // Distance from globe center for tile view
+export const TILE_VIEW_ZOOM = 1.0; // Default zoom level for tile view 

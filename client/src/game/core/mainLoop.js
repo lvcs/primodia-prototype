@@ -1,7 +1,7 @@
 // Main animation loop (animate function and clock) 
 import * as THREE from 'three';
 import { handleKeyboardInput } from '@/game/controls/keyboardControls.js'; // Path updated
-import { updatePlanetRotation, getPlanetGroup, getWorldData } from '@/game/planet.js'; // Path updated, added getWorldData
+import { getPlanetGroup, getWorldData } from '@/game/planet.js'; // Path updated, removed updatePlanetRotation
 import { updateCameraControlsUI as updateComponentUIDisplay } from '@/ui/components/CameraControlsSection.js'; // New import
 import { updateCameraDebugInfo, updateGlobeDebugInfo } from '@/game/utils/debug.js';
 import { sphereSettings } from '@/game/world/planetSphereVoronoi.js';
@@ -29,8 +29,7 @@ function animate() {
         return;
     }
 
-    handleKeyboardInput(); // From keyboardControls.js
-    updatePlanetRotation(deltaTime, controls); // Pass OrbitControls for its potential update
+    handleKeyboardInput(deltaTime); // Pass deltaTime for frame-rate independence
     updateComponentUIDisplay(); // New parameter-less signature
 
     // Update camera debug info if the tab is active (the function itself checks for visibility)
