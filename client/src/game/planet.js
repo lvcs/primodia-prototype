@@ -162,12 +162,27 @@ export function updatePlanetColors() {
 
   function elevationRGB(val){
     const elev = val + sphereSettings.elevationBias;
-    const stops=[1,0.8,0.6,0.4,0.2,0,-0.2,-0.4,-0.6,-0.8,-1];
-    const hex=[0x641009,0x87331E,0xAB673D,0xD2A467,0xFAE29A,0xF1EBDA,0x2F62B9,0x1E3FB2,0x0D1BA1,0x0C0484,0x170162];
-    for(let i=0;i<stops.length;i++){
-      if(elev>=stops[i]){ const h=hex[i]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255]; }
+    // 20 stops for ocean (very dark blue to blue), 20 for land (pale yellow to dark red)
+    // Ocean: -1.0 to 0.0, Land: 0.0+ to 1.0
+    const oceanHex = [
+      0x0a0033, 0x0b003a, 0x0c0040, 0x0d0047, 0x0e004d, 0x0f0054, 0x10005a, 0x110061, 0x120067, 0x13006e,
+      0x140074, 0x15007b, 0x160081, 0x170088, 0x18008e, 0x190095, 0x1a009b, 0x1b00a2, 0x1c00a8, 0x1d00af
+    ];
+    const landHex = [
+      0xfff9e5, 0xfff3cc, 0xffecb2, 0xffe699, 0xffe080, 0xffb366, 0xff804d, 0xff4d33, 0xff1a1a, 0xf21616,
+      0xe61212, 0xd90e0e, 0xcc0a0a, 0xbf0606, 0xb20202, 0xa60000, 0x990000, 0x7a0000, 0x5c0000, 0x3d0000
+    ];
+    if (elev < 0) {
+      // Ocean: map elev from -1.0 to 0.0 to 0..19
+      const idx = Math.max(0, Math.min(19, Math.floor((elev + 1) / (1 / 20))));
+      const h = oceanHex[idx];
+      return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
+    } else {
+      // Land: map elev from 0.0 to 1.0 to 0..19
+      const idx = Math.max(0, Math.min(19, Math.floor(elev / (1 / 20))));
+      const h = landHex[idx];
+      return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
     }
-    const h=hex[hex.length-1]; return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
   }
 
   const tempColor = new THREE.Color(); // For color conversion, if not already defined
