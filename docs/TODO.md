@@ -86,17 +86,15 @@
 - [ ] Model Core Game Logic with XState Statecharts
 - [ ] Embrace Functional Programming Principles (Pure Functions, Immutability)
 - [ ] Refactor UI into Reusable Atomic Design Components
-- [ ] Implement Lazy-Loading for Heavy UI Components
 - [ ] Utilize Web Workers for XState Interpreters (Performance)
 - [ ] Manage UI-Specific State with Redux Toolkit/Zustand (or similar)
 - [ ] Define Clear Bridging Mechanisms between XState and UI State
-- [ ] Evaluate & Utilize RxJS for Complex Async Event Streams (Optional)
 
 ## III. Libraries & Technologies (Adoption Plan from ROADMAP.MD)
 - [ ] Fully Adopt TypeScript Across the Codebase
 - [ ] Adopt XState for Core Game Logic State Machines
-- [ ] Evaluate & Potentially Adopt a UI Framework (Svelte, Vue, Preact/React)
-- [ ] Evaluate & Potentially Adopt Redux Toolkit/Zustand/Jotai for UI State
+- [ ] Evaluate & Potentially Adopt a UI Framework (React)
+- [ ] Evaluate & Potentially Adopt Redux Zustand for UI State
 
 ## IV. Phased Tooling, Quality, and Lifecycle Roadmap (from ROADMAP.MD)
 
@@ -114,14 +112,14 @@
 ### Phase 3: Testing Matrix
 - [ ] Implement Unit Testing for Engine (Vitest, High Coverage for Pure Logic)
 - [ ] Implement Unit Testing for UI (Jest/Vitest + React Testing Library or similar)
-- [ ] Implement Integration / End-to-End (E2E) Testing (Cypress or Playwright)
-- [ ] Implement Visual Regression Testing (Storybook + Chromatic or Loki)
-- [ ] Implement Test Coverage Reporting (Codecov or similar, PR Gating)
+- [ ] Implement Integration / End-to-End (E2E) Testing (Cypress or Playwright) (Later)
+- [ ] Implement Visual Regression Testing (Storybook + Chromatic or Loki) (Later)
+- [ ] Implement Test Coverage Reporting (Codecov or similar, PR Gating) (Later)
 
 ### Phase 4: Continuous Integration / Continuous Deployment (CI/CD)
 - [ ] Setup CI Pipeline (GitHub Actions/GitLab CI: Install, Lint, Type-check, Test, Build)
 - [ ] Configure CI Artifact Generation (Engine Package, UI Build, Storybook Static Site)
-- [ ] Setup CD for Staging Environment (Auto-deploy UI & Storybook on `develop` merge)
+- [ ] Setup CD for Staging Environment (Auto-deploy UI & Storybook on `develop` merge) (Later)
 - [ ] Setup CD for Production Environment (Gated Release, Semantic-Release on `main`)
 
 ### Phase 5: Observability & Metrics
@@ -130,24 +128,23 @@
 - [ ] Implement Analytics/Telemetry for Feature Usage (Optional, User Consent)
 
 ### Phase 6: Performance Budgets & Optimizations
-- [ ] Implement Bundle Analysis (e.g., `rollup-plugin-visualizer`)
-- [ ] Implement Code-Splitting & Lazy-Loading (Dynamic Imports, Three.js Assets)
-- [ ] Utilize Web Workers for Heavy Tasks (Path-finding, AI, Map Gen via Comlink)
-- [ ] Optimize Asset Pipeline (Draco Compression, Texture Atlases, On-demand Streaming)
+- [ ] Implement Bundle Analysis (e.g., `rollup-plugin-visualizer`) (Later)
+- [ ] Utilize Web Workers for Heavy Tasks (Path-finding, AI, Map Gen via Comlink) (Later)
+- [ ] Optimize Asset Pipeline (Draco Compression, Texture Atlases, On-demand Streaming) (Later)
 
 ### Phase 7: Documentation & Onboarding
 - [x] Maintain Comprehensive & Living Project Documentation (Architecture, API, Onboarding) (ROADMAP.MD and GAME.MD creation and extensive updates)
 - [ ] Generate Typedoc API Documentation for Engine Package
-- [ ] Maintain Storybook as a Living UI Component Library & Usage Guide
+- [ ] Maintain Storybook as a Living UI Component Library & Usage Guide (Later)
 - [ ] Create & Maintain Architecture Documents (Markdown/MkDocs: Data-Flow, State Strategy)
 - [ ] Create Developer Onboarding Guide ("First PR" Instructions)
 
-### Phase 8: Security & Maintenance
-- [ ] Setup Dependabot/Renovate for Automated Dependency Updates
-- [ ] Enable GitHub Secret Scanning (or similar tools)
+### Phase 8: Security & Maintenance (Later, Very Low Importance)
+- [ ] Setup Dependabot/Renovate for Automated Dependency Updates (Later)
+- [ ] Enable GitHub Secret Scanning (or similar tools) (Later)
 - [ ] Implement License Compliance Checking (e.g., `license-checker`)
 
-### Phase 9: Continuous Improvement
+### Phase 9: Continuous Improvement (Later, Very Low Importance)
 - [ ] Create & Monitor CI Health Dashboard (Build/Test Times, Flake Rate)
 - [ ] Conduct Quarterly Toolchain Retrospectives & Refinements
 - [ ] Establish Developer Feedback Loop for Toolchain & Process Improvement

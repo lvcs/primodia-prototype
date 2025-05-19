@@ -1,8 +1,0 @@
----
-description: 
-globs: 
-alwaysApply: true
----
-# Just do it `/`
-
-- Implement code without asking me for confirmation, unless you are unsure, or have different strategies to choose from

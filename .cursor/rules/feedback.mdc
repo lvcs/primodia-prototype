@@ -1,0 +1,8 @@
+---
+description: 
+globs: Feedback.md
+alwaysApply: false
+---
+When receiving feedback, look at the original Requirements.md and TODO.md in the same directory.
+Consume feedback and plan implementation of feedback.
+Ammend the Requirements.md file, so it includes requirements in case this feature has to be reimplemented.

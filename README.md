@@ -1,6 +1,6 @@
 # Primodia - 3D 4X Strategy Game
 
-Primodia is a browser-based 3D strategy game inspired by classics like Civilization, Caesar, Pharaoh, Zeus, and Tropico. The game features a hexagonal globe world with multiplayer capabilities.
+Primodia is a browser-based, multiplayer 3D strategy game inspired by classics like Civilization, Caesar, Pharaoh, Zeus, and Tropico.
 
 ## Technologies Used
 
