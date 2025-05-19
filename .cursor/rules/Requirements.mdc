@@ -1,8 +1,10 @@
+```mdc
 ---
 description: 
 globs: Requirements.md
-alwaysApply: false
+alwaysApply: true
 ---
+```
 1. Understand the objectives in Requirements.md file
 2. Create an empty PLAN.md file in the same folder
 3. Come up with few potential solutions to achieve the objective, with pros and cons

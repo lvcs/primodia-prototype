@@ -3,7 +3,6 @@ import registerTemplate from './pages/register.html?raw';
 import gameTemplate from './pages/game.html?raw';
 import { setupLogin, setupRegister } from './auth.js';
 import { initGame } from './game/game.js';
-import { renderGlobeControls } from './ui/index.js';
 
 // Global error handler
 window.addEventListener('error', (event) => {
@@ -42,7 +41,6 @@ function renderRegisterPage() {
 
 function renderGamePage() {
   app.innerHTML = gameTemplate;
-  renderGlobeControls();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userNameSpan = document.getElementById('user-name');
   if (userNameSpan) userNameSpan.textContent = user.username || '';

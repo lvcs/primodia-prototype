@@ -5,6 +5,7 @@
 
 import * as THREE from 'three'; // Added for THREE.MathUtils
 import { SliderControl } from '@/ui/components/SliderControl.js'; // Corrected import path
+import { getCamera, getScene, getControls, getWorldConfig } from '@/game/core/setup.js';
 
 // Enable or disable debug mode
 export const DEBUG = true;
@@ -28,236 +29,19 @@ let globeRotXSlider, globeRotYSlider, globeRotZSlider;
 let globeRotXDisplay, globeRotYDisplay, globeRotZDisplay;
 let currentPlanetGroup = null; // To store reference to planetGroup for slider callbacks
 
+// Global references for camera debug sliders, displays, and rig
+let cameraRig;
+let cameraTargetXSlider, cameraTargetYSlider, cameraTargetZSlider;
+let cameraTargetXDisplay, cameraTargetYDisplay, cameraTargetZDisplay;
+let cameraZoomSlider, cameraZoomDisplay;
+let cameraYawSlider, cameraRollSlider;
+let cameraYawDisplay, cameraRollDisplay;
+
 // Create a simple debug GUI to overlay on the game
-export function createDebugUI() {
-  if (!DEBUG) return;
-
-  // Create a debug panel
-  const debugPanel = document.createElement('div');
-  debugPanel.id = 'debug-panel';
-  debugPanel.style.position = 'absolute';
-  debugPanel.style.bottom = '10px';
-  debugPanel.style.left = '50%'; // Center horizontally
-  debugPanel.style.transform = 'translateX(-50%)'; // Ensure proper centering
-  debugPanel.style.padding = '10px';
-  debugPanel.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-  debugPanel.style.color = 'white';
-  debugPanel.style.fontFamily = 'monospace';
-  debugPanel.style.zIndex = '1000';
-  debugPanel.style.fontSize = '12px';
-  debugPanel.style.minWidth = '350px'; // Adjusted width
-  debugPanel.style.maxHeight = '300px'; // Increased maxHeight for more controls
-  debugPanel.style.overflow = 'hidden'; // Will use custom scroll for content
-
-  // Header
-  const header = document.createElement('h3');
-  header.textContent = 'Debug Info';
-  debugPanel.appendChild(header);
-
-  // Segmented Control
-  const segmentControlContainer = document.createElement('div');
-  segmentControlContainer.style.display = 'flex';
-  segmentControlContainer.style.marginBottom = '5px';
-
-  const tileButton = document.createElement('button');
-  tileButton.id = 'debug-tab-tile';
-  tileButton.textContent = 'Tile';
-  tileButton.style.flexGrow = '1';
-  tileButton.style.padding = '5px';
-  tileButton.style.border = '1px solid #555';
-  tileButton.style.backgroundColor = '#333';
-  tileButton.style.color = 'white';
-  tileButton.style.cursor = 'pointer';
-  
-  const cameraButton = document.createElement('button');
-  cameraButton.id = 'debug-tab-camera';
-  cameraButton.textContent = 'Camera';
-  cameraButton.style.flexGrow = '1';
-  cameraButton.style.padding = '5px';
-  cameraButton.style.border = '1px solid #555';
-  cameraButton.style.backgroundColor = '#333';
-  cameraButton.style.color = 'white';
-  cameraButton.style.cursor = 'pointer';
-
-  const globeButton = document.createElement('button');
-  globeButton.id = 'debug-tab-globe';
-  globeButton.textContent = 'Globe';
-  globeButton.style.flexGrow = '1';
-  globeButton.style.padding = '5px';
-  globeButton.style.border = '1px solid #555';
-  globeButton.style.backgroundColor = '#333';
-  globeButton.style.color = 'white';
-  globeButton.style.cursor = 'pointer';
-
-  segmentControlContainer.appendChild(tileButton);
-  segmentControlContainer.appendChild(cameraButton);
-  segmentControlContainer.appendChild(globeButton);
-  debugPanel.appendChild(segmentControlContainer);
-
-  // Content Containers
-  const tileContent = document.createElement('div');
-  tileContent.id = 'debug-tile-content';
-  tileContent.style.padding = '5px';
-  tileContent.style.border = '1px dashed #444';
-  tileContent.style.maxHeight = '150px'; // Max height for content area
-  tileContent.style.overflowY = 'auto'; // Scroll for this content
-  debugPanel.appendChild(tileContent);
-
-  const cameraContent = document.createElement('div');
-  cameraContent.id = 'debug-camera-content';
-  cameraContent.style.padding = '5px';
-  cameraContent.style.border = '1px dashed #444';
-  cameraContent.style.maxHeight = '150px'; // Max height for content area
-  cameraContent.style.overflowY = 'auto'; // Scroll for this content
-  debugPanel.appendChild(cameraContent);
-
-  const globeContent = document.createElement('div');
-  globeContent.id = 'debug-globe-content';
-  globeContent.style.padding = '5px';
-  globeContent.style.border = '1px dashed #444';
-  globeContent.style.maxHeight = '150px';
-  globeContent.style.overflowY = 'auto';
-  debugPanel.appendChild(globeContent);
-  
-  // Utility Buttons (Clear Cache, Reload, Toggle Verbose)
-  const utilityButtonsContainer = document.createElement('div');
-  utilityButtonsContainer.style.marginTop = '5px';
-  
-  const clearCacheButton = document.createElement('button');
-  clearCacheButton.id = 'debug-clear-cache';
-  clearCacheButton.textContent = 'Clear Cache';
-  clearCacheButton.style.marginRight = '5px';
-  clearCacheButton.style.cursor = 'pointer';
-
-  const reloadButton = document.createElement('button');
-  reloadButton.id = 'debug-reload';
-  reloadButton.textContent = 'Reload';
-  reloadButton.style.marginRight = '5px';
-  reloadButton.style.cursor = 'pointer';
-  
-  const verboseButton = document.createElement('button');
-  verboseButton.id = 'debug-verbose';
-  verboseButton.textContent = 'Toggle Verbose';
-  verboseButton.style.cursor = 'pointer';
-  
-  utilityButtonsContainer.appendChild(clearCacheButton);
-  utilityButtonsContainer.appendChild(reloadButton);
-  utilityButtonsContainer.appendChild(verboseButton);
-  debugPanel.appendChild(utilityButtonsContainer);
-
-  // Replaces the old debug-status div for general messages
-  const generalStatusDiv = document.createElement('div');
-  generalStatusDiv.id = 'debug-general-status'; 
-  generalStatusDiv.style.marginTop = '5px';
-  generalStatusDiv.style.fontSize = '10px';
-  generalStatusDiv.style.maxHeight = '50px';
-  generalStatusDiv.style.overflowY = 'auto';
-  debugPanel.appendChild(generalStatusDiv);
-
-  document.body.appendChild(debugPanel);
-
-  const setActiveTab = (tabName) => {
-    // Reset all button backgrounds and hide all content
-    tileButton.style.backgroundColor = '#333';
-    cameraButton.style.backgroundColor = '#333';
-    globeButton.style.backgroundColor = '#333';
-    tileContent.style.display = 'none';
-    cameraContent.style.display = 'none';
-    globeContent.style.display = 'none';
-
-    if (tabName === 'tile') {
-      tileButton.style.backgroundColor = '#555';
-      tileContent.style.display = 'block';
-      localStorage.setItem('debugTabState', 'tile');
-    } else if (tabName === 'camera') {
-      cameraButton.style.backgroundColor = '#555';
-      cameraContent.style.display = 'block';
-      localStorage.setItem('debugTabState', 'camera');
-    } else if (tabName === 'globe') {
-      globeButton.style.backgroundColor = '#555';
-      globeContent.style.display = 'block';
-      localStorage.setItem('debugTabState', 'globe');
-    }
-  };
-
-  tileButton.addEventListener('click', () => setActiveTab('tile'));
-  cameraButton.addEventListener('click', () => setActiveTab('camera'));
-  globeButton.addEventListener('click', () => setActiveTab('globe'));
-
-  // Load initial state
-  const savedTab = localStorage.getItem('debugTabState');
-  if (savedTab === 'camera') {
-    setActiveTab('camera');
-  } else if (savedTab === 'globe') {
-    setActiveTab('globe');
-  } else {
-    setActiveTab('tile'); // Default to tile
-  }
-  
-  // Add event listeners for utility buttons
-  clearCacheButton.addEventListener('click', () => {
-    localStorage.clear(); // This will also clear debugTabState, so we reset it.
-    debug('Cache cleared');
-    updateDebugStatus('Cache cleared'); // Uses the new general status div
-    setActiveTab('tile'); // Reset to default tab after clearing all of localStorage
-  });
-  
-  reloadButton.addEventListener('click', () => {
-    window.location.reload();
-  });
-  
-  verboseButton.addEventListener('click', () => {
-    window.VERBOSE_DEBUG = !window.VERBOSE_DEBUG;
-    updateDebugStatus(`Verbose mode: ${window.VERBOSE_DEBUG ? 'ON' : 'OFF'}`);
-  });
-  
-  // (Inside createDebugUI, after creating globeContent div)
-  if (!globeContent.querySelector('#globe-rotation-sliders-container')) { // Check if sliders are already added
-    const slidersContainer = document.createElement('div');
-    slidersContainer.id = 'globe-rotation-sliders-container';
-    slidersContainer.style.marginTop = '10px';
-
-    const createRotationSlider = (axis, labelText) => {
-      const container = document.createElement('div');
-      container.style.display = 'flex'; container.style.alignItems = 'center'; container.style.marginBottom = '2px';
-      const label = document.createElement('div'); label.textContent = labelText; label.style.marginRight = '3px'; label.style.width = '90px';
-      const display = document.createElement('div'); display.style.minWidth = '50px'; display.style.marginLeft='3px';
-      const slider = SliderControl({
-          id: `globe-rot-${axis}-slider`, min: -Math.PI.toFixed(4), max: Math.PI.toFixed(4), step: (Math.PI / 180).toFixed(4), // Approx 1 degree step
-          onInput: (event) => {
-              if (currentPlanetGroup) {
-                  const val = parseFloat(event.target.value);
-                  currentPlanetGroup.rotation[axis] = val;
-                  display.textContent = val.toFixed(2);
-              }
-          }
-      });
-      slider.style.flexGrow = '1';
-      container.appendChild(label); container.appendChild(slider); container.appendChild(display);
-      slidersContainer.appendChild(container);
-      return { slider, display };
-    };
-
-    const xRot = createRotationSlider('x', 'Rot X (rad):');
-    globeRotXSlider = xRot.slider; globeRotXDisplay = xRot.display;
-    const yRot = createRotationSlider('y', 'Rot Y (rad):');
-    globeRotYSlider = yRot.slider; globeRotYDisplay = yRot.display;
-    const zRot = createRotationSlider('z', 'Rot Z (rad):');
-    globeRotZSlider = zRot.slider; globeRotZDisplay = zRot.display;
-    
-    globeContent.appendChild(slidersContainer);
-
-    const globeInfoTextElement = document.createElement('div');
-    globeInfoTextElement.id = 'debug-globe-info-text'; 
-    globeInfoTextElement.style.marginTop = '10px';
-    globeInfoTextElement.style.borderTop = '1px solid #555';
-    globeInfoTextElement.style.paddingTop = '5px';
-    globeInfoTextElement.style.fontSize = '11px'; // Slightly smaller for dense info
-    globeContent.appendChild(globeInfoTextElement);
-  }
-  
-  return debugPanel;
-}
+// export function createDebugUI() {
+//   if (!DEBUG) return;
+//   // ... entire function body ...
+// }
 
 // Update the debug status (now for general messages)
 export function updateDebugStatus(message) {
@@ -407,7 +191,7 @@ export function logWorldStructure(world) {
 // Add this function to initialize debug mode
 export function initDebug() {
   if (!DEBUG) return;
-  createDebugUI();
+  // createDebugUI();
   debug('Debug mode initialized');
   updateDebugStatus('Debug initialized');
   window.addEventListener('error', (event) => {

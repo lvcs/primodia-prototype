@@ -1,8 +1,10 @@
+```mdc
 ---
 description: This rule explains Express.js conventions and best practices for Node.js backend development.
 globs: server/**/*.js
-alwaysApply: false
+alwaysApply: true
 ---
+```
 # Express.js rules
 
 - Use proper middleware order: body parsers, custom middleware, routes, error handlers

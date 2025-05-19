@@ -10,8 +10,6 @@ let localCameraAnimator;
 
 // UI Elements that need updating
 let distanceDisplayElement;
-let tiltValueDisplayElement;
-let tiltSliderControl; // This will be the slider input element from SliderControl
 
 function handleZoom(isZoomIn) {
     if (!localCamera || !localControls || !localCamera.userData.worldConfig) { // Assuming worldConfig is on camera.userData
@@ -42,12 +40,6 @@ export function updateCameraControlsUI() {
     if (distanceDisplayElement) {
         const currentDistance = localControls.getDistance ? localControls.getDistance() : localCamera.position.distanceTo(localControls.target);
         distanceDisplayElement.textContent = `Dist: ${currentDistance.toFixed(2)}`;
-    }
-
-    if (tiltValueDisplayElement && tiltSliderControl) {
-        const currentTilt = localCameraAnimator.getTilt();
-        tiltSliderControl.value = currentTilt; // Update slider position
-        tiltValueDisplayElement.textContent = `${currentTilt.toFixed(0)}°`; // Just the value for the separate display
     }
 }
 
@@ -89,51 +81,157 @@ export function CameraControlsSectionComponent({ camera, controls, cameraAnimato
     zoomControlsContainer.appendChild(zoomOutBtn);
     zoomControlsContainer.appendChild(zoomInBtn);
 
-    // --- Tilt Controls Elements ---
-    const tiltControlsContainer = document.createElement('div');
-    tiltControlsContainer.style.display = 'flex';
-    tiltControlsContainer.style.alignItems = 'center';
+    // --- Camera Debug Sliders ---
+    // Get dynamic ranges from controls and world config (with fallbacks)
+    const worldRadius = worldConfig && worldConfig.radius ? worldConfig.radius : 6400;
+    const minDistance = localControls && localControls.minDistance !== undefined ? localControls.minDistance : worldRadius;
+    const maxDistance = localControls && localControls.maxDistance !== undefined ? localControls.maxDistance : worldRadius * 5;
 
-    const tiltLabel = document.createElement('div');
-    tiltLabel.textContent = 'Tilt:';
-    tiltLabel.classList.add('control-text-label'); // A generic class for text labels
-    tiltLabel.style.marginRight = '3px';
-    
-    tiltValueDisplayElement = document.createElement('div');
-    tiltValueDisplayElement.classList.add('control-value-display');
-    tiltValueDisplayElement.style.minWidth = '30px'; // For "XX°"
-    tiltValueDisplayElement.style.marginLeft = '3px';
+    // Helper to create a labeled slider row
+    function createSliderRow(labelText, slider, valueDisplay) {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.marginBottom = '4px';
+        const label = document.createElement('div');
+        label.textContent = labelText;
+        label.className = 'control-text-label';
+        label.style.width = '90px';
+        row.appendChild(label);
+        row.appendChild(slider);
+        if (valueDisplay) {
+            valueDisplay.className = 'control-value-display';
+            valueDisplay.style.marginLeft = '5px';
+            row.appendChild(valueDisplay);
+        }
+        return row;
+    }
 
-
-    tiltSliderControl = SliderControl({
-        id: 'camera-tilt-slider',
-        min: 0,
-        max: 80, // As per harp.gl example and our previous implementation
-        step: 1,
-        value: localCameraAnimator.getTilt ? localCameraAnimator.getTilt() : 0,
-        onInput: (event) => {
-            if (localCameraAnimator) {
-                const newTilt = parseFloat(event.target.value);
-                localCameraAnimator.setTilt(newTilt);
-                if (tiltValueDisplayElement) { // Direct feedback
-                    tiltValueDisplayElement.textContent = `${newTilt.toFixed(0)}°`;
-                }
-            }
-        },
-        // 'change' event on slider is usually fired on mouseup, useful for final state sync.
-        // OrbitControls 'change' event should also call updateCameraControlsUI.
-        onChange: () => {
-            updateCameraControlsUI();
+    // State for slider values
+    let cameraRig = localCamera.parent;
+    if (!cameraRig || cameraRig.type !== 'Object3D') cameraRig = localCamera; // fallback
+    // Target X
+    const targetXDisplay = document.createElement('span');
+    const targetXSlider = SliderControl({
+        id: 'camera-target-x-slider',
+        min: (-worldRadius).toFixed(2),
+        max: worldRadius.toFixed(2),
+        step: (worldRadius/100).toFixed(2),
+        value: '0',
+        onInput: (e) => {
+            targetXDisplay.textContent = e.target.value;
+            applyCameraPanelControls();
         }
     });
-    tiltSliderControl.style.flexGrow = '1';
+    targetXDisplay.textContent = '0';
+    // Target Y
+    const targetYDisplay = document.createElement('span');
+    const targetYSlider = SliderControl({
+        id: 'camera-target-y-slider',
+        min: (-worldRadius).toFixed(2),
+        max: worldRadius.toFixed(2),
+        step: (worldRadius/100).toFixed(2),
+        value: '0',
+        onInput: (e) => {
+            targetYDisplay.textContent = e.target.value;
+            applyCameraPanelControls();
+        }
+    });
+    targetYDisplay.textContent = '0';
+    // Target Z
+    const targetZDisplay = document.createElement('span');
+    const targetZSlider = SliderControl({
+        id: 'camera-target-z-slider',
+        min: (-worldRadius).toFixed(2),
+        max: worldRadius.toFixed(2),
+        step: (worldRadius/100).toFixed(2),
+        value: '0',
+        onInput: (e) => {
+            targetZDisplay.textContent = e.target.value;
+            applyCameraPanelControls();
+        }
+    });
+    targetZDisplay.textContent = '0';
+    // Zoom Distance
+    const zoomDisplay = document.createElement('span');
+    const initialZoom = cameraRig.position.length ? cameraRig.position.length() : worldRadius * 2.5;
+    const zoomSlider = SliderControl({
+        id: 'camera-zoom-distance-slider',
+        min: minDistance.toString(),
+        max: maxDistance.toString(),
+        step: ((maxDistance - minDistance)/100).toFixed(2),
+        value: initialZoom.toString(),
+        onInput: (e) => {
+            zoomDisplay.textContent = e.target.value;
+            applyCameraPanelControls();
+        }
+    });
+    zoomDisplay.textContent = initialZoom.toString();
+    // Yaw
+    const yawDisplay = document.createElement('span');
+    const yawSlider = SliderControl({
+        id: 'camera-yaw-slider',
+        min: (-Math.PI).toFixed(4),
+        max: Math.PI.toFixed(4),
+        step: (Math.PI/180).toFixed(4),
+        value: localCamera.rotation.y.toString(),
+        onInput: (e) => {
+            yawDisplay.textContent = parseFloat(e.target.value).toFixed(2);
+            applyCameraPanelControls();
+        }
+    });
+    yawDisplay.textContent = parseFloat(localCamera.rotation.y).toFixed(2);
+    // Roll
+    const rollDisplay = document.createElement('span');
+    const rollSlider = SliderControl({
+        id: 'camera-roll-slider',
+        min: (-Math.PI).toFixed(4),
+        max: Math.PI.toFixed(4),
+        step: (Math.PI/180).toFixed(4),
+        value: localCamera.rotation.z.toString(),
+        onInput: (e) => {
+            rollDisplay.textContent = parseFloat(e.target.value).toFixed(2);
+            applyCameraPanelControls();
+        }
+    });
+    rollDisplay.textContent = parseFloat(localCamera.rotation.z).toFixed(2);
 
-    tiltControlsContainer.appendChild(tiltLabel);
-    tiltControlsContainer.appendChild(tiltSliderControl);
-    tiltControlsContainer.appendChild(tiltValueDisplayElement);
-    
+    // Function to apply all slider values to CameraRig and Camera
+    function applyCameraPanelControls() {
+        const targetVec = new THREE.Vector3(
+            parseFloat(targetXSlider.value),
+            parseFloat(targetYSlider.value),
+            parseFloat(targetZSlider.value)
+        );
+        const zoomDist = parseFloat(zoomSlider.value);
+        const dir = new THREE.Vector3();
+        localCamera.getWorldDirection(dir).negate();
+        if (cameraRig && cameraRig.position && cameraRig.lookAt) {
+            cameraRig.position.copy(targetVec.clone().add(dir.multiplyScalar(zoomDist)));
+            cameraRig.lookAt(targetVec);
+        }
+        localCamera.rotation.set(
+            0, // Pitch (X) is always 0
+            parseFloat(yawSlider.value),
+            parseFloat(rollSlider.value)
+        );
+        if (localControls && localControls.target) {
+            localControls.target.copy(targetVec);
+            if (localControls.update) localControls.update();
+        }
+    }
+
     // --- Main Section ---
-    const sectionChildren = [zoomControlsContainer, tiltControlsContainer];
+    const sectionChildren = [zoomControlsContainer];
+    // Add all sliders to the panel BEFORE creating the ControlSection
+    sectionChildren.push(
+        createSliderRow('Target X:', targetXSlider, targetXDisplay),
+        createSliderRow('Target Y:', targetYSlider, targetYDisplay),
+        createSliderRow('Target Z:', targetZSlider, targetZDisplay),
+        createSliderRow('Zoom Dist:', zoomSlider, zoomDisplay),
+        createSliderRow('Yaw (rad):', yawSlider, yawDisplay),
+        createSliderRow('Roll (rad):', rollSlider, rollDisplay)
+    );
     const cameraSection = ControlSection({
         label: 'Camera', // Changed label to 'Camera'
         children: sectionChildren

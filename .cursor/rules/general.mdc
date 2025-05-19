@@ -1,8 +1,11 @@
+```mdc
 ---
-description: 
-globs: 
+description: Always attach general rules
+globs:
 alwaysApply: true
 ---
+```
+
 # General Rules for Primodia
 
 Primodia is a browser-based, multiplayer 3D strategy game inspired by Civilization, Caesar, Pharaoh, Zeus, and Tropico. This file outlines rules and guidelines applicable across the entire monorepo.

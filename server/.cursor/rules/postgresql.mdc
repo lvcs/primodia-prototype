@@ -3,7 +3,6 @@ description: This rule explains PostgreSQL database design patterns and advanced
 globs: **/*.sql
 alwaysApply: false
 ---
-
 # PostgresSQL rules
 
 ## General

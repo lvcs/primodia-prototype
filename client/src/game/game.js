@@ -16,7 +16,8 @@ import RandomService from './core/RandomService.js'; // Added to ensure it's her
 import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';
 import { initKeyboardControls, handleKeyboardInput, disposeKeyboardControls } from './controls/keyboardControls.js';
 import { CameraControlsSectionComponent, updateCameraControlsUI as updateComponentUIDisplay } from '@/ui/components/CameraControlsSection.js';
-import { renderGlobeControls } from '@/ui/index.js'; // Import renderGlobeControls
+// import { renderGlobeControls } from '@/ui/index.js'; // Import renderGlobeControls
+import { UnifiedControlPanel } from '@/ui/components/UnifiedControlPanel.js';
 
 // Import setup functions
 import {
@@ -75,12 +76,11 @@ let gameCameraAnimator = null; // To store the camera animator instance
 export function initGame() {
   try {
     debug('Initializing game (fresh start)...');
-    initDebug();
-    
     const threeContext = setupThreeJS();
     scene = threeContext.scene; // Assign to module var for potential direct use if any remains
     camera = threeContext.camera;
     renderer = threeContext.renderer;
+    initDebug();
 
     worldConfig = setupInitialWorldConfig();
     
@@ -95,9 +95,22 @@ export function initGame() {
     sphereSettings.currentSeed = RandomService.getCurrentSeed();
     debug(`Initial map seed set in sphereSettings: ${sphereSettings.currentSeed}`);
 
-    // Refresh the UI controls to display the initial seed and correct view mode
-    renderGlobeControls(); 
-    
+    // Remove old UI panels
+    // renderGlobeControls(); 
+    // const cameraControlsElement = CameraControlsSectionComponent({
+    //     camera: camera,
+    //     controls: currentControls,
+    //     cameraAnimator: gameCameraAnimator,
+    //     worldConfig: currentWorldConfig
+    // });
+    // const uiOverlay = document.getElementById('ui-overlay') || document.body;
+    // uiOverlay.appendChild(cameraControlsElement);
+
+    // Mount unified control panel
+    const uiOverlay = document.getElementById('ui-overlay') || document.body;
+    const unifiedPanel = new UnifiedControlPanel();
+    uiOverlay.appendChild(unifiedPanel.element);
+
     setupLighting(scene);
     controls = setupOrbitControls(camera, renderer, worldConfig);
     
@@ -108,18 +121,16 @@ export function initGame() {
     const currentControls = getControls(); // Get the freshly created OrbitControls
     const currentWorldConfig = getWorldConfig();
 
-    const cameraControlsElement = CameraControlsSectionComponent({
-        camera: camera,
-        controls: currentControls,
-        cameraAnimator: gameCameraAnimator,
-        worldConfig: currentWorldConfig
-    });
-
-    const uiOverlay = document.getElementById('ui-overlay') || document.body;
-    uiOverlay.appendChild(cameraControlsElement);
-    if (uiOverlay.id === 'ui-overlay' && getComputedStyle(uiOverlay).pointerEvents === 'none') {
-        cameraControlsElement.style.pointerEvents = 'auto';
-    }
+    // const cameraControlsElement = CameraControlsSectionComponent({
+    //     camera: camera,
+    //     controls: currentControls,
+    //     cameraAnimator: gameCameraAnimator,
+    //     worldConfig: currentWorldConfig
+    // });
+    // uiOverlay.appendChild(cameraControlsElement);
+    // if (uiOverlay.id === 'ui-overlay' && getComputedStyle(uiOverlay).pointerEvents === 'none') {
+    //     cameraControlsElement.style.pointerEvents = 'auto';
+    // }
 
     setupSocketConnection();
     startAnimationLoop(); // Start the animation loop from mainLoop.js

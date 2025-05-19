@@ -1,2 +1,2 @@
-Requirements.mdc: 1
-rule-analytics.mdc: 1
+requirements.mdc: 9
+rule-analytics.mdc: 2
