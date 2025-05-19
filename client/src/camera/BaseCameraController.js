@@ -9,12 +9,12 @@ export class BaseCameraController {
   /**
    * Create a base camera controller.
    * @param {THREE.Camera} threeJsCamera - The camera object from Three.js.
-   * @param {number} globeRadius - The radius of the globe.
+   * @param {number} globeRadius - The radius of the globe in kilometers (1 unit = 1 km).
    */
   constructor(threeJsCamera, globeRadius) {
     // Store the camera object
     this.threeJsCamera = threeJsCamera;
-    // Store the globe's radius
+    // Store the globe's radius in kilometers
     this.globeRadius = globeRadius;
     // Store animation configuration
     this.config = {

@@ -9,6 +9,8 @@ import { generatePlates } from './platesGenerator.js';
 import RandomService from '../core/RandomService.js';
 import * as Const from '../../config/gameConstants.js';
 
+// All radius values are now in kilometers (1 unit = 1 km)
+
 /**
  * Generates globe mesh (legacy) plus OO WorldGlobe description.
  * @param {{radius:number}} config

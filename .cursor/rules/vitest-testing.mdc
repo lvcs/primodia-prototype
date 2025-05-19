@@ -1,6 +1,6 @@
 ---
-description: This rule explains the guidelines for writing Vitest tests for Next.js applications.
-globs: *
+description: 
+globs: 
 alwaysApply: false
 ---
 

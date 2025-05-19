@@ -13,7 +13,7 @@ export function setupThreeJS() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(Const.SCENE_BACKGROUND_COLOR);
   camera = new THREE.PerspectiveCamera(Const.CAMERA_FOV, window.innerWidth / window.innerHeight, Const.CAMERA_NEAR_PLANE, Const.CAMERA_FAR_PLANE);
-  camera.position.set(0, 0, 25); // Initial Z will be overridden by setupControls based on radius
+  camera.position.set(0, 0, 16000); // Initial Z for 6400 km globe, will be overridden by setupControls
   camera.lookAt(0, 0, 0);
   renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -36,7 +36,7 @@ export function setupLighting(_scene) { // Accept scene as parameter
   const ambientLight = new THREE.AmbientLight(0x606080, 1);
   _scene.add(ambientLight);
   const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
-  sunLight.position.set(50, 50, 50);
+  sunLight.position.set(20000, 20000, 20000);
   sunLight.castShadow = true;
   sunLight.shadow.mapSize.width = 2048;
   sunLight.shadow.mapSize.height = 2048;
@@ -80,4 +80,6 @@ export const getScene = () => scene;
 export const getCamera = () => camera;
 export const getRenderer = () => renderer;
 export const getControls = () => controls;
-export const getWorldConfig = () => worldConfig; 
+export const getWorldConfig = () => worldConfig;
+
+// All radius values are now in kilometers (1 unit = 1 km) 

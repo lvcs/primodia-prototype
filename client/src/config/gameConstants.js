@@ -21,10 +21,10 @@ export const DEFAULT_JITTER = 0.5;
 export const STEP_JITTER = 0.01;
 
 // Globe Radius / Size
-export const GLOBE_RADIUS = 10; // Fixed radius for the globe
-export const MIN_GLOBE_RADIUS = 5; // Kept for reference or future use if slider is re-enabled
-export const MAX_GLOBE_RADIUS = 50; // Kept for reference
-export const DEFAULT_GLOBE_RADIUS = 10; // Kept for reference
+export const GLOBE_RADIUS = 6400; // Fixed radius for the globe, in kilometers
+export const MIN_GLOBE_RADIUS = 6400; // Minimum radius (fixed for Earth scale)
+export const MAX_GLOBE_RADIUS = 6400; // Maximum radius (fixed for Earth scale)
+export const DEFAULT_GLOBE_RADIUS = 6400; // Default radius (fixed for Earth scale)
 export const STEP_GLOBE_RADIUS = 1; // Kept for reference
 
 // Elevation Bias
@@ -39,7 +39,7 @@ export const DEFAULT_WORLD_DETAIL = 2; // Initial value for worldConfig.detail
 // Camera (from game.js)
 export const CAMERA_FOV = 60;
 export const CAMERA_NEAR_PLANE = 0.1;
-export const CAMERA_FAR_PLANE = 1000;
+export const CAMERA_FAR_PLANE = 100000;
 export const CAMERA_MIN_DISTANCE_FACTOR = 1.02; // Min zoom distance as a factor of globe radius
 export const CAMERA_MAX_DISTANCE_FACTOR = 5;   // Max zoom distance as a factor of globe radius
 export const CAMERA_INITIAL_POS_Y_FACTOR = 0; // Initial camera Y position factor
@@ -68,5 +68,5 @@ export const MOUSE_RELEASE_INERTIA_FACTOR = 30.0; // Multiplier for mouse delta 
 
 // Tile View Angle
 export const TILE_VIEW_TILT_ANGLE = -Math.PI / 4; // -45 degrees 
-export const TILE_VIEW_SPHERE_DISTANCE = 10.75; // Distance from globe center for tile view
+export const TILE_VIEW_SPHERE_DISTANCE = 16000; // Distance from globe center for tile view (2.5x radius)
 export const TILE_VIEW_ZOOM = 1.0; // Default zoom level for tile view 

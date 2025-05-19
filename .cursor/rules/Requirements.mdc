@@ -1,0 +1,16 @@
+---
+description: 
+globs: Requirements.md
+alwaysApply: false
+---
+1. Understand the objectives in Requirements.md file
+2. Create an empty PLAN.md file in the same folder
+3. Come up with few potential solutions to achieve the objective, with pros and cons
+3. Document those in the PLAN.md
+4. Evaluate the solutions and pick the most promising one
+5. Document the decision in PLAN.md
+6. Add Implementation TODO section with detailed implementation plan, using [ ] checkboxes
+7. Implement the solution, check [ ] checkboxes as you go
+8. Document steps, problems you run into and how you were able to solve them
+9. Continue until all TODO items are complete
+10. Document the issues you learn during debugging, document them in the PLAN, provide information how was that solved

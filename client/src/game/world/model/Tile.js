@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+// All area values are now in km² and all distances in km (1 unit = 1 km, 1 unit^2 = 1 km^2)
+
 export default class Tile {
   /**
    * @param {Object} opts

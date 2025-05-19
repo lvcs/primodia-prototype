@@ -9,6 +9,8 @@ import { SliderControl } from '@/ui/components/SliderControl.js'; // Corrected i
 // Enable or disable debug mode
 export const DEBUG = true;
 
+// All radius and area values are now in kilometers (1 unit = 1 km, 1 unit^2 = 1 km^2)
+
 // Debug logger
 export function debug(...args) {
   if (DEBUG) {
@@ -301,11 +303,11 @@ export function updateCameraDebugInfo(camera, controls) {
 
     cameraContentElement.innerHTML = 
       `--- Camera Info ---<br>
-      Pos: ${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)}<br>
-      Target: ${target.x.toFixed(2)}, ${target.y.toFixed(2)}, ${target.z.toFixed(2)}<br>
-      Dist: ${distance.toFixed(2)}<br>
-      MinDist: ${controls.minDistance.toFixed(2)}<br>
-      MaxDist: ${controls.maxDistance.toFixed(2)}<br>
+      Pos: ${pos.x.toFixed(2)} km, ${pos.y.toFixed(2)} km, ${pos.z.toFixed(2)} km<br>
+      Target: ${target.x.toFixed(2)} km, ${target.y.toFixed(2)} km, ${target.z.toFixed(2)} km<br>
+      Dist: ${distance.toFixed(2)} km<br>
+      MinDist: ${controls.minDistance.toFixed(2)} km<br>
+      MaxDist: ${controls.maxDistance.toFixed(2)} km<br>
       FOV: ${camera.fov}°<br>
       Polar Angle: ${typeof polarAngleDeg === 'number' ? polarAngleDeg.toFixed(1) : polarAngleDeg}°<br>
       Azimuthal Angle: ${typeof azimuthalAngleDeg === 'number' ? azimuthalAngleDeg.toFixed(1) : azimuthalAngleDeg}°<br>
@@ -347,7 +349,7 @@ export function updateGlobeDebugInfo(planetGroupInstance, globeStaticData) {
             if (key === 'CurrentRotationDeg' || key === 'TargetAngularVelocity') {
               content += `${key}: <pre style="margin: 2px 0; padding: 2px; background: #222; border-radius: 3px;">${JSON.stringify(value, null, 2)}</pre>`;
             } else if (typeof value === 'number') {
-              content += `${key}: ${value.toFixed ? value.toFixed(4) : value}<br>`;
+              content += `${key}: ${value.toFixed ? value.toFixed(4) : value} km<br>`;
             } else {
               content += `${key}: ${value}<br>`;
             }
@@ -390,9 +392,9 @@ export function logWorldStructure(world) {
       if (world.uniqueWorldVertices && sampleCell.seedPointKey && world.uniqueWorldVertices.has(sampleCell.seedPointKey)) {
         const sampleSeedVertexData = world.uniqueWorldVertices.get(sampleCell.seedPointKey);
         debug('Sample seed vertex data (from uniqueWorldVertices via cell[0].seedPointKey):');
-        debug(`  - basePosition: (${sampleSeedVertexData.basePosition.x.toFixed(2)}, ${sampleSeedVertexData.basePosition.y.toFixed(2)}, ${sampleSeedVertexData.basePosition.z.toFixed(2)})`);
-        debug(`  - elevatedPosition: (${sampleSeedVertexData.elevatedPosition.x.toFixed(2)}, ${sampleSeedVertexData.elevatedPosition.y.toFixed(2)}, ${sampleSeedVertexData.elevatedPosition.z.toFixed(2)})`);
-        debug(`  - elevation: ${sampleSeedVertexData.elevation.toFixed(4)}`);
+        debug(`  - basePosition: (${sampleSeedVertexData.basePosition.x.toFixed(2)} km, ${sampleSeedVertexData.basePosition.y.toFixed(2)} km, ${sampleSeedVertexData.basePosition.z.toFixed(2)} km)`);
+        debug(`  - elevatedPosition: (${sampleSeedVertexData.elevatedPosition.x.toFixed(2)} km, ${sampleSeedVertexData.elevatedPosition.y.toFixed(2)} km, ${sampleSeedVertexData.elevatedPosition.z.toFixed(2)} km)`);
+        debug(`  - elevation: ${sampleSeedVertexData.elevation.toFixed(4)} km`);
       }
     } else if (world.cells && world.cells.length > 0 && !world.cells[0]) {
       debug('Sample cell (world.cells[0]) is null or undefined.');

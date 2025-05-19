@@ -26,6 +26,8 @@ let orbitController = null;
 let mouseDownTime;
 let mouseDownPosition = new THREE.Vector2();
 
+// All radius and area values are now in kilometers (1 unit = 1 km, 1 unit^2 = 1 km^2)
+
 export function getSelectedHighlight() {
     return selectedHighlight;
 }
@@ -190,7 +192,7 @@ export function setupRootEventListeners() {
             debug(`Tile ${tileId} – Terr:${terrain} Plate:${plateId} Elev:${elevation?.toFixed(2)} Moist:${moisture?.toFixed(2)} Lat:${lat.toFixed(2)}° Lon:${lon.toFixed(2)}°`);
 
             const clickedTileForUI = wData.globe.getTile(tileId);
-            const areaForUI = clickedTileForUI?.area !== undefined ? clickedTileForUI.area.toFixed(4) : 'N/A';
+            const areaForUI = clickedTileForUI?.area !== undefined ? clickedTileForUI.area.toFixed(4) + ' km²' : 'N/A';
             const currentSeed = RandomService.getCurrentSeed(); // Get current seed
             const tileInfoHtml =
                 `Seed: ${currentSeed === undefined ? 'N/A' : currentSeed}<br>` + // Display seed
@@ -213,7 +215,7 @@ export function setupRootEventListeners() {
                     debugMsg += `, Neighbors=[${clickedTile.neighbors.join(',')}]`;
                 }
                 if (clickedTile.area !== undefined) {
-                    debugMsg += `, Area=${clickedTile.area.toFixed(4)}`;
+                    debugMsg += `, Area=${clickedTile.area.toFixed(4)} km²`;
                 }
                 if (clickedTile.plateId !== null) {
                     debugMsg += `, PlateID=${clickedTile.plateId}`;

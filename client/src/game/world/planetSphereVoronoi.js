@@ -8,6 +8,8 @@ import Tile from './model/Tile.js';
 import * as Const from '../../config/gameConstants.js'; // Import constants
 import RandomService from '../core/RandomService.js'; // Added import
 
+// All radius values are now in kilometers (1 unit = 1 km)
+
 // Cache for random lat/lon offsets
 const _randomLat = [];
 const _randomLon = [];

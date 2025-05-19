@@ -1,3 +1,4 @@
+// All radius values are now in kilometers (1 unit = 1 km)
 // Planet generation, display, color updates, and rotation logic 
 import * as THREE from 'three';
 import { debug, error } from './utils/debug.js';
@@ -81,7 +82,7 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
       debug('Planet mesh group added to scene.');
     } else {
       error('Failed to generate planet mesh group. worldData:', worldData);
-      const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 10;
+      const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 6400;
       const fallbackGeometry = new THREE.SphereGeometry(fallbackRadius, 32, 32);
       const fallbackMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
       planetGroup = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
@@ -112,7 +113,7 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     error('Error in generateAndDisplayPlanet: Processing fallback.'); 
 
     if (_existingPlanetGroup) _scene.remove(_existingPlanetGroup);
-    const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 10;
+    const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 6400;
     const fallbackGeometry = new THREE.SphereGeometry(fallbackRadius, 32, 32);
     const fallbackMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
     planetGroup = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
