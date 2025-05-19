@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { BaseCameraController } from './BaseCameraController.js';
+import { CAMERA_VIEWS } from '@/config/cameraViewsConfig.js';
+
+const GLOBE_CONFIG = CAMERA_VIEWS.globe;
 
 /**
  * Controls the camera when viewing the entire globe.
@@ -18,13 +21,44 @@ export class GlobeCameraController extends BaseCameraController {
 
   /**
    * Animate the camera to the globe view.
-   * This is a placeholder (stub) function for now.
+   * Only change the distance from the center along the current direction, always look at 0,0,0.
    * @param {Function} [onComplete] - Optional callback when animation finishes.
    */
   animateToGlobe(onComplete = () => {}) {
-    // This is where you would add animation logic to move the camera to a globe view.
-    // For now, it just calls the onComplete callback immediately.
-    if (onComplete) onComplete(true);
+    // Get current direction from center to camera
+    const currentPos = this.threeJsCamera.position.clone();
+    const direction = currentPos.clone().normalize();
+    const targetDistance = GLOBE_CONFIG.defaultPosition.y; // Use y as the distance from center
+    const endPos = direction.multiplyScalar(targetDistance);
+    const startPos = this.threeJsCamera.position.clone();
+    const startZoom = this.threeJsCamera.zoom;
+    const endZoom = 1.0;
+    const duration = GLOBE_CONFIG.animation?.durationMs || 1000;
+    const easing = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const startTime = Date.now();
+    const animateStep = () => {
+      const elapsed = Date.now() - startTime;
+      let progress = Math.min(elapsed / duration, 1);
+      const eased = easing(progress);
+      // Animate position along the direction
+      const pos = startPos.clone().lerp(endPos, eased);
+      this.threeJsCamera.position.copy(pos);
+      // Animate zoom
+      this.threeJsCamera.zoom = startZoom + (endZoom - startZoom) * eased;
+      this.threeJsCamera.updateProjectionMatrix();
+      // Always look at the center
+      this.threeJsCamera.lookAt(0, 0, 0);
+      if (progress < 1) {
+        requestAnimationFrame(animateStep);
+      } else {
+        this.threeJsCamera.position.copy(endPos);
+        this.threeJsCamera.zoom = endZoom;
+        this.threeJsCamera.updateProjectionMatrix();
+        this.threeJsCamera.lookAt(0, 0, 0);
+        if (onComplete) onComplete();
+      }
+    };
+    animateStep();
   }
 
   /**
@@ -33,15 +67,10 @@ export class GlobeCameraController extends BaseCameraController {
    * @returns {number} The tilt angle in degrees.
    */
   getTilt() {
-    // Get the camera's current position in 3D space
     const pos = this.threeJsCamera.position;
-    // The target is the center of the globe (0,0,0)
     const target = new THREE.Vector3(0, 0, 0);
-    // Calculate the direction from the camera to the globe center
     const dir = target.clone().sub(pos).normalize();
-    // The tilt angle is the angle between this direction and the 'up' direction (y-axis)
     const tiltRad = Math.acos(dir.y);
-    // Convert the tilt from radians to degrees for easier understanding
     return THREE.MathUtils.radToDeg(tiltRad);
   }
 } 

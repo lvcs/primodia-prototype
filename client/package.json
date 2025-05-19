@@ -14,7 +14,8 @@
     "delaunator": "^5.0.0",
     "simplex-noise": "^4.0.3",
     "socket.io-client": "^4.8.1",
-    "three": "^0.176.0"
+    "three": "^0.176.0",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "vite": "^6.3.5"

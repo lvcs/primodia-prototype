@@ -46,6 +46,34 @@ function renderGamePage() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userNameSpan = document.getElementById('user-name');
   if (userNameSpan) userNameSpan.textContent = user.username || '';
+
+  // Inject globe icon button next to username
+  if (userNameSpan && !document.getElementById('globe-view-icon-btn')) {
+    const globeBtn = document.createElement('button');
+    globeBtn.id = 'globe-view-icon-btn';
+    globeBtn.title = 'Switch to Globe View';
+    globeBtn.style.background = 'none';
+    globeBtn.style.border = 'none';
+    globeBtn.style.cursor = 'pointer';
+    globeBtn.style.marginLeft = '8px';
+    globeBtn.style.verticalAlign = 'middle';
+    globeBtn.style.display = 'inline-flex';
+    globeBtn.style.alignItems = 'center';
+    globeBtn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:white;">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M2 12h20"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+    `;
+    globeBtn.addEventListener('click', () => {
+      if (window.cameraAnimator && window.cameraAnimator.animateToGlobe) {
+        window.cameraAnimator.animateToGlobe();
+      }
+    });
+    userNameSpan.parentNode.insertBefore(globeBtn, userNameSpan.nextSibling);
+  }
+
   const signOutBtn = document.getElementById('sign-out');
   if (signOutBtn) {
     signOutBtn.addEventListener('click', () => {

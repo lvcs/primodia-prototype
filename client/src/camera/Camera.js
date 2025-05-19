@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GlobeCameraController } from './GlobeCameraController.js';
 import { TileCameraController } from './TileCameraController.js';
+import { CAMERA_VIEWS } from '@/config/cameraViewsConfig.js';
+import { useCameraUIStore } from '@/ui/store/cameraUIStore.js';
 
 /**
  * Camera manager that delegates to Globe and Tile controllers.
@@ -25,14 +27,21 @@ export class Camera {
     this.orbitControls = orbitControls;
     // Store the globe's radius
     this.globeRadius = globeRadius;
-    // Set the initial camera mode to 'globe' (viewing the whole globe)
-    this.cameraMode = 'globe'; // 'globe' or 'tile'
-    // Store the target tile (if in tile mode)
-    this.tileTarget = null;
     // Create a controller for globe view
     this.globeController = new GlobeCameraController(threeJsCamera, globeRadius);
     // Create a controller for tile view
     this.tileController = new TileCameraController(threeJsCamera, globeRadius);
+
+    // Restore state from UI store or use default
+    const { viewMode, position, zoom, tilt, target } = useCameraUIStore.getState();
+    this.cameraMode = viewMode;
+    this.tileTarget = target;
+    if (position) this.threeJsCamera.position.set(position.x, position.y, position.z);
+    if (zoom && 'zoom' in this.threeJsCamera) {
+      this.threeJsCamera.zoom = zoom;
+      this.threeJsCamera.updateProjectionMatrix();
+    }
+    // Optionally set tilt if needed
   }
 
   /**
@@ -45,6 +54,12 @@ export class Camera {
     this.cameraMode = mode;
     // If in tile mode and a tile center is provided, store a copy of it; otherwise, clear the tile target
     this.tileTarget = (mode === 'tile' && tileCenter) ? tileCenter.clone() : null;
+    useCameraUIStore.getState().setViewMode(mode);
+    if (mode === 'tile' && tileCenter) {
+      useCameraUIStore.getState().setTarget({ x: tileCenter.x, y: tileCenter.y, z: tileCenter.z });
+    } else {
+      useCameraUIStore.getState().setTarget(null);
+    }
   }
 
   /**
@@ -55,7 +70,14 @@ export class Camera {
     // Switch to globe mode
     this.setMode('globe');
     // Delegate the animation to the globe controller
-    this.globeController.animateToGlobe(onComplete);
+    this.globeController.animateToGlobe(() => {
+      // Update UI store with new camera state
+      const pos = this.threeJsCamera.position;
+      useCameraUIStore.getState().setPosition({ x: pos.x, y: pos.y, z: pos.z });
+      if ('zoom' in this.threeJsCamera) useCameraUIStore.getState().setZoom(this.threeJsCamera.zoom);
+      useCameraUIStore.getState().setTilt(this.getTilt());
+      if (onComplete) onComplete();
+    });
   }
 
   /**
@@ -65,9 +87,18 @@ export class Camera {
    */
   animateToTile(tile, onComplete = () => {}) {
     // Switch to tile mode and set the target tile
-    this.setMode('tile', this.tileController.latLonToWorld(tile.latitude, tile.longitude));
+    const tileCenter = this.tileController.latLonToWorld(tile.latitude, tile.longitude);
+    this.setMode('tile', tileCenter);
     // Delegate the animation to the tile controller
-    this.tileController.animateToTile(tile, onComplete);
+    this.tileController.animateToTile(tile, () => {
+      // Update UI store with new camera state
+      const pos = this.threeJsCamera.position;
+      useCameraUIStore.getState().setPosition({ x: pos.x, y: pos.y, z: pos.z });
+      if ('zoom' in this.threeJsCamera) useCameraUIStore.getState().setZoom(this.threeJsCamera.zoom);
+      useCameraUIStore.getState().setTilt(this.getTilt());
+      useCameraUIStore.getState().setTarget({ x: tileCenter.x, y: tileCenter.y, z: tileCenter.z });
+      if (onComplete) onComplete();
+    });
   }
 
   /**

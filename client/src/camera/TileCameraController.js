@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { BaseCameraController } from './BaseCameraController.js';
-import { TILE_VIEW_TILT_ANGLE, TILE_VIEW_SPHERE_DISTANCE, TILE_VIEW_ZOOM } from '@/config/gameConstants.js';
+import { CAMERA_VIEWS } from '@/config/cameraViewsConfig.js';
+
+const TILE_CONFIG = CAMERA_VIEWS.tile;
 
 /**
  * Controls the camera when focusing on a specific tile (area) on the globe.
@@ -30,8 +32,8 @@ export class TileCameraController extends BaseCameraController {
     // 2. Get the direction from the globe center to the tile
     const direction = tilePos.clone().normalize();
 
-    // 3. Set the camera position to be TILE_VIEW_SPHERE_DISTANCE * globeRadius away from the center, along this direction
-    const cameraDistance = TILE_VIEW_SPHERE_DISTANCE;
+    // 3. Set the camera position to be defaultDistance away from the center, along this direction
+    const cameraDistance = TILE_CONFIG.defaultDistance;
     const cameraPos = direction.multiplyScalar(cameraDistance);
 
     // Store the camera's current position as the animation start
@@ -62,11 +64,12 @@ export class TileCameraController extends BaseCameraController {
         this.threeJsCamera.rotation.y = 0;
         // Set the camera's zoom level if supported
         if ('zoom' in this.threeJsCamera) {
-          this.threeJsCamera.zoom = TILE_VIEW_ZOOM;
+          this.threeJsCamera.zoom = 1.0;
           this.threeJsCamera.updateProjectionMatrix();
         }
       },
       onComplete,
+      // Optionally, you could use TILE_CONFIG.animation.durationMs and easing here if animateCamera supports it
     });
   }
 
