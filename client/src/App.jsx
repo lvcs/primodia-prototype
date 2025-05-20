@@ -11,6 +11,7 @@ import RegisterPage from './pages/RegisterPage'; // Import RegisterPage
 import { initGame } from './game/game'; // Updated import path
 // import { useAuthStore } from './stores/authStore'; // Future auth store
 
+
 function App() {
   const canvasRef = useRef(null);
   const [isGameLoading, setIsGameLoading] = useState(false);
@@ -73,7 +74,7 @@ function App() {
   }
 
   return (
-    <div id="game-page-react" className="w-screen h-screen bg-gray-900 text-white flex flex-col relative">
+    <div id="game-page-react" className="w-screen h-screen bg-gray-900 text-white flex flex-col relative overflow-hidden">
       <LoadingIndicator isActive={showAppLoading} />
 
       {/* Show user info when logged in and not loading */}
@@ -97,11 +98,11 @@ function App() {
 
       {/* Game Container */}
       {currentUser && (
-        <div id="game-container-react" className="flex-grow relative" style={{ display: 'block' }}> 
-          <canvas ref={canvasRef} id="game-canvas-react" className="w-full h-full absolute top-0 left-0"></canvas>
+        <div id="game-container-react" className="w-full h-full absolute inset-0" style={{ display: 'block' }}> 
+          <canvas ref={canvasRef} id="game-canvas-react" className="w-full h-full absolute inset-0"></canvas>
           
           {/* UI Overlay - sits on top of the canvas */}
-          <div id="ui-overlay-react" className="absolute top-0 left-0 w-full h-full pointer-events-none">
+          <div id="ui-overlay-react" className="absolute inset-0 w-full h-full pointer-events-none">
             <TopBar />
             <MiniMap />
             {/* Top Bar - for resources, turn info */}
