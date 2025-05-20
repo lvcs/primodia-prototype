@@ -9,30 +9,10 @@ import {
   DEFAULT_VIEW_MODE
 } from '../config/gameConstants';
 
-// --- Mock/Placeholder Game Logic Imports (to be replaced by actual game logic calls) ---
-// These would ideally be imported from their actual locations or handled by a central game service.
+// Import the actual game functions instead of using mocks
+import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '../game/game.js';
 
-// Duplicating DrawMode and defaultMapType here for now, should come from game logic files
-// const DrawMode = {
-//   POINTS: 'points',
-//   DELAUNAY: 'delaunay',
-//   VORONOI: 'voronoi',
-//   CENTROID: 'centroid'
-// };
-// const defaultMapType = 'continents';
-// const DEFAULT_VIEW_MODE = 'elevation';
-
-const requestPlanetRegeneration = (/* seed */) => {
-  // This function will eventually call the actual game logic.
-  // The store actions will pass the current state of sphereSettings.
-  console.log('Store Action: Requesting planet regeneration with current settings.');
-};
-
-const triggerPlanetColorUpdate = () => {
-  // This function will eventually call the actual game logic.
-  console.log('Store Action: Triggering planet color update with current settings.');
-};
-// --- End Mock/Placeholder Game Logic Imports ---
+// --- End Game Logic Imports ---
 
 const initialWorldSettings = {
   drawMode: DrawMode.VORONOI,

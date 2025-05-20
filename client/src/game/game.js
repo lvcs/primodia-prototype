@@ -12,6 +12,9 @@ import * as Const from '../config/gameConstants.js'; // Corrected path
 import { DrawMode } from '../config/gameConstants.js'; // Added direct import for DrawMode
 // import { getActionForKey, Actions } from '../config/keybindings.js'; // Corrected path if used
 
+// Import store to access current settings
+import { useWorldSettingsStore } from '../stores';
+
 // Import new control modules
 import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';
 import { initKeyboardControls, handleKeyboardInput, disposeKeyboardControls } from './controls/keyboardControls.js';
@@ -118,6 +121,26 @@ export function requestPlanetRegeneration(seed) {
     }
     debug(`Requesting planet regeneration with seed: ${seed === undefined ? 'Default/Last' : seed}`);
 
+    // Sync settings from worldSettingsStore to sphereSettings
+    const storeState = useWorldSettingsStore.getState();
+    console.log('Syncing worldSettingsStore to sphereSettings:', storeState);
+    
+    // Update all sphereSettings properties from the store
+    sphereSettings.drawMode = storeState.drawMode;
+    sphereSettings.algorithm = storeState.algorithm;
+    sphereSettings.numPoints = storeState.numPoints;
+    sphereSettings.jitter = storeState.jitter;
+    sphereSettings.mapType = storeState.mapType;
+    sphereSettings.outlineVisible = storeState.outlineVisible;
+    sphereSettings.numPlates = storeState.numPlates;
+    sphereSettings.viewMode = storeState.viewMode;
+    sphereSettings.elevationBias = storeState.elevationBias;
+    
+    // If seed is provided, update currentSeed in sphereSettings
+    if (seed !== undefined) {
+        sphereSettings.currentSeed = seed;
+    }
+
     generatePlanet(s, wc, existingControls, pg, sh, seed);
 
     // const newPlanetGroup = getPlanetGroup(); 
@@ -135,5 +158,19 @@ export function triggerPlanetColorUpdate() {
         return;
     }
     debug('Requesting planet color update...');
+    
+    // Sync view-related settings from worldSettingsStore to sphereSettings
+    const storeState = useWorldSettingsStore.getState();
+    console.log('Syncing view settings from worldSettingsStore to sphereSettings:', {
+        outlineVisible: storeState.outlineVisible,
+        viewMode: storeState.viewMode,
+        elevationBias: storeState.elevationBias
+    });
+    
+    // Update view-related properties from the store
+    sphereSettings.outlineVisible = storeState.outlineVisible;
+    sphereSettings.viewMode = storeState.viewMode;
+    sphereSettings.elevationBias = storeState.elevationBias;
+    
     updatePlanetColors();
 } 
