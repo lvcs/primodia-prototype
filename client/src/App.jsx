@@ -74,7 +74,7 @@ function App() {
   }
 
   return (
-    <div id="game-page-react" className="w-screen h-screen bg-gray-900 text-white flex flex-col relative overflow-hidden">
+    <div id="game-page-react" className="w-screen h-screen bg-gray-900 text-white flex flex-col relative overflow-hidden dark">
       <LoadingIndicator isActive={showAppLoading} />
 
       {/* Show user info when logged in and not loading */}
