@@ -1,38 +1,47 @@
 // Three.js scene, camera, renderer, lighting, and initial controls setup 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import * as Const from '@/config/gameConstants.js'; // Updated path
-import { debug } from '@/game/utils/debug.js'; // Updated path
+// Adjust path for Const if it moves to client/src/config
+import * as Const from '../../config/gameConstants.js'; 
+// Adjust path for debug if it moves
+import { debug } from '../utils/debug.js'; 
 
-// Module-level variables for scene, camera, renderer, controls, and worldConfig
-// These will be initialized by the functions in this module.
 let scene, camera, renderer, controls;
 let worldConfig;
 
-export function setupThreeJS() {
+export function setupThreeJS(canvasElement) {
+  if (!canvasElement) {
+    throw new Error("setupThreeJS requires a canvasElement argument.");
+  }
   scene = new THREE.Scene();
   scene.background = new THREE.Color(Const.SCENE_BACKGROUND_COLOR);
-  camera = new THREE.PerspectiveCamera(Const.CAMERA_FOV, window.innerWidth / window.innerHeight, Const.CAMERA_NEAR_PLANE, Const.CAMERA_FAR_PLANE);
-  camera.position.set(0, 0, 16000); // Initial Z for 6400 km globe, will be overridden by setupControls
+  
+  // Use canvas dimensions for aspect ratio initially, but it should adapt on resize
+  const aspectRatio = canvasElement.clientWidth / canvasElement.clientHeight;
+  camera = new THREE.PerspectiveCamera(Const.CAMERA_FOV, aspectRatio, Const.CAMERA_NEAR_PLANE, Const.CAMERA_FAR_PLANE);
+  camera.position.set(0, 0, 16000); 
   camera.lookAt(0, 0, 0);
-  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true, alpha: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  
+  renderer = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true, alpha: true });
+  renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight); // Use canvas size
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  return { scene, camera, renderer }; // Return them so game.js can access them
+  // Resizing should be handled by an event listener in the game setup or main loop,
+  // updating camera aspect and renderer size.
+  return { scene, camera, renderer };
 }
 
-export function setupInitialWorldConfig() { // Renamed to avoid conflict in game.js if it re-exports or uses it differently
+export function setupInitialWorldConfig() {
   worldConfig = {
     radius: Const.GLOBE_RADIUS,
     detail: Const.DEFAULT_WORLD_DETAIL,
   };
   debug('Initial worldConfig set:', worldConfig);
-  return worldConfig; // Return it
+  return worldConfig;
 }
 
-export function setupLighting(_scene) { // Accept scene as parameter
+export function setupLighting(_scene) {
   const ambientLight = new THREE.AmbientLight(0x606080, 1);
   _scene.add(ambientLight);
   const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
@@ -46,7 +55,7 @@ export function setupLighting(_scene) { // Accept scene as parameter
   _scene.add(hemisphereLight);
 }
 
-export function setupOrbitControls(_camera, _renderer, _worldConfig) { // Renamed to avoid conflict
+export function setupOrbitControls(_camera, _renderer, _worldConfig) {
   if (controls) {
     controls.dispose();
   }
@@ -55,14 +64,8 @@ export function setupOrbitControls(_camera, _renderer, _worldConfig) { // Rename
   controls.enablePan = false;
   controls.minDistance = _worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
   controls.maxDistance = _worldConfig.radius * Const.CAMERA_MAX_DISTANCE_FACTOR;
-
-  // Allow full rotation around the X-axis (polar angle)
-  controls.minPolarAngle = 0; // Min angle from the zenith (Y-axis up)
-  controls.maxPolarAngle = Math.PI; // Max angle from the zenith (Y-axis up)
-
-  // Azimuthal rotation (around Y-axis) is unrestricted by default.
-  // controls.minAzimuthAngle = -Infinity; // Default
-  // controls.maxAzimuthAngle = Infinity;  // Default
+  controls.minPolarAngle = 0;
+  controls.maxPolarAngle = Math.PI;
 
   _camera.position.set(
     0,
@@ -71,15 +74,11 @@ export function setupOrbitControls(_camera, _renderer, _worldConfig) { // Rename
   );
   controls.target.set(0, 0, 0);
   controls.update();
-  return controls; // Return the created controls
+  return controls;
 }
 
-// Getter functions for other modules to access these core components if needed,
-// without directly exposing the module-level variables.
 export const getScene = () => scene;
 export const getCamera = () => camera;
 export const getRenderer = () => renderer;
 export const getControls = () => controls;
-export const getWorldConfig = () => worldConfig;
-
-// All radius values are now in kilometers (1 unit = 1 km) 
+export const getWorldConfig = () => worldConfig; 

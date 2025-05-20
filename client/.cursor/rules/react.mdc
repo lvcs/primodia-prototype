@@ -1,7 +1,7 @@
 ```mdc
 ---
 description: This rule explains React component patterns, hooks usage, and best practices.
-globs: client/**/*.js,client/**/*.html
+globs: client/**/*.js,client/**/*.jsx,client/**/*.html
 alwaysApply: true
 ---
 ```

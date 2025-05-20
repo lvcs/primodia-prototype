@@ -4,10 +4,14 @@ Primodia is a browser-based, multiplayer 3D strategy game inspired by classics l
 
 ## Technologies Used
 
+- pnmp build manager
+
 - **Frontend:**
   - Three.js for 3D rendering
   - JavaScript (ES6+)
   - Vite for fast development and hot reloading
+  - Zustand for state management
+  - Radix UI for component UI library
 
 - **Backend:**
   - Express.js server
@@ -21,16 +25,9 @@ Primodia is a browser-based, multiplayer 3D strategy game inspired by classics l
 primodia/
 ├── client/               # Frontend
 │   ├── src/
-│   │   ├── game/         # Game logic
-│   │   │   ├── world/    # World generation and rendering
-│   │   │   ├── entities/ # Game entities (units, buildings)
-│   │   │   ├── utils/    # Utility functions
-│   │   │   └── multiplayer/ # Multiplayer logic
-│   │   ├── styles/       # CSS styles
-│   │   ├── auth.js       # Authentication logic
-│   │   └── main.js       # Main entry point
-│   ├── index.html        # HTML entry point
-│   └── package.json      # Frontend dependencies
+│   │   ├── components/   # Components used in the game UI
+│   │   ├── config/       # Configuration files
+│   │   └── stores/       # State management stores
 ├── server/               # Backend
 │   ├── controllers/      # Request handlers
 │   ├── routes/           # API routes

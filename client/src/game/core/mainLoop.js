@@ -1,44 +1,49 @@
-// Main animation loop (animate function and clock) 
 import * as THREE from 'three';
-import { handleKeyboardInput } from '@/game/controls/keyboardControls.js'; // Path updated
-import { getPlanetGroup, getWorldData } from '@/game/planet.js'; // Path updated, removed updatePlanetRotation
-import { updateCameraControlsUI as updateComponentUIDisplay } from '@/ui/components/CameraControlsSection.js'; // New import
-import { updateCameraDebugInfo, updateGlobeDebugInfo } from '@/game/utils/debug.js';
-import { sphereSettings } from '@/game/world/planetSphereVoronoi.js';
-import { getCamera, getRenderer, getScene, getControls } from './setup.js'; // Path updated (now sibling in core/)
-import * as Const from '@/config/gameConstants.js';
+// Adjust path for keyboardControls.js
+import { handleKeyboardInput } from '../controls/keyboardControls.js'; 
+// Adjust path for planet.js
+import { getPlanetGroup, getWorldData } from '../planet.js'; 
+// updateComponentUIDisplay from old CameraControlsSection is obsolete with React UI
+// import { updateCameraControlsUI as updateComponentUIDisplay } from '@/ui/components/CameraControlsSection.js'; 
+// Adjust path for debug.js and ensure its update... functions are safe (console.log or store update)
+import { updateCameraDebugInfo, updateGlobeDebugInfo } from '../utils/debug.js';
+// Adjust path for planetSphereVoronoi.js
+import { sphereSettings } from '../world/planetSphereVoronoi.js';
+// Imports from ./setup.js are correct as it's a sibling
+import { getCamera, getRenderer, getScene, getControls } from './setup.js'; 
+// Adjust path for gameConstants.js
+import * as Const from '../../config/gameConstants.js';
+
+// Import the new debug store for updating debug info from the main loop
+import { useDebugStore } from '../../stores';
 
 const clock = new THREE.Clock();
-let animationFrameId = null; // To potentially stop the loop if needed
+let animationFrameId = null;
 
 function animate() {
     animationFrameId = requestAnimationFrame(animate);
     const deltaTime = clock.getDelta();
 
-    // Get current state/objects via getters
     const camera = getCamera();
     const renderer = getRenderer();
     const scene = getScene();
-    const controls = getControls(); // OrbitControls
+    const controls = getControls();
     const planetGroup = getPlanetGroup();
 
-    // Ensure all critical components are available
     if (!camera || !renderer || !scene || !controls || !planetGroup) {
-        // console.error("Animation loop: Missing critical components.");
-        // Consider stopping the loop or logging less frequently if this occurs often
         return;
     }
 
-    handleKeyboardInput(deltaTime); // Pass deltaTime for frame-rate independence
-    updateComponentUIDisplay(); // New parameter-less signature
+    handleKeyboardInput(deltaTime);
+    // updateComponentUIDisplay(); // Obsolete: Old UI component update
 
-    // Update camera debug info if the tab is active (the function itself checks for visibility)
-    if (camera && controls) {
-        updateCameraDebugInfo(camera, controls);
-    }
+    // Update camera debug info via store if necessary, or rely on CameraDebugTab subscribing to cameraUIStore
+    // For now, let's assume CameraDebugTab gets its primary data from cameraUIStore or directly.
+    // If specific derived data from this loop is needed, it can update useDebugStore.cameraDebugInfo
+    // updateCameraDebugInfo(camera, controls); // Calls the neutered debug.js version (console.logs)
+    // Example: useDebugStore.getState().setCameraDebugInfo({ customLoopData: 'value' });
 
-    // Update globe debug info with rotation
-    if (planetGroup) {
+    if (planetGroup && planetGroup.userData) { // Check userData exists
         const rotationDeg = {
             x: THREE.MathUtils.radToDeg(planetGroup.rotation.x).toFixed(2),
             y: THREE.MathUtils.radToDeg(planetGroup.rotation.y).toFixed(2),
@@ -46,7 +51,7 @@ function animate() {
         };
         
         let targetAngularVelocity = { x: 'N/A', y: 'N/A', z: 'N/A' };
-        if (planetGroup.userData && planetGroup.userData.targetAngularVelocity) {
+        if (planetGroup.userData.targetAngularVelocity) {
             targetAngularVelocity = {
                 x: planetGroup.userData.targetAngularVelocity.x.toFixed(4),
                 y: planetGroup.userData.targetAngularVelocity.y.toFixed(4),
@@ -55,15 +60,18 @@ function animate() {
         }
 
         const globeDebugData = {
-            CurrentRotationDeg: rotationDeg,
-            TargetAngularVelocity: targetAngularVelocity,
-            AngularDamping: Const.GLOBE_ANGULAR_DAMPING_FACTOR
+            rotation: `CurrentRotationDeg: ${JSON.stringify(rotationDeg)}<br/>TargetAngularVelocity: ${JSON.stringify(targetAngularVelocity)}<br/>AngularDamping: ${Const.GLOBE_ANGULAR_DAMPING_FACTOR}`,
+            // If individual slider values for rotation are needed in debugStore:
+            // rotationX: planetGroup.rotation.x,
+            // rotationY: planetGroup.rotation.y,
+            // rotationZ: planetGroup.rotation.z
         };
-        updateGlobeDebugInfo(planetGroup, globeDebugData);
+        // updateGlobeDebugInfo(planetGroup, globeDebugData); // Calls the neutered debug.js version
+        useDebugStore.getState().setGlobeDebugInfo(globeDebugData); // Update store directly
     }
 
     if (controls.enableDamping) {
-        controls.update();
+        controls.update(deltaTime); // Pass deltaTime to controls.update if it supports it (some versions do)
     }
     renderer.render(scene, camera);
 }
@@ -72,13 +80,14 @@ export function startAnimationLoop() {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
-    animate(); // Start the loop
+    clock.start(); // Ensure clock is started/reset before new loop
+    animate();
 }
 
-// Optional: function to stop the animation loop
 export function stopAnimationLoop() {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
+        clock.stop();
     }
 } 

@@ -6,6 +6,7 @@ import { terrainById, Terrains } from './registries/TerrainRegistry.js';
 import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
 import * as Const from '../../config/gameConstants.js'; // Import constants
+import { DrawMode } from '../../config/gameConstants.js'; // CORRECTED PATH
 import RandomService from '../core/RandomService.js'; // Added import
 
 // All radius values are now in kilometers (1 unit = 1 km)
@@ -461,14 +462,6 @@ function generateVoronoiGeometry(points, delaunay) {
 
     return { geometry, colors, ids, tileTerrain, tileSphericalExcesses };
 }
-
-// Constants for drawing modes
-export const DrawMode = {
-  POINTS: 'points',
-  DELAUNAY: 'delaunay',
-  VORONOI: 'voronoi',
-  CENTROID: 'centroid'
-};
 
 export const DEFAULT_VIEW_MODE = 'elevation'; // Added constant for default view
 
