@@ -2,12 +2,15 @@
 
 ## 1. Objectives
 - Migrate UI code to functional React components with hooks.
+- Previous client code is moved to `client(to_refactor)`
+- Functional React code is created in `client`
 - Introduce Radix UI components for consistent styling and accessibility.
 - Consolidate all UI related stores under `client/src/stores` using Zustand.
 - Expose the main UI store via `window.uiStore` for debugging.
 - Remove stray `console.log` statements from production code.
 - Ensure UI follows declarative patterns and prefers composition over inheritance.
 - Provide reusable custom hooks and context-based utilities.
+- [ ] Ensure full functional parity between the new `client` implementation and the original `client(to_refactor)` functionality.
 
 ## 2. Potential Solutions & Evaluation
 
@@ -31,34 +34,34 @@ The chosen approach is to follow the specifications in `Requirements.md`, levera
 
 ## 4. Implementation TODOs
 
-### Phase 0: Initial Issues & Cleanup (New)
-- [x] Investigate and fix 404/500 errors for `cameraViewsConfig.js` and `cameraUIStore.js` in `Camera.js` and `eventHandlers.js`. (Imports in `client/src/camera/Camera.js` corrected to relative paths. Alias `@/` in `client/vite.config.js` points to `client/src/`.)
-
 ### Phase 1: Setup & Libraries
-- [x] Install React and Radix UI packages in the client project (`src/client/package.json`).
+- [x] Install React and Radix UI packages in the client project (`client/package.json`).
 - [x] Install Zustand in the client project.
-- [x] Create `src/client/src/stores/index.js` to export Zustand stores.
+- [x] Create `client/src/stores/index.js` to export Zustand stores.
 - [x] Configure PropTypes for validation.
 - [x] Add ESLint rule for PropTypes if available and configure ESLint for React.
 
 ### Phase 2: Store Migration & Creation
-- [x] Create `src/client/src/stores/uiStore.js` for the main UI state.
+- [x] Create `client/src/stores/uiStore.js` for the main UI state.
     - [x] Define initial state structure (e.g., open menus, modals, notifications).
     - [x] Implement actions to modify the state.
 - [x] Expose the main UI store to `window.uiStore` in development mode.
-- [x] Move existing `cameraUIStore.js` to `src/client/src/stores/cameraUIStore.js`.
+- [x] Move existing `cameraUIStore.js` to `client/src/stores/cameraUIStore.js`.
     - [x] Refactor it to use Zustand (already using).
     - [x] Export as `useCameraUIStore`.
     - [x] Update imports where `cameraUIStore` was used (handled by new relative path).
-- [x] Create `src/client/src/stores/worldSettingsStore.js` for `sphereSettings` management.
+- [x] Create `client/src/stores/worldSettingsStore.js` for `sphereSettings` management.
     - [x] Define initial state based on `sphereSettings` from `planetSphereVoronoi.js` and `gameConstants.js`.
     - [x] Implement actions for each setting (e.g., `setNumPoints`, `setJitter`, `setMapType`).
     - [x] Actions should call `requestPlanetRegeneration()` or `triggerPlanetColorUpdate()` as appropriate (mocked for now).
-- [x] Export `useWorldSettingsStore` from `src/client/src/stores/index.js`.
+- [x] Export `useWorldSettingsStore` from `client/src/stores/index.js`.
+- [ ] **Migrate Remaining Stores from `client(to_refactor)`:**
+    - [ ] Based on the audit, identify and migrate or recreate any other Zustand stores or state management logic from `client(to_refactor)/src/stores` (or other locations) to `client/src/stores`.
+    - [ ] Ensure they follow the new patterns (functional, Zustand-based) and are exported via `client/src/stores/index.js`.
 
 ### Phase 3: Component Refactor & Development
-- [x] Identify initial set of UI controls for the control panel to be refactored (Focus: `UnifiedControlPanel` with a tabbed interface. Source: `client/src/ui/components/UnifiedControlPanel.js`).
-- [x] Create a directory `src/client/src/components/ui/` for common Radix-based UI components (e.g., Button, Slider, Input, Tabs).
+- [x] Identify initial set of UI controls for the control panel to be refactored (Focus: `UnifiedControlPanel` with a tabbed interface. Source: `client(to_refactor)/src/ui/components/UnifiedControlPanel.js`).
+- [x] Create a directory `client/src/components/ui/` for common Radix-based UI components (e.g., Button, Slider, Input, Tabs).
 - [x] Develop base Radix UI components:
     - [x] `Button.jsx`
     - [x] `Slider.jsx`
@@ -68,7 +71,7 @@ The chosen approach is to follow the specifications in `Requirements.md`, levera
     - [x] `Switch.jsx` (using `@radix-ui/react-switch`)
     - [x] `ControlSectionWrapper.jsx` (simple layout component)
     - [ ] (Add more as needed)
-- [x] Create `src/client/src/components/control-panel/UnifiedControlPanel.jsx`.
+- [x] Create `client/src/components/control-panel/UnifiedControlPanel.jsx`.
     - [x] Implement a container structure.
     - [x] Implement a tabbed interface using the `Tabs.jsx` component (Tabs: Globe, Camera, Tile Debug, Camera Debug, Globe Debug).
     - [x] Identify and list the specific controls within the existing `UnifiedControlPanel` that need to be ported to Radix UI components (Done, see analysis above. Key controls: Buttons, Sliders, Selects, Toggles/Switches, TextInputs).
@@ -103,24 +106,58 @@ The chosen approach is to follow the specifications in `Requirements.md`, levera
 - [x] Replace imperative DOM manipulation with declarative JSX and hooks.
 - [x] Remove stray `console.log` statements (gated by a development flag or removed entirely for production).
 - [x] Refactor `GlobeTab.jsx` to use `useWorldSettingsStore`.
+- [ ] **Broader UI Refactor from `client(to_refactor)`:**
+    - [ ] Systematically refactor all remaining UI components identified in the audit from `client(to_refactor)/src/ui/` (and other relevant subdirectories like `client(to_refactor)/src/core_modules/`, `client(to_refactor)/src/game_specific_ui/`) into functional React components within `client/src/components/`.
+    - [ ] For each component/module from `client(to_refactor)`:
+        - [ ] Analyze its functionality and dependencies based on the audit.
+        - [ ] Rebuild as a React functional component using hooks, adhering to functional and declarative principles.
+        - [ ] Utilize Radix UI primitives from `client/src/components/ui/` where appropriate, or create new shared Radix-based components if needed.
+        - [ ] Connect components to relevant Zustand stores for state management.
+        - [ ] Ensure all public components have `PropTypes`.
+    - [ ] **Recreate Core Game UI Layout:**
+        - [ ] Ensure the main game interface layout (e.g., full-screen canvas, positioning of primary UI elements) is replicated from `client(to_refactor)` into the new `client` structure, using appropriate React components and styling.
+    - [ ] **Refactor Authentication UI & Flows:**
+        - [ ] Recreate or refactor UI components and logic for user sign-in, sign-up, and sign-out functionalities from `client(to_refactor)`.
+        - [ ] Ensure these flows integrate correctly with any backend services and new state management.
+    - [ ] Address and refactor any imperative DOM manipulations found during the audit (e.g., direct element creation/manipulation in utility functions or old component logic) to use declarative JSX and React state/hooks.
+    - [ ] Migrate any UI-specific utility functions from `client(to_refactor)` to `client/src/utils/` or integrate them into relevant components/hooks.
 
 ### Phase 4: Custom Hooks & Utilities
-- [ ] Identify repetitive logic that can be extracted into custom hooks.
-- [ ] Create `src/client/src/hooks/` directory.
+- [ ] Identify repetitive logic that can be extracted into custom hooks from the broader refactoring effort.
+- [ ] Create `client/src/hooks/` directory.
 - [ ] Implement custom hooks (e.g., `useWorldConfig`, `useCameraData`).
 - [ ] After stores are set up (like `useWorldSettingsStore`), identify if more specific custom hooks are needed (e.g., `useFormattedWorldSetting`, `useGameActions`).
-- [ ] Create `src/client/src/hooks/` directory (if not already created by store setup).
+- [ ] Create `client/src/hooks/` directory (if not already created by store setup).
 - [ ] Implement identified custom hooks.
+- [ ] **Migrate Non-UI Utilities from `client(to_refactor)`:**
+    - [ ] Review `client(to_refactor)` (e.g., `client(to_refactor)/src/utils/`, `client(to_refactor)/src/helpers/`, or other non-UI specific modules identified in the audit).
+    - [ ] Determine if these utilities are still needed.
+    - [ ] If so, refactor them for modern JavaScript, functional style, and adherence to project guidelines, then move them to `client/src/utils/` or `shared/` if applicable.
+
 
 ### Phase 5: Cleanup & Finalization
-- [ ] Remove obsolete code (`UIController`, old control panel implementation) once parity is achieved.
+- [ ] **Refactor Main Application Entry Point & Global Styles:**
+    - [ ] Review and refactor the main application entry point(s) used by `client(to_refactor)` (e.g., `index.html`, main JavaScript file that initializes the old UI).
+    - [ ] Ensure the new main entry point for `client` (e.g., `client/index.html`, `client/src/main.jsx`) correctly initializes the React application, providers, global stores, and any other necessary setup.
+    - [ ] Migrate or recreate global styles from `client(to_refactor)`, ensuring they are compatible with Tailwind CSS and the new component structure. Remove styles related to the old implementation.
+    - [ ] Remove any setup or initialization code related to the old `client(to_refactor)` system.
+- [ ] **Remove Obsolete Code (Full `client(to_refactor)` Directory):**
+    - [ ] Once all functionality from `client(to_refactor)` has been successfully ported to `client`, thoroughly verified through testing, and all dependencies are updated.
+    - [ ] Delete the entire `client(to_refactor)` directory.
+    - [ ] Remove any remaining references to `client(to_refactor)` in build configurations, scripts, or documentation.
 - [ ] Ensure all public components have `PropTypes`.
-- [ ] Verify React fragments and keys are used appropriately in list rendering.
 
 ### Phase 6: Documentation & Testing
 - [ ] Document UI store architecture and usage patterns in `docs/UI_Store_And_Components.md`.
 - [ ] Provide examples of components utilizing the new store and hooks in the documentation.
 - [ ] Plan for unit tests using React Testing Library (implementation for later).
+- [ ] **Comprehensive End-to-End Testing for Functional Parity:**
+    - [ ] Develop and execute a test plan covering all features and user interactions previously handled by `client(to_refactor)`.
+    - [ ] Verify that the new `client` implementation provides full functional parity and behaves as expected.
+    - [ ] Test across different browsers and devices if applicable.
+- [ ] **Update Project Documentation:**
+    - [ ] Update the main project `README.md` and any other relevant architectural or developer documentation.
+    - [ ] Reflect the new `client` directory structure, the removal of `client(to_refactor)`, and any significant changes to the development setup or build process.
 
 ---
 *This plan will be updated as tasks are completed and new issues arise.* 

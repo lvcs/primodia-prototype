@@ -70,3 +70,35 @@ export const MOUSE_RELEASE_INERTIA_FACTOR = 30.0; // Multiplier for mouse delta 
 export const TILE_VIEW_TILT_ANGLE = -Math.PI / 4; // -45 degrees 
 export const TILE_VIEW_SPHERE_DISTANCE = 16000; // Distance from globe center for tile view (2.5x radius)
 export const TILE_VIEW_ZOOM = 1.0; // Default zoom level for tile view 
+
+// UI Specific Constants
+export const DrawMode = {
+  POINTS: 'points',
+  DELAUNAY: 'delaunay',
+  VORONOI: 'voronoi',
+  CENTROID: 'centroid'
+};
+
+export const mockMapTypes = {
+  CONTINENTS: { id: 'continents', name: 'Continents', description: 'Large landmasses.' },
+  PANGAEA: { id: 'pangaea', name: 'Pangaea', description: 'One supercontinent.' },
+  FRACTAL: { id: 'fractal', name: 'Fractal', description: 'Chaotic coastlines.' },
+  ARCHIPELAGO: { id: 'archipelago', name: 'Archipelago', description: 'Small islands.' },
+  ISLAND_PLATES: { id: 'island_plates', name: 'Island Plates', description: 'Mix of small-to-medium islands.'},
+  HIGHLANDS: { id: 'highlands', name: 'Highlands', description: 'Mostly hills and mountains.'},
+  LAKES: { id: 'lakes', name: 'Lakes', description: 'Tons of small inland lakes.'},
+  DRY: { id: 'dry', name: 'Dry', description: 'Arid terrain.'},
+};
+export const defaultMapType = 'continents';
+
+export const DEFAULT_VIEW_MODE = 'elevation';
+
+export const globeViewOptions = [
+  { value: 'terrain', label: 'Terrain' },
+  { value: 'plates', label: 'Tectonic Plates' },
+  { value: 'elevation', label: 'Elevation' },
+  { value: 'moisture', label: 'Moisture' },
+  { value: 'temperature', label: 'Temperature' }
+];
+
+export const algorithms = [1, 2]; 

@@ -23,16 +23,9 @@ You are an expert full-stack game developer with extensive experience in JavaScr
 primodia/
 ├── client/               # Frontend
 │   ├── src/
-│   │   ├── game/         # Game logic
-│   │   │   ├── world/    # World generation and rendering
-│   │   │   ├── entities/ # Game entities (units, buildings)
-│   │   │   ├── utils/    # Utility functions
-│   │   │   └── multiplayer/ # Multiplayer logic
-│   │   ├── styles/       # CSS styles
-│   │   ├── auth.js       # Authentication logic
-│   │   └── main.js       # Main entry point
-│   ├── index.html        # HTML entry point
-│   └── package.json      # Frontend dependencies
+│   │   ├── components/   # Components used in the game UI
+│   │   ├── config/       # Configuration files
+│   │   └── stores/       # State management stores
 ├── server/               # Backend
 │   ├── controllers/      # Request handlers
 │   ├── routes/           # API routes
@@ -66,7 +59,6 @@ primodia/
 - No Apologies: Avoid using apologies in documentation or comments.
 - Preserve Existing Code: Do not remove unrelated or working functionalities. Maintain existing structures unless explicitly directed.
 - Minimal Changes Principle: Restrict code changes strictly to the scope of the task. Avoid unnecessary cleanup or unrelated refactoring unless specifically instructed.
-
 
 # Code Structure and Design
 - Clear Interfaces: Design simple, clean interfaces. Ensure modules have clearly defined input and output structures.

@@ -11,6 +11,7 @@ The current UI implementation under `client/src` relies heavily on imperative DO
 - Remove stray `console.log` statements from production code.
 - Ensure UI follows declarative patterns and prefers composition over inheritance.
 - Provide reusable custom hooks and context based utilities.
+- Recreate all functionality currently in `client(to_refactor)` within the `client` directory structure.
 
 ## Specifications
 ### Architecture
