@@ -21,6 +21,11 @@ The current UI implementation under `client/src` relies heavily on imperative DO
 - Prop validation must use `PropTypes` for every public component.
 - Use React fragments to avoid extraneous DOM nodes and keys for list rendering.
 
+## Porting Existing UI
+Focus on UnifiedContolPanel.
+We want a Container with Tabs on top.
+Match existing UI controls to Radix UI components
+
 ### Debugging
 - The main UI store should be accessible from the browser console (e.g., `window.uiStore`) to aid debugging.
 - All other debugging output should be gated behind a development flag.

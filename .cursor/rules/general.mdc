@@ -21,16 +21,30 @@ You are an expert full-stack game developer with extensive experience in JavaScr
 
 # Root Directory Structure
 primodia/
-├── src/
-│   ├── client/       # Frontend: React, Three.js, rendering, state
-    └── package.json  # Dependency management for client
-│   ├── server/       # Backend: Express.js, PostgreSQL, routes, authorizatoin
-├── docs/             # Project documentation, guides, specifications
-├── tests/            # Vitest unit, integration, and end-to-end tests
-├── assets/           # Static assets such as textures, models, audio
-├── .cursor/
-│   └── rules/        # MDC rules and AI development guidelines
-└── package.json      # Dependency management for server
+├── client/               # Frontend
+│   ├── src/
+│   │   ├── game/         # Game logic
+│   │   │   ├── world/    # World generation and rendering
+│   │   │   ├── entities/ # Game entities (units, buildings)
+│   │   │   ├── utils/    # Utility functions
+│   │   │   └── multiplayer/ # Multiplayer logic
+│   │   ├── styles/       # CSS styles
+│   │   ├── auth.js       # Authentication logic
+│   │   └── main.js       # Main entry point
+│   ├── index.html        # HTML entry point
+│   └── package.json      # Frontend dependencies
+├── server/               # Backend
+│   ├── controllers/      # Request handlers
+│   ├── routes/           # API routes
+│   ├── middleware/       # Express middleware
+│   ├── models/           # Database models
+│   ├── utils/            # Utility functions
+│   ├── db.js             # Database connection
+│   ├── socket.js         # Socket.io handlers
+│   └── index.js          # Server entry point
+├── shared/               # Shared code between client and server
+├── package.json          # Project dependencies
+└── README.md             # Project documentation
 
 # State Management
 ## Game store

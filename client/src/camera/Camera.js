@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GlobeCameraController } from './GlobeCameraController.js';
 import { TileCameraController } from './TileCameraController.js';
-import { CAMERA_VIEWS } from '@/config/cameraViewsConfig.js';
-import { useCameraUIStore } from '@/ui/store/cameraUIStore.js';
+import { CAMERA_VIEWS } from '../config/cameraViewsConfig.js';
+import { useCameraUIStore } from '../stores';
 
 /**
  * Camera manager that delegates to Globe and Tile controllers.

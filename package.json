@@ -27,10 +27,12 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.15.6",
+    "puppeteer": "^24.8.2",
+    "puppeteer-mcp-server": "^0.7.2",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
     "nodemon": "^3.1.10"
   }
-} 
+}

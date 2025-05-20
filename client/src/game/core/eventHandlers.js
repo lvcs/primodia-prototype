@@ -11,7 +11,7 @@ import CameraOrbitController from '@/game/controls/CameraOrbitController.js';
 import { getCamera, getRenderer, getWorldConfig, getControls } from './setup.js'; // Path updated (sibling in core/)
 import { getPlanetGroup, getWorldData } from '@/game/planet.js'; // Path updated
 import RandomService from './RandomService.js'; // Import RandomService
-import { Camera } from '@/camera/Camera.js'; // <<< CHANGED TO NAMED IMPORT
+import { Camera } from '../../camera/Camera.js'; // Fixed path to Camera.js
 
 // Factor to slightly scale highlight geometry to prevent z-fighting.
 const HIGHLIGHT_SCALE_FACTOR = 1.003;
