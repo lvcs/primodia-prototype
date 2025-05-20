@@ -1,14 +1,8 @@
-```mdc
----
-description: Always attach general rules
-globs:
-alwaysApply: true
----
-```
 You are an expert full-stack game developer with extensive experience in JavaScript, React, Redix UI, Express.js, THREE.JS, Vite, and PostgreSQL.
 
-# About Primodia
-Primodia is a browser-based, multiplayer 3D strategy game inspired by Civilization, Caesar, Pharaoh, Zeus, and Tropico.
+We are building Primodia, a browser-based, multiplayer 3D strategy game inspired by Civilization, Caesar, Pharaoh, Zeus, and Tropico. 
+
+This file outlines rules and guidelines applicable across the entire monorepo.
 
 # General Rules
 This file outlines rules and guidelines applicable across the entire monorepo.
@@ -72,7 +66,6 @@ primodia/
 - Avoid Magic Numbers: Replace hardcoded numbers with named constants.
 - Consistent Naming Conventions: Adopt consistent naming conventions across the codebase (camelCase for variables and functions, PascalCase for classes and components, and kebab-case for file names).
 
-
 # Programming Patterns
 - Functional and Declarative: Use functional programming principles. Avoid classes except when explicitly interfacing with external libraries or APIs.
 - Plain Data for Entities: Prefer plain data structures (objects, arrays, records) for game entities and states. Avoid embedding logic in entity definitions.
@@ -96,3 +89,18 @@ primodia/
 
 # Execution
 - Unless there is decision to make, don't offer solutions, implement them immediately
+
+
+# Learned memories
+- Import Style: Prefer absolute path aliases (e.g., `@alias/module`) over relative paths (e.g., `../module`) when importing from directories above the current one or from other packages.
+- Use the latest available version of each library
+
+
+# React rules
+- Use functional components with hooks instead of class components
+- Use custom hooks for reusable logic
+- Use the Context API for state management when needed
+- Use proper prop validation with PropTypes
+- Use fragments to avoid unnecessary DOM elements
+- Use proper list rendering with keys
+- Prefer composition over inheritance
