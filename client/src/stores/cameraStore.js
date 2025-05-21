@@ -75,4 +75,4 @@ const useCameraStore = create((set, get) => ({
   // restoreState: (state) => console.warn('restoreState is deprecated'),
 }));
 
-export default useCameraStore; 
+export { useCameraStore }; 

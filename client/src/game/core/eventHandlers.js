@@ -73,55 +73,13 @@ export function setupRootEventListeners(canvasElement) { // canvasElement is ren
       orbitController = new CameraOrbitController(cameraInstance, orbitControlsInstance, initialRadius, initialPhi, initialTheta);
       window.orbitController = orbitController; // TODO: Avoid global exposure
       
-      // Subscribe to cameraStore zoom changes to update orbitController
-      // Ensure orbitController is defined before subscribing
-      if (orbitController && orbitControlsInstance) { // Ensure orbitControlsInstance is also available
-        const unsubscribe = useCameraStore.subscribe(
-          (state) => state.zoom,
-          (newZoom, oldZoom) => {
-            console.log(`[EventHandlers SUBSCRIPTION] Store zoom changed. Old: ${oldZoom?.toFixed(2)}, New: ${newZoom?.toFixed(2)}`);
-            if (orbitController && newZoom !== oldZoom) {
-              const currentPhi = orbitControlsInstance.getPolarAngle();
-              const currentTheta = orbitControlsInstance.getAzimuthalAngle();
-              const currentRadius = orbitControlsInstance.getDistance();
-              console.log(`[EventHandlers SUBSCRIPTION] OrbitControls state: Radius=${currentRadius?.toFixed(2)}, Phi=${currentPhi?.toFixed(2)}, Theta=${currentTheta?.toFixed(2)}`);
-
-              if (Math.abs(currentRadius - newZoom) > 0.01) { 
-                console.log(`[EventHandlers SUBSCRIPTION] Updating camera: currentRadius (${currentRadius?.toFixed(2)}) is different from newZoom (${newZoom?.toFixed(2)}). Calling orbitController.setSpherical.`);
-                orbitController.setSpherical(newZoom, currentPhi, currentTheta);
-              } else {
-                console.log(`[EventHandlers SUBSCRIPTION] NOT updating camera: currentRadius (${currentRadius?.toFixed(2)}) is close enough to newZoom (${newZoom?.toFixed(2)}).`);
-              }
-            }
-          }
-        );
-        // TODO: manage unsubscription if eventHandlers are ever torn down.
-      }
+      
       
       // addGlobeViewButton(cameraAnimator); // Deprecated: UserInfo.jsx handles this via props
     } else {
       error("Failed to initialize CameraAnimator/OrbitController: Missing dependencies.");
     }
     
-    // Resize listener should ideally be managed by React, perhaps in App.jsx or a layout component
-    // For now, keep it, but it might be redundant if canvas size is managed by CSS/React layout.
-    const handleResize = () => {
-        const cam = getCamera(); 
-        const rend = getRenderer();
-        if (!cam || !rend || !rend.domElement) return;
-        // Use parent clientWidth/Height if canvas is styled to fill parent
-        const canvas = rend.domElement;
-        const newWidth = canvas.clientWidth;
-        const newHeight = canvas.clientHeight;
-
-        if (canvas.width !== newWidth || canvas.height !== newHeight) {
-            cam.aspect = newWidth / newHeight;
-            cam.updateProjectionMatrix();
-            rend.setSize(newWidth, newHeight, false); // Set updateStyle to false if React/CSS handles size
-            debug(`[eventHandlers] Resized to ${newWidth}x${newHeight}`);
-        }
-    };
-    window.addEventListener('resize', handleResize);
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();

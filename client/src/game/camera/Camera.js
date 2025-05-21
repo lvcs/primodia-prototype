@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { throttle } from 'lodash';
-import { GlobeCameraController } from './GlobeCameraController.js';
 import { TileCameraController } from './TileCameraController.js';
 import { CAMERA_VIEWS } from '@config/cameraConfig.js';
 import { useCameraStore } from '@stores';
 
 const ORBIT_CONTROLS_CHANGE_THROTTLE_MS = 100; // Throttle updates from orbit controls
+
+
 
 /**
  * Camera manager that delegates to Globe and Tile controllers.
@@ -30,8 +31,6 @@ export class Camera {
     this.orbitControls = orbitControls;
     // Store the globe's radius
     this.globeRadius = globeRadius;
-    // Create a controller for globe view
-    this.globeController = new GlobeCameraController(threeJsCamera, globeRadius);
     // Create a controller for tile view
     this.tileController = new TileCameraController(threeJsCamera, globeRadius);
 
@@ -42,18 +41,6 @@ export class Camera {
     // this.tileTarget = target; // tileTarget is set by setMode or animateToTile
     if (position) this.threeJsCamera.position.set(position.x, position.y, position.z);
     
-    // Ensure PerspectiveCamera.zoom is 1. It's not for distance.
-    if ('zoom' in this.threeJsCamera) {
-        if (this.threeJsCamera.zoom !== 1) {
-            this.threeJsCamera.zoom = 1;
-            this.threeJsCamera.updateProjectionMatrix();
-        }
-    } else {
-        // If it's not a PerspectiveCamera or CombinedCamera with a .zoom, this won't apply
-        // but it's good practice to be aware.
-    }
-
-    // Optionally set tilt if needed
 
     // Listen to orbitControls changes to update the store
     if (this.orbitControls) {
@@ -64,14 +51,6 @@ export class Camera {
       }, ORBIT_CONTROLS_CHANGE_THROTTLE_MS);
 
       this.orbitControls.addEventListener('change', this.throttledUpdateStoreFromOrbitControls);
-    }
-  }
-
-  // Method to clean up the event listener when Camera instance is no longer needed
-  dispose() {
-    if (this.orbitControls && this.throttledUpdateStoreFromOrbitControls) {
-      this.orbitControls.removeEventListener('change', this.throttledUpdateStoreFromOrbitControls);
-      this.throttledUpdateStoreFromOrbitControls.cancel(); // Cancel any pending throttled calls
     }
   }
 
@@ -88,19 +67,6 @@ export class Camera {
       currentDistance = this.threeJsCamera.position.distanceTo(this.orbitControls.target || new THREE.Vector3(0,0,0));
     }
 
-    if (explicitDistance !== null) {
-      cameraStore.setZoom(explicitDistance); // Use explicitDistance for zoom
-    } else {
-      cameraStore.setZoom(currentDistance); // Use calculated/actual distance for zoom
-    }
-
-    cameraStore.setTilt(this.getTilt());
-    if (targetCenter) {
-      cameraStore.setTarget({ x: targetCenter.x, y: targetCenter.y, z: targetCenter.z });
-    } else if (this.cameraMode === 'globe') { // Clear target if in globe mode and no specific target given
-      cameraStore.setTarget(null);
-    }
-    // If in tile mode, the target should already be set by setMode or animateToTile's direct call before animation
   }
 
   /**
@@ -146,7 +112,7 @@ export class Camera {
     const tileCenter = this.tileController.latLonToWorld(tile.latitude, tile.longitude);
     this.setMode('tile', tileCenter);
     // Delegate the animation to the tile controller
-    this.tileController.animateToTile(tile, () => {
+    animateToTileAlt(tile, () => {
       // Update UI store with new camera state
       this._updateCameraStoreState(tileCenter, CAMERA_VIEWS.tile.defaultDistance); // Tile view, use defined constant
       if (onComplete) onComplete();
@@ -158,15 +124,7 @@ export class Camera {
    * @returns {number} The tilt angle in degrees.
    */
   getTilt() {
-    // If in tile mode and the tile controller can provide the tilt, use it
-    if (this.cameraMode === 'tile' && this.tileController.getTilt) {
-      return this.tileController.getTilt();
-    }
-    // If in globe mode and the globe controller can provide the tilt, use it
-    if (this.cameraMode === 'globe' && this.globeController.getTilt) {
-      return this.globeController.getTilt();
-    }
-    // Default to 0 if tilt cannot be determined
-    return 0;
+    return this.baseController.getTilt();
   }
 } 
+

@@ -73,21 +73,5 @@ export class TileCameraController extends BaseCameraController {
     });
   }
 
-  /**
-   * Get the tilt angle of the camera relative to the tile it is looking at.
-   * The tilt is how much the camera is angled from looking straight down/up.
-   * @returns {number} The tilt angle in degrees.
-   */
-  getTilt() {
-    // Get the camera's current position
-    const pos = this.threeJsCamera.position;
-    // Get the direction the camera is looking in
-    const target = this.threeJsCamera.getWorldDirection(new THREE.Vector3()).add(pos);
-    // Calculate the direction vector from the camera to the target
-    const dir = target.clone().sub(pos).normalize();
-    // The tilt angle is the angle between this direction and the 'up' direction (y-axis)
-    const tiltRad = Math.acos(dir.y);
-    // Convert the tilt from radians to degrees for easier understanding
-    return THREE.MathUtils.radToDeg(tiltRad);
-  }
+
 } 
