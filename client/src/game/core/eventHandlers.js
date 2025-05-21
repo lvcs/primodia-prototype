@@ -20,6 +20,7 @@ import RandomService from './RandomService.js';
 // This might need to be a new React-based camera control system or store interaction later.
 import { Camera } from '@/game/camera/Camera'; 
 import CameraOrbitController from '@/game/camera/CameraOrbitController';
+import { useCameraStore } from '@stores/cameraStore'; // Import camera store
 
 const HIGHLIGHT_SCALE_FACTOR = 1.003;
 const MAX_DRAG_DIST_FOR_CLICK = 10; 
@@ -69,8 +70,33 @@ export function setupRootEventListeners(canvasElement) { // canvasElement is ren
       const initialRadius = cameraInstance.position.length();
       const initialPhi = Math.acos(cameraInstance.position.y / initialRadius);
       const initialTheta = Math.atan2(cameraInstance.position.z, cameraInstance.position.x);
-      orbitController = new CameraOrbitController(cameraInstance, initialRadius, initialPhi, initialTheta);
+      orbitController = new CameraOrbitController(cameraInstance, orbitControlsInstance, initialRadius, initialPhi, initialTheta);
       window.orbitController = orbitController; // TODO: Avoid global exposure
+      
+      // Subscribe to cameraStore zoom changes to update orbitController
+      // Ensure orbitController is defined before subscribing
+      if (orbitController && orbitControlsInstance) { // Ensure orbitControlsInstance is also available
+        const unsubscribe = useCameraStore.subscribe(
+          (state) => state.zoom,
+          (newZoom, oldZoom) => {
+            console.log(`[EventHandlers SUBSCRIPTION] Store zoom changed. Old: ${oldZoom?.toFixed(2)}, New: ${newZoom?.toFixed(2)}`);
+            if (orbitController && newZoom !== oldZoom) {
+              const currentPhi = orbitControlsInstance.getPolarAngle();
+              const currentTheta = orbitControlsInstance.getAzimuthalAngle();
+              const currentRadius = orbitControlsInstance.getDistance();
+              console.log(`[EventHandlers SUBSCRIPTION] OrbitControls state: Radius=${currentRadius?.toFixed(2)}, Phi=${currentPhi?.toFixed(2)}, Theta=${currentTheta?.toFixed(2)}`);
+
+              if (Math.abs(currentRadius - newZoom) > 0.01) { 
+                console.log(`[EventHandlers SUBSCRIPTION] Updating camera: currentRadius (${currentRadius?.toFixed(2)}) is different from newZoom (${newZoom?.toFixed(2)}). Calling orbitController.setSpherical.`);
+                orbitController.setSpherical(newZoom, currentPhi, currentTheta);
+              } else {
+                console.log(`[EventHandlers SUBSCRIPTION] NOT updating camera: currentRadius (${currentRadius?.toFixed(2)}) is close enough to newZoom (${newZoom?.toFixed(2)}).`);
+              }
+            }
+          }
+        );
+        // TODO: manage unsubscription if eventHandlers are ever torn down.
+      }
       
       // addGlobeViewButton(cameraAnimator); // Deprecated: UserInfo.jsx handles this via props
     } else {

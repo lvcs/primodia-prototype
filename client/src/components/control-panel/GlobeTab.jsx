@@ -32,7 +32,7 @@ import {
   DEFAULT_VIEW_MODE,
   globeViewOptions,
   algorithms
-} from '@config/gameConstants';
+} from '@config/gameConfig';
 
 // TODO: Integrate MapRegistry for live data
 

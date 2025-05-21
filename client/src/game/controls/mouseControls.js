@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import * as Const from '../../config/gameConstants.js';
+import * as Const from '../../config/gameConfig.js';
 
 
 // --- State ---

@@ -1,54 +1,78 @@
 import { create } from 'zustand';
+import * as THREE from 'three';
 
-import { CAMERA_VIEWS } from '@config/cameraParameters';
+import { CAMERA_VIEWS, GLOBE_VIEW_CAMERA_DISTANCE, TILE_VIEW_CAMERA_DISTANCE } from '@config/cameraConfig';
 
-// Default state for each view
-const getDefaultState = (view = 'globe') => {
-  const config = CAMERA_VIEWS[view] || CAMERA_VIEWS.globe;
-  return {
-    viewMode: view,
-    position: null, // { x, y, z } or null
-    zoom: config.defaultZoom,
-    tilt: config.defaultTilt, // Pitch (X-axis rotation)
-    yaw: 0, // Y-axis rotation, default to 0
-    roll: 0, // Z-axis rotation, default to 0
-    target: null, // { x, y, z } or null
-  };
+// Helper to get default camera parameters based on view mode
+const getDefaultCameraParams = (viewMode = 'globe') => {
+  // TODO: Define specific phi, theta, zoom for each view mode in cameraConfig.js
+  // For now, using some placeholders.
+  switch (viewMode) {
+    case 'tile':
+      return {
+        zoom: TILE_VIEW_CAMERA_DISTANCE !== undefined ? TILE_VIEW_CAMERA_DISTANCE : 50,
+        phi: Math.PI / 4, // Example: 45 degrees
+        theta: 0,
+        target: new THREE.Vector3(0, 0, 0), // Or a specific default target for tile view
+      };
+    case 'globe':
+    default:
+      return {
+        zoom: GLOBE_VIEW_CAMERA_DISTANCE !== undefined ? GLOBE_VIEW_CAMERA_DISTANCE : 150,
+        phi: Math.PI / 2, // Equatorial
+        theta: 0, // Default orientation
+        target: new THREE.Vector3(0, 0, 0),
+      };
+  }
 };
 
-export const useCameraStore = create((set, get) => ({
-  ...getDefaultState(),
+const useCameraStore = create((set, get) => ({
+  // REQ-CAM-R-001: Definitive state
+  ...getDefaultCameraParams('globe'), // Initialize with default globe view params
+  viewMode: 'globe',
+  isAnimating: false,
 
-  // Switch view mode and reset to default for that view
-  setViewMode: (view) => set((state) => ({
-    ...getDefaultState(view),
-  })),
-
-  // Update camera position
-  setPosition: (position) => set({ position }),
-
-  // Update zoom
+  // REQ-CAM-R-002: Actions to update state variables
   setZoom: (zoom) => set({ zoom }),
+  setTarget: (target) => set({ target: new THREE.Vector3().copy(target) }),
+  setPhi: (phi) => set({ phi }),
+  setTheta: (theta) => set({ theta }),
+  setRotation: ({ phi, theta }) => set(state => {
+    const newPhi = phi !== undefined ? phi : state.phi;
+    const newTheta = theta !== undefined ? theta : state.theta;
+    return { phi: newPhi, theta: newTheta };
+  }),
+  setIsAnimating: (isAnimating) => set({ isAnimating }),
 
-  // Update tilt
-  setTilt: (tilt) => set({ tilt }),
+  setViewMode: (viewMode) => set((state) => {
+    const defaultParams = getDefaultCameraParams(viewMode);
+    return {
+      viewMode,
+      ...defaultParams, // Reset zoom, phi, theta, target to defaults for the new mode
+      isAnimating: false, // Reset animation state on view mode change
+    };
+  }),
 
-  // Update yaw
-  setYaw: (yaw) => set({ yaw }),
+  // --- Helper getters ---
+  getOrientation: () => ({
+    phi: get().phi,
+    theta: get().theta,
+  }),
 
-  // Update roll
-  setRoll: (roll) => set({ roll }),
+  getPositionState: () => ({
+    zoom: get().zoom,
+    target: get().target.clone(),
+    phi: get().phi,
+    theta: get().theta,
+  }),
 
-  // Update target
-  setTarget: (target) => set({ target }),
+  // --- Deprecated actions/state (to be removed after confirming they are not used elsewhere) ---
+  // setPosition: (position) => console.warn('setPosition is deprecated'),
+  // setTilt: (tilt) => console.warn('setTilt is deprecated'),
+  // setYaw: (yaw) => console.warn('setYaw is deprecated'),
+  // setRoll: (roll) => console.warn('setRoll is deprecated'),
+  // setOrientation: (orientationUpdate) => console.warn('setOrientation (old) is deprecated'),
+  // restoreState: (state) => console.warn('restoreState is deprecated'),
+}));
 
-  // Action to set multiple orientation parameters at once
-  setOrientation: (orientationUpdate) => set((state) => ({
-    tilt: orientationUpdate.tilt !== undefined ? orientationUpdate.tilt : state.tilt,
-    yaw: orientationUpdate.yaw !== undefined ? orientationUpdate.yaw : state.yaw,
-    roll: orientationUpdate.roll !== undefined ? orientationUpdate.roll : state.roll,
-  })),
-
-  // Restore full state (e.g., on view switch)
-  restoreState: (state) => set({ ...state }),
-})); 
+export default useCameraStore; 

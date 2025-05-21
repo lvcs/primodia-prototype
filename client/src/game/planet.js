@@ -2,7 +2,7 @@
 // Planet generation, display, color updates, and rotation logic 
 import * as THREE from 'three';
 import { debug, error } from './utils/debug.js';
-import * as Const from '@config/gameConstants.js'; // Adjusted path
+import * as Const from '@config/gameConfig.js'; // Adjusted path
 import { sphereSettings } from './world/planetSphereVoronoi.js'; 
 import { generateWorld } from './world/worldGenerator.js';
 import { Terrains, getColorForTerrain } from './world/registries/TerrainRegistry.js';

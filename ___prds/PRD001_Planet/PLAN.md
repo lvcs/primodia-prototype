@@ -53,4 +53,4 @@
 
 ### Camera Far Plane Clipping Issue
 - **Problem:** After scaling the planet to 6400 km, the camera's far clipping plane (CAMERA_FAR_PLANE) was set to 1000, causing the planet and glow to be clipped when zooming out beyond ~7400 units.
-- **Solution:** Increased CAMERA_FAR_PLANE to 100,000 in gameConstants.js, allowing the camera to zoom out far enough to view the entire planet and its glow without obstruction. 
+- **Solution:** Increased CAMERA_FAR_PLANE to 100,000 in gameConfig.js, allowing the camera to zoom out far enough to view the entire planet and its glow without obstruction. 

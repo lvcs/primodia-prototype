@@ -8,7 +8,7 @@ import {
   DrawMode,
   defaultMapType,
   DEFAULT_VIEW_MODE
-} from '@config/gameConstants';
+} from '@config/gameConfig';
 
 // Import the actual game functions
 import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '@game/game';

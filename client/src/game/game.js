@@ -8,9 +8,9 @@ import { Terrains } from './world/registries/TerrainRegistry.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './utils/debug.js';
 import RandomService from './core/RandomService.js'; 
-import * as Const from '@config/gameConstants'; // Corrected path
-import { DrawMode } from '../config/gameConstants.js'; // Added direct import for DrawMode
-// import { getActionForKey, Actions } from '../config/keybindings.js'; // Corrected path if used
+import * as Const from '@config/gameConfig'; // Corrected path
+import { DrawMode } from '../config/gameConfig.js'; // Added direct import for DrawMode
+// import { getActionForKey, Actions } from '../config/keyboardConfig.js'; // Corrected path if used
 
 // Import store safely at the top
 import { useWorldStore } from '@stores';

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DEFAULT_ANIMATION_DURATION_MS, DEFAULT_EASING_CURVE } from '@config/cameraParameters';
+import { DEFAULT_ANIMATION_DURATION_MS, DEFAULT_EASING_CURVE } from '@config/cameraConfig';
 
 /**
  * Base class for camera controllers.

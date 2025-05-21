@@ -1,8 +1,11 @@
 import * as THREE from 'three';
+import { throttle } from 'lodash';
 import { GlobeCameraController } from './GlobeCameraController.js';
 import { TileCameraController } from './TileCameraController.js';
-import { CAMERA_VIEWS } from '@config/cameraParameters.js';
+import { CAMERA_VIEWS } from '@config/cameraConfig.js';
 import { useCameraStore } from '@stores';
+
+const ORBIT_CONTROLS_CHANGE_THROTTLE_MS = 100; // Throttle updates from orbit controls
 
 /**
  * Camera manager that delegates to Globe and Tile controllers.
@@ -32,27 +35,63 @@ export class Camera {
     // Create a controller for tile view
     this.tileController = new TileCameraController(threeJsCamera, globeRadius);
 
+    
     // Restore state from UI store or use default
-    const { viewMode, position, zoom, tilt, target } = useCameraStore.getState();
+    const { viewMode, position /*, zoom, tilt, target */ } = useCameraStore.getState();
     this.cameraMode = viewMode;
-    this.tileTarget = target;
+    // this.tileTarget = target; // tileTarget is set by setMode or animateToTile
     if (position) this.threeJsCamera.position.set(position.x, position.y, position.z);
-    if (zoom && 'zoom' in this.threeJsCamera) {
-      this.threeJsCamera.zoom = zoom;
-      this.threeJsCamera.updateProjectionMatrix();
+    
+    // Ensure PerspectiveCamera.zoom is 1. It's not for distance.
+    if ('zoom' in this.threeJsCamera) {
+        if (this.threeJsCamera.zoom !== 1) {
+            this.threeJsCamera.zoom = 1;
+            this.threeJsCamera.updateProjectionMatrix();
+        }
+    } else {
+        // If it's not a PerspectiveCamera or CombinedCamera with a .zoom, this won't apply
+        // but it's good practice to be aware.
     }
+
     // Optionally set tilt if needed
+
+    // Listen to orbitControls changes to update the store
+    if (this.orbitControls) {
+      this.throttledUpdateStoreFromOrbitControls = throttle(() => {
+        // We call _updateCameraStoreState without explicitDistance, 
+        // so it calculates distance from current orbitControls state.
+        this._updateCameraStoreState(); 
+      }, ORBIT_CONTROLS_CHANGE_THROTTLE_MS);
+
+      this.orbitControls.addEventListener('change', this.throttledUpdateStoreFromOrbitControls);
+    }
   }
 
-  _updateCameraStoreState(targetCenter = null, explicitZoom = null) {
+  // Method to clean up the event listener when Camera instance is no longer needed
+  dispose() {
+    if (this.orbitControls && this.throttledUpdateStoreFromOrbitControls) {
+      this.orbitControls.removeEventListener('change', this.throttledUpdateStoreFromOrbitControls);
+      this.throttledUpdateStoreFromOrbitControls.cancel(); // Cancel any pending throttled calls
+    }
+  }
+
+  _updateCameraStoreState(targetCenter = null, explicitDistance = null) {
     const cameraStore = useCameraStore.getState();
     const position = this.threeJsCamera.position;
     cameraStore.setPosition({ x: position.x, y: position.y, z: position.z });
 
-    if (explicitZoom !== null && 'zoom' in this.threeJsCamera) {
-      cameraStore.setZoom(explicitZoom);
-    } else if ('zoom' in this.threeJsCamera) { // Fallback if no explicit zoom given
-      cameraStore.setZoom(this.threeJsCamera.zoom);
+    let currentDistance;
+    if (this.orbitControls && typeof this.orbitControls.getDistance === 'function') {
+      currentDistance = this.orbitControls.getDistance();
+    } else {
+      // Fallback: calculate distance from camera position to orbitControls target (usually 0,0,0 for globe)
+      currentDistance = this.threeJsCamera.position.distanceTo(this.orbitControls.target || new THREE.Vector3(0,0,0));
+    }
+
+    if (explicitDistance !== null) {
+      cameraStore.setZoom(explicitDistance); // Use explicitDistance for zoom
+    } else {
+      cameraStore.setZoom(currentDistance); // Use calculated/actual distance for zoom
     }
 
     cameraStore.setTilt(this.getTilt());
@@ -92,7 +131,7 @@ export class Camera {
     // Delegate the animation to the globe controller
     this.globeController.animateToGlobe(() => {
       // Update UI store with new camera state
-      this._updateCameraStoreState(null, 1.0); // Globe view, explicit zoom 1.0
+      this._updateCameraStoreState(null, CAMERA_VIEWS.globe.defaultPosition.y); // Globe view, use defined constant
       if (onComplete) onComplete();
     });
   }
@@ -109,7 +148,7 @@ export class Camera {
     // Delegate the animation to the tile controller
     this.tileController.animateToTile(tile, () => {
       // Update UI store with new camera state
-      this._updateCameraStoreState(tileCenter, 1.0); // Tile view, explicit zoom 1.0
+      this._updateCameraStoreState(tileCenter, CAMERA_VIEWS.tile.defaultDistance); // Tile view, use defined constant
       if (onComplete) onComplete();
     });
   }

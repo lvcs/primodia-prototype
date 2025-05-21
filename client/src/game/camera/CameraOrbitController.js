@@ -1,19 +1,35 @@
 import * as THREE from 'three';
+import { throttle } from 'lodash';
+import { useCameraStore } from '@stores/cameraStore';
+
+const DEBOUNCE_ZOOM_UPDATE_MS = 100; //ms
 
 class CameraOrbitController {
     /**
      * @param {THREE.Camera} camera - The camera to control.
+     * @param {THREE.OrbitControls} threeOrbitControls - The main OrbitControls instance.
      * @param {number} radius - Initial distance from the globe center.
      * @param {number} phi - Initial polar angle (vertical, 0 = up, PI = down).
      * @param {number} theta - Initial azimuthal angle (horizontal, 0 = +X).
      */
-    constructor(camera, radius, phi, theta) {
+    constructor(camera, threeOrbitControls, radius, phi, theta) {
         this.camera = camera;
+        this.threeOrbitControls = threeOrbitControls; // Store the OrbitControls instance
         this.radius = radius;
         this.phi = phi;
         this.theta = theta;
         this.target = new THREE.Vector3(0, 0, 0); // Always look at globe center
         this.updateCamera();
+
+        // Get the setZoom action from the store
+        this._setStoreZoom = useCameraStore.getState().setZoom;
+        // Create a throttled version for performance
+        this.throttledSetStoreZoom = throttle((newRadius) => {
+            this._setStoreZoom(newRadius);
+        }, DEBOUNCE_ZOOM_UPDATE_MS);
+
+        // Initial sync
+        this.throttledSetStoreZoom(this.radius);
     }
 
     setSpherical(radius, phi, theta) {
@@ -35,6 +51,11 @@ class CameraOrbitController {
         this.camera.position.set(x, y, z);
         this.camera.up.set(0, 1, 0);
         this.camera.lookAt(this.target);
+
+        // Inform the main OrbitControls to update its internal state
+        if (this.threeOrbitControls) {
+            this.threeOrbitControls.update();
+        }
     }
 
     // Optionally, methods to increment angles
@@ -48,6 +69,7 @@ class CameraOrbitController {
     zoom(deltaRadius) {
         this.radius = Math.max(1, this.radius + deltaRadius); // prevent negative/zero radius
         this.updateCamera();
+        this.throttledSetStoreZoom(this.radius); // Update store on zoom change
     }
 }
 

@@ -1,4 +1,6 @@
-// client/src/config/cameraParameters.js
+// Camera Distance Constants
+export const GLOBE_VIEW_CAMERA_DISTANCE = 16000;
+export const TILE_VIEW_CAMERA_DISTANCE = 9600;
 
 // Easing functions
 export const CAMERA_EASINGS = {
@@ -14,7 +16,7 @@ export const DEFAULT_EASING_CURVE = CAMERA_EASINGS.easeInOutCubic;
 export const CAMERA_VIEWS = {
   globe: {
     label: 'Globe',
-    defaultPosition: { x: 0, y: 16000, z: 0 }, // 16,000 units above the center (0,0,0)
+    defaultPosition: { x: 0, y: GLOBE_VIEW_CAMERA_DISTANCE, z: 0 }, // Use the constant
     defaultTilt: 30, // Degrees
     animation: {
       durationMs: 1500, // Can override DEFAULT_ANIMATION_DURATION_MS
@@ -24,7 +26,7 @@ export const CAMERA_VIEWS = {
   },
   tile: {
     label: 'Tile',
-    defaultDistance: 6800, // Distance from center in units
+    defaultDistance: TILE_VIEW_CAMERA_DISTANCE, // Use the constant
     defaultTilt: 60, // Degrees
     animation: {
       durationMs: 1200, // Can override DEFAULT_ANIMATION_DURATION_MS

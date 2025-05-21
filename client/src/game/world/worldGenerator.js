@@ -7,7 +7,7 @@ import { getColorForTemperature } from './registries/TemperatureRegistry.js';
 import { getColorForMoisture } from './registries/MoistureRegistry.js';
 import { generatePlates } from './platesGenerator.js';
 import RandomService from '@game/core/RandomService';
-import * as Const from '@config/gameConstants';
+import * as Const from '@config/gameConfig';
 
 // All radius values are now in kilometers (1 unit = 1 km)
 

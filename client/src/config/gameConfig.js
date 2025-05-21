@@ -66,10 +66,13 @@ export const KEYBOARD_TARGET_ANGULAR_SPEED = 0.0075; // Target angular speed (ra
 export const KEYBOARD_ROTATION_ACCELERATION_FACTOR = 0.1; // How quickly globe reaches target speed from keyboard (0-1)
 export const MOUSE_RELEASE_INERTIA_FACTOR = 30.0; // Multiplier for mouse delta to initial angular velocity on release 
 
-// Tile View Angle
-export const TILE_VIEW_TILT_ANGLE = -Math.PI / 4; // -45 degrees 
-export const TILE_VIEW_SPHERE_DISTANCE = 16000; // Distance from globe center for tile view (2.5x radius)
-export const TILE_VIEW_ZOOM = 1.0; // Default zoom level for tile view 
+// Tile View
+// export const TILE_VIEW_CAMERA_DISTANCE = 6800; // Moved to cameraConfig.js
+
+// Globe View
+// export const GLOBE_VIEW_CAMERA_DISTANCE = 16000; // Moved to cameraConfig.js
+
+
 
 // UI Specific Constants
 export const DrawMode = {

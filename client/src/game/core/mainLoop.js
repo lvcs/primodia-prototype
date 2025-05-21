@@ -3,16 +3,14 @@ import * as THREE from 'three';
 import { handleKeyboardInput } from '@game/controls/keyboardControls.js'; 
 // Adjust path for planet.js
 import { getPlanetGroup, getWorldData } from '@game/planet.js'; 
-// updateComponentUIDisplay from old CameraControlsSection is obsolete with React UI
-// import { updateCameraControlsUI as updateComponentUIDisplay } from '@/ui/components/CameraControlsSection.js'; 
 // Adjust path for debug.js and ensure its update... functions are safe (console.log or store update)
 import { updateCameraDebugInfo, updateGlobeDebugInfo } from '@game/utils/debug.js';
 // Adjust path for planetSphereVoronoi.js
 import { sphereSettings } from '@game/world/planetSphereVoronoi.js';
 // Imports from ./setup.js are correct as it's a sibling
 import { getCamera, getRenderer, getScene, getControls } from './setup.js'; 
-// Adjust path for gameConstants.js
-import * as Const from '@config/gameConstants.js';
+// Adjust path for gameConfig.js
+import * as Const from '@config/gameConfig.js';
 
 // Import the new debug store for updating debug info from the main loop
 import { useDebugStore } from '@stores';

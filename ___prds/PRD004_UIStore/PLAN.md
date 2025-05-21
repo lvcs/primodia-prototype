@@ -51,7 +51,7 @@ The chosen approach is to follow the specifications in `Requirements.md`, levera
     - [x] Export as `useCameraUIStore`.
     - [x] Update imports where `cameraUIStore` was used (handled by new relative path).
 - [x] Create `client/src/stores/worldSettingsStore.js` for `sphereSettings` management.
-    - [x] Define initial state based on `sphereSettings` from `planetSphereVoronoi.js` and `gameConstants.js`.
+    - [x] Define initial state based on `sphereSettings` from `planetSphereVoronoi.js` and `gameConfig.js`.
     - [x] Implement actions for each setting (e.g., `setNumPoints`, `setJitter`, `setMapType`).
     - [x] Actions should call `requestPlanetRegeneration()` or `triggerPlanetColorUpdate()` as appropriate (mocked for now).
 - [x] Export `useWorldSettingsStore` from `client/src/stores/index.js`.

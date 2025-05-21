@@ -2,7 +2,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // Adjust path for Const if it moves to client/src/config
-import * as Const from '../../config/gameConstants.js'; 
+import * as ConstFromGameConfig from '../../config/gameConfig.js'; // Renamed to avoid conflict
+import { GLOBE_VIEW_CAMERA_DISTANCE } from '../../config/cameraConfig.js'; // Import specific constant
 // Adjust path for debug if it moves
 import { debug } from '../utils/debug.js'; 
 
@@ -14,12 +15,12 @@ export function setupThreeJS(canvasElement) {
     throw new Error("setupThreeJS requires a canvasElement argument.");
   }
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(Const.SCENE_BACKGROUND_COLOR);
+  scene.background = new THREE.Color(ConstFromGameConfig.SCENE_BACKGROUND_COLOR);
   
   // Use canvas dimensions for aspect ratio initially, but it should adapt on resize
   const aspectRatio = canvasElement.clientWidth / canvasElement.clientHeight;
-  camera = new THREE.PerspectiveCamera(Const.CAMERA_FOV, aspectRatio, Const.CAMERA_NEAR_PLANE, Const.CAMERA_FAR_PLANE);
-  camera.position.set(0, 0, 16000); 
+  camera = new THREE.PerspectiveCamera(ConstFromGameConfig.CAMERA_FOV, aspectRatio, ConstFromGameConfig.CAMERA_NEAR_PLANE, ConstFromGameConfig.CAMERA_FAR_PLANE);
+  camera.position.set(0, 0, GLOBE_VIEW_CAMERA_DISTANCE); // Use the constant for Z distance
   camera.lookAt(0, 0, 0);
   
   renderer = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true, alpha: true });
@@ -34,8 +35,8 @@ export function setupThreeJS(canvasElement) {
 
 export function setupInitialWorldConfig() {
   worldConfig = {
-    radius: Const.GLOBE_RADIUS,
-    detail: Const.DEFAULT_WORLD_DETAIL,
+    radius: ConstFromGameConfig.GLOBE_RADIUS,
+    detail: ConstFromGameConfig.DEFAULT_WORLD_DETAIL,
   };
   debug('Initial worldConfig set:', worldConfig);
   return worldConfig;
@@ -62,15 +63,15 @@ export function setupOrbitControls(_camera, _renderer, _worldConfig) {
   controls = new OrbitControls(_camera, _renderer.domElement);
   controls.enableDamping = true;
   controls.enablePan = false;
-  controls.minDistance = _worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
-  controls.maxDistance = _worldConfig.radius * Const.CAMERA_MAX_DISTANCE_FACTOR;
+  controls.minDistance = _worldConfig.radius * ConstFromGameConfig.CAMERA_MIN_DISTANCE_FACTOR;
+  controls.maxDistance = _worldConfig.radius * ConstFromGameConfig.CAMERA_MAX_DISTANCE_FACTOR;
   controls.minPolarAngle = 0;
   controls.maxPolarAngle = Math.PI;
 
   _camera.position.set(
     0,
-    _worldConfig.radius * Const.CAMERA_INITIAL_POS_Y_FACTOR,
-    _worldConfig.radius * Const.CAMERA_INITIAL_POS_Z_FACTOR
+    _worldConfig.radius * ConstFromGameConfig.CAMERA_INITIAL_POS_Y_FACTOR,
+    _worldConfig.radius * ConstFromGameConfig.CAMERA_INITIAL_POS_Z_FACTOR
   );
   controls.target.set(0, 0, 0);
   controls.update();

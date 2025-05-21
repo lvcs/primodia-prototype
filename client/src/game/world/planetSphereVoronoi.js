@@ -5,8 +5,8 @@ import { debug } from '@game/utils/debug';
 import { terrainById, Terrains } from './registries/TerrainRegistry.js';
 import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
-import * as Const from '@config/gameConstants'; // Import constants
-import { DrawMode } from '../../config/gameConstants.js'; // CORRECTED PATH
+import * as Const from '@config/gameConfig'; // Import constants
+import { DrawMode } from '../../config/gameConfig.js'; // CORRECTED PATH
 import RandomService from '../core/RandomService.js'; // Added import
 
 // All radius values are now in kilometers (1 unit = 1 km)
