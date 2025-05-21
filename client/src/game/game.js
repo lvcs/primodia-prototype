@@ -13,7 +13,7 @@ import { DrawMode } from '../config/gameConstants.js'; // Added direct import fo
 // import { getActionForKey, Actions } from '../config/keybindings.js'; // Corrected path if used
 
 // Import store safely at the top
-import { useWorldSettingsStore } from '@stores/worldSettingsStore';
+import { useWorldStore } from '@stores';
 
 // Import new control modules
 import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';
@@ -166,7 +166,7 @@ export function requestPlanetRegeneration(seed, worldSettings) {
     try {
       // Use a setTimeout to avoid any circular dependency issues
       setTimeout(() => {
-        const { setCurrentSeed } = useWorldSettingsStore.getState();
+        const { setCurrentSeed } = useWorldStore.getState();
         if (setCurrentSeed) {
           console.log('Updating store with actual seed:', result.actualSeed);
           setCurrentSeed(result.actualSeed);

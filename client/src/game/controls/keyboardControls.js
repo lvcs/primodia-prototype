@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import * as Const from '@config/gameConstants.js';
 import { getActionForKey, Actions } from '@config/keybindings.js';
-import CameraOrbitController from './CameraOrbitController.js';
 
 // --- State ---
 const activeKeys = new Set();

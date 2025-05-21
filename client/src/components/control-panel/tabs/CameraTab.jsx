@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { useCameraUIStore, useWorldSettingsStore } from '@stores';
+import { useCameraStore, useWorldStore } from '@stores';
 import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
 
@@ -22,7 +22,7 @@ function CameraTab() {
     setZoom,
     setYaw,
     setRoll,
-  } = useCameraUIStore((state) => ({
+  } = useCameraStore((state) => ({
     target: state.target, // { x, y, z } or null
     zoom: state.zoom,
     yaw: state.yaw, // radians
@@ -33,7 +33,7 @@ function CameraTab() {
     setRoll: state.setRoll,
   }));
 
-  const worldRadius = useWorldSettingsStore((state) => state.worldRadius) || DEFAULT_WORLD_RADIUS;
+  const worldRadius = useWorldStore((state) => state.worldRadius) || DEFAULT_WORLD_RADIUS;
   
   const currentTarget = target || { x: 0, y: 0, z: 0 };
 

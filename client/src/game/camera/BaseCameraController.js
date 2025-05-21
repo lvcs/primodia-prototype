@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ANIMATION_DURATION_MS, EASING_CURVE } from './cameraConfig';
+import { DEFAULT_ANIMATION_DURATION_MS, DEFAULT_EASING_CURVE } from '@config/cameraParameters';
 
 /**
  * Base class for camera controllers.
@@ -18,13 +18,34 @@ export class BaseCameraController {
     this.globeRadius = globeRadius;
     // Store animation configuration
     this.config = {
-      ANIMATION_DURATION_MS,
-      EASING_CURVE,
+      ANIMATION_DURATION_MS: DEFAULT_ANIMATION_DURATION_MS,
+      EASING_CURVE: DEFAULT_EASING_CURVE,
     };
     // Track if the camera is currently animating
     this.isAnimating = false;
     // Store the animation frame ID for cancelling if needed
     this.animationFrameId = null;
+  }
+
+  _performAnimationStep(startPos, endPos, startTarget, endTarget, startUp, endUp, duration, easing, startTime, onUpdate, onComplete) {
+    const elapsed = Date.now() - startTime;
+    let progress = Math.min(elapsed / duration, 1);
+    const easedProgress = easing(progress);
+
+    const pos = startPos.clone().lerp(endPos, easedProgress);
+    const target = startTarget.clone().lerp(endTarget, easedProgress);
+    const up = startUp.clone().lerp(endUp, easedProgress);
+
+    if (onUpdate) onUpdate(pos, target, up);
+
+    if (progress < 1) {
+      this.animationFrameId = requestAnimationFrame(() => this._performAnimationStep(startPos, endPos, startTarget, endTarget, startUp, endUp, duration, easing, startTime, onUpdate, onComplete));
+    } else {
+      this.isAnimating = false;
+      this.animationFrameId = null;
+      if (onUpdate) onUpdate(endPos, endTarget, endUp); // Ensure final state
+      if (onComplete) onComplete(true);
+    }
   }
 
   /**
@@ -65,36 +86,7 @@ export class BaseCameraController {
     const easing = this.config.EASING_CURVE;
     // Mark that the camera is animating
     this.isAnimating = true;
-    // Define the function that will be called every animation frame
-    const animateStep = () => {
-      // Calculate how much time has passed since the animation started
-      const elapsed = Date.now() - startTime;
-      // Calculate the progress as a value between 0 (start) and 1 (end)
-      let progress = Math.min(elapsed / duration, 1);
-      // Apply the easing function to make the animation feel smooth
-      const easedProgress = easing(progress);
-      // Interpolate (blend) between the start and end positions
-      const pos = startPos.clone().lerp(endPos, easedProgress);
-      // Interpolate between the start and end targets
-      const target = startTarget.clone().lerp(endTarget, easedProgress);
-      // Interpolate between the start and end up vectors
-      const up = startUp.clone().lerp(endUp, easedProgress);
-      // Call the onUpdate function to update the camera's state
-      if (onUpdate) onUpdate(pos, target, up);
-      // If the animation is not finished, request the next animation frame
-      if (progress < 1) {
-        this.animationFrameId = requestAnimationFrame(animateStep);
-      } else {
-        // Animation is finished
-        this.isAnimating = false;
-        this.animationFrameId = null;
-        // Ensure the camera is set to the final state
-        if (onUpdate) onUpdate(endPos, endTarget, endUp);
-        // Call the onComplete callback if provided
-        if (onComplete) onComplete(true);
-      }
-    };
-    // Start the animation
-    this.animationFrameId = requestAnimationFrame(animateStep);
+
+    this._performAnimationStep(startPos, endPos, startTarget, endTarget, startUp, endUp, duration, easing, startTime, onUpdate, onComplete);
   }
 } 

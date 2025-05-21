@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GlobeCameraController } from './GlobeCameraController.js';
 import { TileCameraController } from './TileCameraController.js';
-import { CAMERA_VIEWS } from '../config/cameraViewsConfig.js';
-import { useCameraUIStore } from '../stores';
+import { CAMERA_VIEWS } from '@config/cameraParameters.js';
+import { useCameraStore } from '@stores';
 
 /**
  * Camera manager that delegates to Globe and Tile controllers.
@@ -33,7 +33,7 @@ export class Camera {
     this.tileController = new TileCameraController(threeJsCamera, globeRadius);
 
     // Restore state from UI store or use default
-    const { viewMode, position, zoom, tilt, target } = useCameraUIStore.getState();
+    const { viewMode, position, zoom, tilt, target } = useCameraStore.getState();
     this.cameraMode = viewMode;
     this.tileTarget = target;
     if (position) this.threeJsCamera.position.set(position.x, position.y, position.z);
@@ -42,6 +42,26 @@ export class Camera {
       this.threeJsCamera.updateProjectionMatrix();
     }
     // Optionally set tilt if needed
+  }
+
+  _updateCameraStoreState(targetCenter = null, explicitZoom = null) {
+    const cameraStore = useCameraStore.getState();
+    const position = this.threeJsCamera.position;
+    cameraStore.setPosition({ x: position.x, y: position.y, z: position.z });
+
+    if (explicitZoom !== null && 'zoom' in this.threeJsCamera) {
+      cameraStore.setZoom(explicitZoom);
+    } else if ('zoom' in this.threeJsCamera) { // Fallback if no explicit zoom given
+      cameraStore.setZoom(this.threeJsCamera.zoom);
+    }
+
+    cameraStore.setTilt(this.getTilt());
+    if (targetCenter) {
+      cameraStore.setTarget({ x: targetCenter.x, y: targetCenter.y, z: targetCenter.z });
+    } else if (this.cameraMode === 'globe') { // Clear target if in globe mode and no specific target given
+      cameraStore.setTarget(null);
+    }
+    // If in tile mode, the target should already be set by setMode or animateToTile's direct call before animation
   }
 
   /**
@@ -54,11 +74,11 @@ export class Camera {
     this.cameraMode = mode;
     // If in tile mode and a tile center is provided, store a copy of it; otherwise, clear the tile target
     this.tileTarget = (mode === 'tile' && tileCenter) ? tileCenter.clone() : null;
-    useCameraUIStore.getState().setViewMode(mode);
+    useCameraStore.getState().setViewMode(mode);
     if (mode === 'tile' && tileCenter) {
-      useCameraUIStore.getState().setTarget({ x: tileCenter.x, y: tileCenter.y, z: tileCenter.z });
+      useCameraStore.getState().setTarget({ x: tileCenter.x, y: tileCenter.y, z: tileCenter.z });
     } else {
-      useCameraUIStore.getState().setTarget(null);
+      useCameraStore.getState().setTarget(null);
     }
   }
 
@@ -72,10 +92,7 @@ export class Camera {
     // Delegate the animation to the globe controller
     this.globeController.animateToGlobe(() => {
       // Update UI store with new camera state
-      const pos = this.threeJsCamera.position;
-      useCameraUIStore.getState().setPosition({ x: pos.x, y: pos.y, z: pos.z });
-      if ('zoom' in this.threeJsCamera) useCameraUIStore.getState().setZoom(this.threeJsCamera.zoom);
-      useCameraUIStore.getState().setTilt(this.getTilt());
+      this._updateCameraStoreState(null, 1.0); // Globe view, explicit zoom 1.0
       if (onComplete) onComplete();
     });
   }
@@ -92,11 +109,7 @@ export class Camera {
     // Delegate the animation to the tile controller
     this.tileController.animateToTile(tile, () => {
       // Update UI store with new camera state
-      const pos = this.threeJsCamera.position;
-      useCameraUIStore.getState().setPosition({ x: pos.x, y: pos.y, z: pos.z });
-      if ('zoom' in this.threeJsCamera) useCameraUIStore.getState().setZoom(this.threeJsCamera.zoom);
-      useCameraUIStore.getState().setTilt(this.getTilt());
-      useCameraUIStore.getState().setTarget({ x: tileCenter.x, y: tileCenter.y, z: tileCenter.z });
+      this._updateCameraStoreState(tileCenter, 1.0); // Tile view, explicit zoom 1.0
       if (onComplete) onComplete();
     });
   }

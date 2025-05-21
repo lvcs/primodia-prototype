@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import zukeeper from 'zukeeper';
 
-import { CAMERA_VIEWS } from '@config/cameraViewsConfig'; // Updated import path
+import { CAMERA_VIEWS } from '@config/cameraParameters';
 
 // Default state for each view
 const getDefaultState = (view = 'globe') => {
@@ -17,7 +16,7 @@ const getDefaultState = (view = 'globe') => {
   };
 };
 
-export const useCameraUIStore = create((set, get) => ({
+export const useCameraStore = create((set, get) => ({
   ...getDefaultState(),
 
   // Switch view mode and reset to default for that view

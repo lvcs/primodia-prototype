@@ -6,7 +6,7 @@ import { Slider } from '@components/ui/Slider';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@components/ui/Select';
 import { Switch } from '@components/ui/Switch';
 import { Input } from '@components/ui/Input';
-import { useWorldSettingsStore } from '@stores/worldSettingsStore';
+import { useWorldStore } from '@stores';
 
 // Import constants for slider ranges
 import {
@@ -61,7 +61,7 @@ function GlobeTab() {
     elevationBias, setElevationBias,
     currentSeed, setCurrentSeed, regenerateWorldWithCurrentSettings,
     viewMode, setViewMode,
-  } = useWorldSettingsStore();
+  } = useWorldStore();
 
   // Local state for the seed input field, as it might differ from committed store seed until 'Regenerate' is clicked
   const [worldSeedInput, setWorldSeedInput] = React.useState(currentSeed || '');

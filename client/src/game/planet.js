@@ -219,7 +219,7 @@ export function updatePlanetColors() {
        rgb = [tempColor.r, tempColor.g, tempColor.b];
     } else if (sphereSettings.viewMode === 'temperature') {
         // Assuming worldData and worldData.globe are accessible here, or tile data is on mainMesh.userData
-        const tileData = worldData?.cells?.find(cell => cell.id === tId); // Example: find cell by ID
+        const tileData = worldData?.globe?.getTile(tId); // Example: find cell by ID
         if (tileData && tileData.temperature !== undefined) { // Adjust based on actual data structure
             tempColor.setHex(getColorForTemperature(tileData.temperature));
             rgb = [tempColor.r, tempColor.g, tempColor.b];

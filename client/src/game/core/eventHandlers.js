@@ -9,17 +9,17 @@ import { classifyTerrain } from '@game/world/planetSphereVoronoi';
 import { initMouseControls, disposeMouseControls } from '@game/controls/mouseControls'; 
 // Adjust path for keyboardControls.js, assuming it will be in client/src/game/controls/
 import { initKeyboardControls, disposeKeyboardControls } from '@game/controls/keyboardControls'; 
-// Adjust path for CameraOrbitController.js, assuming it will be in client/src/game/controls/
-import CameraOrbitController from '@game/controls/CameraOrbitController';
-
+// Import useDebugStore
+import { useDebugStore } from '@/stores';
 // Import getters for shared state - these are fine as they are in the same directory (core)
 import { getCamera, getRenderer, getWorldConfig, getControls } from './setup.js'; 
 // Adjust path for planet.js, assuming it will be in client/src/game/
 import { getPlanetGroup, getWorldData } from '@game/planet'; 
 import RandomService from './RandomService.js';
-// Adjust path for Camera.js, assuming it will be in client/src/camera/
+// Adjust path for Camera.js, assuming it will be in client/src/game/camera/
 // This might need to be a new React-based camera control system or store interaction later.
-import { Camera } from '@/camera/Camera'; 
+import { Camera } from '@/game/camera/Camera'; 
+import CameraOrbitController from '@/game/camera/CameraOrbitController';
 
 const HIGHLIGHT_SCALE_FACTOR = 1.003;
 const MAX_DRAG_DIST_FOR_CLICK = 10; 
@@ -194,6 +194,7 @@ export function setupRootEventListeners(canvasElement) { // canvasElement is ren
 
             const clickedTileForUI = wData.globe.getTile(tileId);
             const areaForUI = clickedTileForUI?.area !== undefined ? clickedTileForUI.area.toFixed(4) + ' km²' : 'N/A';
+            const temperatureForUI = clickedTileForUI?.temperature !== undefined ? clickedTileForUI.temperature.toFixed(2) : 'N/A';
             const currentSeed = RandomService.getCurrentSeed(); 
             const tileInfoHtml =
                 `Seed: ${currentSeed === undefined ? 'N/A' : currentSeed}<br>` +
@@ -204,6 +205,7 @@ export function setupRootEventListeners(canvasElement) { // canvasElement is ren
                 `Area: ${areaForUI}<br>` +
                 `Elev: ${elevation?.toFixed(2)}<br>` +
                 `Moist: ${moisture?.toFixed(2)}<br>` +
+                `Temp: ${temperatureForUI}<br>` +
                 `Lat: ${lat.toFixed(2)}°<br>` +
                 `Lon: ${lon.toFixed(2)}°`;
             

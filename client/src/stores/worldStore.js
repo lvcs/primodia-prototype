@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import zukeeper from 'zukeeper';
 
 import {
   DEFAULT_NUMBER_OF_GLOBE_TILES,
@@ -32,7 +31,7 @@ const initialWorldSettings = {
   currentSeed: generateDefaultSeed(), // Use a timestamp-based seed by default
 };
 
-export const useWorldSettingsStore = create(zukeeper((set, get) => ({
+export const useWorldStore = create((set, get) => ({
   ...initialWorldSettings,
 
   // Actions to update settings
@@ -107,4 +106,4 @@ export const useWorldSettingsStore = create(zukeeper((set, get) => ({
 
   // Full reset action (optional)
   resetWorldSettings: () => set(initialWorldSettings),
-}))); 
+})); 

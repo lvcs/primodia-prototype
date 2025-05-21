@@ -1,14 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
-import { useUIStore } from './stores'; // Imports from stores/index.js
+import { 
+  useUIStore, 
+  useCameraStore, 
+  useWorldStore, 
+  useDebugStore, 
+  useAuthStore 
+} from './stores';
 import "./index.css"; // Import Tailwind CSS
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 
-// Expose the UI store to the window in development mode
+// Expose all stores to the window in development mode
 if (import.meta.env.DEV) {
   window.uiStore = useUIStore;
+  window.cameraStore = useCameraStore;
+  window.worldStore = useWorldStore;
+  window.debugStore = useDebugStore;
+  window.authStore = useAuthStore;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

@@ -24,11 +24,16 @@ This file outlines rules and guidelines applicable across the entire monorepo.
 
 # Root Directory Structure
 primodia/
-├── client/               # Frontend, 
-│   ├── src/
-│   │   ├── components/   # Components used in the game UI
-│   │   ├── config/       # Configuration files
-│   │   └── stores/       # State management stores
+├── client/               # Frontend
+│   ├── src/              # @ vite alias
+│   │   ├── components/   # Components used in the game UI; @components alias
+│   │   ├── config/       # Configuration files; @config alias
+│   │   ├── game/         # Game files; @game alias
+│   │   ├── hooks/        # React or Zustand hooks; @hooks alias
+│   │   ├── pages/        # Pages; @pages alias
+│   │   ├── styles/       # CSS Styles; @styles alias
+│   │   ├── stores/       # State management stores; @stores alias
+│   │   └── utils/        # Shared client utils; @utils alias
 ├── server/               # Backend
 │   ├── controllers/      # Request handlers
 │   ├── routes/           # API routes
@@ -74,7 +79,7 @@ primodia/
 - Consistent Coding Style: Adhere to established project style guidelines to maintain consistency and readability.
 - Avoid Magic Numbers: Replace hardcoded numbers with named constants.
 - Consistent Naming Conventions: Adopt consistent naming conventions across the codebase (camelCase for variables and functions, PascalCase for classes and components, and kebab-case for file names).
-
+- Naming variables and constants: Be explicit, don't shorten the names.
 
 # Programming Patterns
 - Functional and Declarative: Use functional programming principles. Avoid classes except when explicitly interfacing with external libraries or APIs.

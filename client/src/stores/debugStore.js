@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import zukeeper from 'zukeeper';
 
-const useDebugStore = create(zukeeper((set) => ({
+const useDebugStore = create((set) => ({
   tileDebugHTML: '<p>Tile debug info will appear here.</p>',
   cameraDebugInfo: {
     // Placeholder for camera debug text or structured data
@@ -25,6 +24,6 @@ const useDebugStore = create(zukeeper((set) => ({
   setGlobeDebugInfo: (info) => set((state) => ({ globeDebugInfo: { ...state.globeDebugInfo, ...info } })),
   // action to update specific globe debug slider:
   // setGlobeDebugSlider: (sliderName, value) => set(state => ({ globeDebugInfo: { ...state.globeDebugInfo, [sliderName]: value }})),
-})));
+}));
 
 export { useDebugStore }; 

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { BaseCameraController } from './BaseCameraController.js';
-import { CAMERA_VIEWS } from '@/config/cameraViewsConfig.js';
+import { CAMERA_VIEWS } from '@config/cameraParameters.js';
 
 const GLOBE_CONFIG = CAMERA_VIEWS.globe;
 
@@ -17,6 +17,33 @@ export class GlobeCameraController extends BaseCameraController {
   constructor(threeJsCamera, globeRadius) {
     // Call the parent class constructor to set up the camera and globe radius
     super(threeJsCamera, globeRadius);
+  }
+
+  _performGlobeAnimationStep(startPos, endPos, startZoom, endZoom, duration, easing, startTime, onComplete) {
+    const elapsed = Date.now() - startTime;
+    let progress = Math.min(elapsed / duration, 1);
+    const eased = easing(progress);
+
+    // Animate position along the direction
+    const pos = startPos.clone().lerp(endPos, eased);
+    this.threeJsCamera.position.copy(pos);
+
+    // Animate zoom
+    this.threeJsCamera.zoom = startZoom + (endZoom - startZoom) * eased;
+    this.threeJsCamera.updateProjectionMatrix();
+
+    // Always look at the center
+    this.threeJsCamera.lookAt(0, 0, 0);
+
+    if (progress < 1) {
+      requestAnimationFrame(() => this._performGlobeAnimationStep(startPos, endPos, startZoom, endZoom, duration, easing, startTime, onComplete));
+    } else {
+      this.threeJsCamera.position.copy(endPos);
+      this.threeJsCamera.zoom = endZoom;
+      this.threeJsCamera.updateProjectionMatrix();
+      this.threeJsCamera.lookAt(0, 0, 0);
+      if (onComplete) onComplete();
+    }
   }
 
   /**
@@ -36,29 +63,8 @@ export class GlobeCameraController extends BaseCameraController {
     const duration = GLOBE_CONFIG.animation?.durationMs || 1000;
     const easing = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     const startTime = Date.now();
-    const animateStep = () => {
-      const elapsed = Date.now() - startTime;
-      let progress = Math.min(elapsed / duration, 1);
-      const eased = easing(progress);
-      // Animate position along the direction
-      const pos = startPos.clone().lerp(endPos, eased);
-      this.threeJsCamera.position.copy(pos);
-      // Animate zoom
-      this.threeJsCamera.zoom = startZoom + (endZoom - startZoom) * eased;
-      this.threeJsCamera.updateProjectionMatrix();
-      // Always look at the center
-      this.threeJsCamera.lookAt(0, 0, 0);
-      if (progress < 1) {
-        requestAnimationFrame(animateStep);
-      } else {
-        this.threeJsCamera.position.copy(endPos);
-        this.threeJsCamera.zoom = endZoom;
-        this.threeJsCamera.updateProjectionMatrix();
-        this.threeJsCamera.lookAt(0, 0, 0);
-        if (onComplete) onComplete();
-      }
-    };
-    animateStep();
+
+    this._performGlobeAnimationStep(startPos, endPos, startZoom, endZoom, duration, easing, startTime, onComplete);
   }
 
   /**
