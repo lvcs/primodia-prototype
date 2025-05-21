@@ -7,12 +7,12 @@ This document outlines the specifications and constraints for refactoring the ex
 - Eliminate all class-based and inheritance-based camera controllers.
 - Provide a minimal, functional interface for all camera operations, exposed via `client/src/game/camera/camera.js`.
 - The camera system within `client/src/game/camera/` will be responsible for creating and managing the `THREE.PerspectiveCamera` and `OrbitControls` instances.
-- All camera state (target, position, viewMode, isAnimating, FOV, near/far planes, up vector) will be managed within `client/src/stores/cameraStore.js` (Zustand store).
-- `OrbitControls` state (camera position, target, up vector) will be two-way synchronized with `cameraStore` by the camera system.
+- All camera state (target, position, zoom, viewMode, isAnimating, ) will be managed within `client/src/stores/cameraStore.js` (Zustand store).
+- `OrbitControls` state (camera position, target) will be two-way synchronized with `cameraStore` by the camera system.
 - The Three.js `PerspectiveCamera` instance will be configured by the camera system, driven by `cameraStore` and `OrbitControls`.
 - Leverage configuration constants from:
   - `@config/cameraConfig` (e.g. `DEFAULT_ANIMATION_DURATION_MS`, `CAMERA_EASINGS`, `CAMERA_VIEWS`)
-  - `@config/gameConfig` (e.g. `CAMERA_FOV`, `CAMERA_NEAR_PLANE`, `CAMERA_FAR_PLANE`, `GLOBE_RADIUS`, zoom factors)
+  - `@config/gameConfig` (e.g. `GLOBE_RADIUS`, zoom factors)
   - `@config/keyboardConfig` (for any keyboard-driven controls)
 - Use the `GLOBE_RADIUS` constant from `@config/gameConfig`.
 
@@ -21,7 +21,7 @@ This document outlines the specifications and constraints for refactoring the ex
 This directory will house the new functional camera logic.
 
 ### `camera.js` (Public Interface)
-Exports functions to interact with the camera system. Functions initiating animations should return a `Promise`.
+Exports functions to interact with the camera system.
 
 - `initializeCameraSystem(canvasElement: HTMLCanvasElement, initialWorldConfig: object): { camera: THREE.PerspectiveCamera, controls: OrbitControls }`
   - Creates and configures `THREE.PerspectiveCamera` and `OrbitControls`.

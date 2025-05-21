@@ -37,13 +37,14 @@ export const STEP_ELEVATION_BIAS = 0.01;
 export const DEFAULT_WORLD_DETAIL = 2; // Initial value for worldConfig.detail
 
 // Camera (from game.js)
-export const CAMERA_FOV = 60;
-export const CAMERA_NEAR_PLANE = 0.1;
-export const CAMERA_FAR_PLANE = 100000;
-export const CAMERA_MIN_DISTANCE_FACTOR = 1.02; // Min zoom distance as a factor of globe radius
-export const CAMERA_MAX_DISTANCE_FACTOR = 5;   // Max zoom distance as a factor of globe radius
+export const CAMERA_FOV = 45;
+export const CAMERA_NEAR_PLANE = 1;
+export const CAMERA_FAR_PLANE = 1000;
+export const CAMERA_MIN_DISTANCE_FROM_CENTER = GLOBE_RADIUS + 400; // Min zoom distance as a factor of globe radius
+export const CAMERA_MAX_DISTANCE_FROM_CENTER = GLOBE_RADIUS * 3;   // Max zoom distance as a factor of globe radius
 export const CAMERA_INITIAL_POS_Y_FACTOR = 0; // Initial camera Y position factor
-export const CAMERA_INITIAL_POS_Z_FACTOR = 2.5; // Initial camera Z position factor
+export const CAMERA_INITIAL_POS_Z_FACTOR = 0; // Initial camera Z position factor
+export const CAMERA_INITIAL_TILT = 0; // Initial camera tilt angle
 
 // Scene (from game.js)
 export const SCENE_BACKGROUND_COLOR = 0x0a0a2a;
