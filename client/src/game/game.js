@@ -12,8 +12,8 @@ import * as Const from '../config/gameConstants.js'; // Corrected path
 import { DrawMode } from '../config/gameConstants.js'; // Added direct import for DrawMode
 // import { getActionForKey, Actions } from '../config/keybindings.js'; // Corrected path if used
 
-// Remove store import to break circular dependency
-// import { useWorldSettingsStore } from '../stores';
+// Import store safely at the top
+import { useWorldSettingsStore } from '../stores/worldSettingsStore.js';
 
 // Import new control modules
 import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';
@@ -109,58 +109,78 @@ export function initGame(canvasElement) {
 }
 
 // Modified to accept settings as a parameter instead of accessing the store
-export function requestPlanetRegeneration(seed, settings) {
-    console.log('requestPlanetRegeneration called with seed:', seed, 'settings:', settings);
-    console.log('UI SETTINGS CHECK - numPoints:', settings?.numPoints);
-    
-    const s = getScene();
-    const wc = getWorldConfig();
-    const existingControls = getControls();
-    const pg = getPlanetGroup();
-    const sh = getSelectedHighlight();
+export function requestPlanetRegeneration(seed, worldSettings) {
+  console.log('requestPlanetRegeneration called with seed:', seed, 'settings:', worldSettings);
+  
+  const s = getScene();
+  const wc = getWorldConfig();
+  const existingControls = getControls();
+  const pg = getPlanetGroup();
+  const sh = getSelectedHighlight();
 
-    if (!s || !wc ) { 
-        error('Cannot regenerate planet: core components not initialized.');
-        return;
-    }
-    debug(`Requesting planet regeneration with seed: ${seed === undefined ? 'Default/Last' : seed}`);
+  if (!s || !wc ) { 
+      error('Cannot regenerate planet: core components not initialized.');
+      return;
+  }
+  debug(`Requesting planet regeneration with seed: ${seed === undefined ? 'Default/Last' : seed}`);
 
-    // Use settings if provided, otherwise keep existing sphereSettings
-    if (settings) {
-        console.log('Syncing provided settings to sphereSettings before regeneration');
-        console.log('BEFORE UPDATE - sphereSettings.numPoints:', sphereSettings.numPoints);
-        
-        // IMPORTANT: Update all sphereSettings properties from the provided settings
-        // This ensures that internal logic using sphereSettings directly has access
-        // to the latest values before any regeneration steps are performed
-        sphereSettings.drawMode = settings.drawMode;
-        sphereSettings.algorithm = settings.algorithm;
-        sphereSettings.numPoints = settings.numPoints;
-        sphereSettings.jitter = settings.jitter;
-        sphereSettings.mapType = settings.mapType;
-        sphereSettings.outlineVisible = settings.outlineVisible;
-        sphereSettings.numPlates = settings.numPlates;
-        sphereSettings.viewMode = settings.viewMode;
-        sphereSettings.elevationBias = settings.elevationBias;
-        
-        // Log the updated sphereSettings to verify they were updated correctly
-        console.log('Updated sphereSettings:', sphereSettings);
-        console.log('AFTER UPDATE - sphereSettings.numPoints:', sphereSettings.numPoints);
-    } else {
-        console.warn('No settings provided to requestPlanetRegeneration, using existing sphereSettings');
-    }
-    
-    // If seed is provided, update currentSeed in sphereSettings
-    if (seed !== undefined) {
-        sphereSettings.currentSeed = seed;
-        console.log('Updated sphereSettings.currentSeed to:', seed);
-    }
+  // Use settings if provided, otherwise keep existing sphereSettings
+  if (worldSettings) {
+      console.log('Syncing provided settings to sphereSettings before regeneration');
+      console.log('BEFORE UPDATE - sphereSettings.numPoints:', sphereSettings.numPoints);
+      
+      // IMPORTANT: Update all sphereSettings properties from the provided settings
+      // This ensures that internal logic using sphereSettings directly has access
+      // to the latest values before any regeneration steps are performed
+      sphereSettings.drawMode = worldSettings.drawMode;
+      sphereSettings.algorithm = worldSettings.algorithm;
+      sphereSettings.numPoints = worldSettings.numPoints;
+      sphereSettings.jitter = worldSettings.jitter;
+      sphereSettings.mapType = worldSettings.mapType;
+      sphereSettings.outlineVisible = worldSettings.outlineVisible;
+      sphereSettings.numPlates = worldSettings.numPlates;
+      sphereSettings.viewMode = worldSettings.viewMode;
+      sphereSettings.elevationBias = worldSettings.elevationBias;
+      
+      // Log the updated sphereSettings to verify they were updated correctly
+      console.log('Updated sphereSettings:', sphereSettings);
+      console.log('AFTER UPDATE - sphereSettings.numPoints:', sphereSettings.numPoints);
+  } else {
+      console.warn('No settings provided to requestPlanetRegeneration, using existing sphereSettings');
+  }
+  
+  // If seed is provided, update currentSeed in sphereSettings
+  if (seed !== undefined) {
+      sphereSettings.currentSeed = seed;
+      console.log('Updated sphereSettings.currentSeed to:', seed);
+  }
 
-    // Generate planet with updated settings
-    generatePlanet(s, wc, existingControls, pg, sh, seed);
+  // Generate planet with updated settings
+  const result = generatePlanet(s, wc, existingControls, pg, sh, seed);
+  
+  // Update the store with the actual seed used
+  if (result && result.actualSeed) {
+    console.log('Actual seed used for planet generation:', result.actualSeed);
     
-    reinitializeControls(); // This might re-setup orbit controls, ensure it's compatible
-    debug('Planet regeneration complete.');
+    // Update the current seed in the store
+    try {
+      // Use a setTimeout to avoid any circular dependency issues
+      setTimeout(() => {
+        const { setCurrentSeed } = useWorldSettingsStore.getState();
+        if (setCurrentSeed) {
+          console.log('Updating store with actual seed:', result.actualSeed);
+          setCurrentSeed(result.actualSeed);
+        }
+      }, 0);
+    } catch (err) {
+      console.error('Error updating seed in store:', err);
+    }
+  }
+  
+  reinitializeControls(); // This might re-setup orbit controls, ensure it's compatible
+  debug('Planet regeneration complete.');
+  
+  return result;
 }
 
 // Modified to accept settings as a parameter instead of accessing the store

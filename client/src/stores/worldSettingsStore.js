@@ -14,6 +14,9 @@ import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '../game/gam
 
 // --- End Game Logic Imports ---
 
+// Generate a default seed based on the current timestamp
+const generateDefaultSeed = () => String(Date.now());
+
 const initialWorldSettings = {
   drawMode: DrawMode.VORONOI,
   algorithm: 1, // Default from old sphereSettings
@@ -24,7 +27,7 @@ const initialWorldSettings = {
   numPlates: DEFAULT_TECHTONIC_PLATES,
   viewMode: DEFAULT_VIEW_MODE, // Default from old sphereSettings
   elevationBias: DEFAULT_ELEVATION_BIAS,
-  currentSeed: '12345', // Initial mock seed, can be updated
+  currentSeed: generateDefaultSeed(), // Use a timestamp-based seed by default
 };
 
 export const useWorldSettingsStore = create((set, get) => ({

@@ -129,7 +129,9 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     updatePlanetColors(); 
 
     debug('Planet generation and display complete.');
-    return { planetGroup, worldData };
+    // Return the actual seed that was used along with other data
+    const actualSeed = worldData?.actualSeed || seed || (sphereSettings.currentSeed ? String(sphereSettings.currentSeed) : String(Date.now()));
+    return { planetGroup, globe: worldData?.globe, actualSeed };
 
   } catch (err) {
     console.error('Caught error in generateAndDisplayPlanet. Original error object:', err);
@@ -150,7 +152,7 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     };
     _scene.add(planetGroup);
     worldData = null; 
-    return { planetGroup, worldData };
+    return { planetGroup, worldData: null, actualSeed: seed || String(Date.now()) };
   }
 }
 

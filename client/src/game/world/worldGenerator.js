@@ -14,7 +14,7 @@ import * as Const from '../../config/gameConstants.js';
 /**
  * Generates globe mesh (legacy) plus OO WorldGlobe description.
  * @param {{radius:number, sphereSettings?:object}} config
- * @returns {{ meshGroup: THREE.Group, globe: WorldGlobe, config: any }}
+ * @returns {{ meshGroup: THREE.Group, globe: WorldGlobe, config: any, actualSeed: string }}
  */
 export function generateWorld(config, seed){
   // If config contains sphereSettings, use it to override the global sphereSettings object
@@ -300,5 +300,6 @@ export function generateWorld(config, seed){
   }
 
   meshGroup.userData.globe = globe;
-  return { meshGroup, globe, config };
+  meshGroup.userData.actualSeed = effectiveSeed; // Store seed in userData for easy access
+  return { meshGroup, globe, config, actualSeed: effectiveSeed };
 } 
