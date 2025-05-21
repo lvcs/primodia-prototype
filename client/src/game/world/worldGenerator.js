@@ -13,13 +13,76 @@ import * as Const from '../../config/gameConstants.js';
 
 /**
  * Generates globe mesh (legacy) plus OO WorldGlobe description.
- * @param {{radius:number}} config
+ * @param {{radius:number, sphereSettings?:object}} config
  * @returns {{ meshGroup: THREE.Group, globe: WorldGlobe, config: any }}
  */
 export function generateWorld(config, seed){
+  // If config contains sphereSettings, use it to override the global sphereSettings object
+  if (config.sphereSettings) {
+    console.log('[generateWorld] Received sphereSettings in config:', config.sphereSettings);
+    console.log('[generateWorld] Original sphereSettings:', {
+      drawMode: sphereSettings.drawMode,
+      algorithm: sphereSettings.algorithm,
+      numPoints: sphereSettings.numPoints,
+      jitter: sphereSettings.jitter,
+      mapType: sphereSettings.mapType,
+      outlineVisible: sphereSettings.outlineVisible,
+      numPlates: sphereSettings.numPlates,
+      viewMode: sphereSettings.viewMode,
+      elevationBias: sphereSettings.elevationBias
+    });
+    
+    console.log('[generateWorld] IMPORTANT: numPoints before update:', sphereSettings.numPoints, 'new value from config:', config.sphereSettings.numPoints);
+    
+    // Update the global sphereSettings with the values from config
+    sphereSettings.drawMode = config.sphereSettings.drawMode;
+    sphereSettings.algorithm = config.sphereSettings.algorithm;
+    sphereSettings.numPoints = config.sphereSettings.numPoints;
+    sphereSettings.jitter = config.sphereSettings.jitter;
+    sphereSettings.mapType = config.sphereSettings.mapType;
+    sphereSettings.outlineVisible = config.sphereSettings.outlineVisible;
+    sphereSettings.numPlates = config.sphereSettings.numPlates;
+    sphereSettings.viewMode = config.sphereSettings.viewMode;
+    sphereSettings.elevationBias = config.sphereSettings.elevationBias;
+    
+    console.log('[generateWorld] Updated sphereSettings:', sphereSettings);
+    console.log('[generateWorld] VERIFICATION: numPoints after update:', sphereSettings.numPoints);
+  } else {
+    console.warn('[generateWorld] No sphereSettings received in config, using existing values');
+  }
+
+  // Debug logging to verify sphereSettings values being used
+  console.log('[generateWorld] Current sphereSettings after possible update:', {
+    drawMode: sphereSettings.drawMode,
+    algorithm: sphereSettings.algorithm,
+    numPoints: sphereSettings.numPoints,
+    jitter: sphereSettings.jitter,
+    mapType: sphereSettings.mapType,
+    outlineVisible: sphereSettings.outlineVisible,
+    numPlates: sphereSettings.numPlates,
+    viewMode: sphereSettings.viewMode,
+    elevationBias: sphereSettings.elevationBias,
+    currentSeed: sphereSettings.currentSeed
+  });
+
+  // Critical verification of numPoints
+  console.log('[generateWorld] FINAL VERIFICATION - numPoints value right before planet generation:', sphereSettings.numPoints);
+
+  // Always use a string seed for consistent results and check before RandomService initialization
+  let effectiveSeed = (seed === undefined) ? String(Date.now()) : String(seed);
+  
+  console.log('[generateWorld] About to initialize RandomService with seed:', effectiveSeed);
+  
+  // Explicitly reset the Random Service state before initialization to avoid any state carryover
+  RandomService.prng = null;
+  
   // Initialize the global random service with the provided seed.
   // All subsequent procedural generation steps will use this seeded PRNG.
-  RandomService.initialize(seed);
+  RandomService.initialize(effectiveSeed);
+  
+  // Check first few random values to verify deterministic behavior
+  console.log('[generateWorld] First 3 random values from newly initialized RandomService:',
+    RandomService.nextFloat(), RandomService.nextFloat(), RandomService.nextFloat());
 
   // Bind RandomService.nextFloat for convenience where needed in this scope or passed down
   const randomFloat = RandomService.nextFloat.bind(RandomService);

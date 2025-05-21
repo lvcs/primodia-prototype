@@ -12,8 +12,8 @@ import * as Const from '../config/gameConstants.js'; // Corrected path
 import { DrawMode } from '../config/gameConstants.js'; // Added direct import for DrawMode
 // import { getActionForKey, Actions } from '../config/keybindings.js'; // Corrected path if used
 
-// Import store to access current settings
-import { useWorldSettingsStore } from '../stores';
+// Remove store import to break circular dependency
+// import { useWorldSettingsStore } from '../stores';
 
 // Import new control modules
 import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';
@@ -108,7 +108,11 @@ export function initGame(canvasElement) {
   }
 }
 
-export function requestPlanetRegeneration(seed) {
+// Modified to accept settings as a parameter instead of accessing the store
+export function requestPlanetRegeneration(seed, settings) {
+    console.log('requestPlanetRegeneration called with seed:', seed, 'settings:', settings);
+    console.log('UI SETTINGS CHECK - numPoints:', settings?.numPoints);
+    
     const s = getScene();
     const wc = getWorldConfig();
     const existingControls = getControls();
@@ -121,56 +125,76 @@ export function requestPlanetRegeneration(seed) {
     }
     debug(`Requesting planet regeneration with seed: ${seed === undefined ? 'Default/Last' : seed}`);
 
-    // Sync settings from worldSettingsStore to sphereSettings
-    const storeState = useWorldSettingsStore.getState();
-    console.log('Syncing worldSettingsStore to sphereSettings:', storeState);
-    
-    // Update all sphereSettings properties from the store
-    sphereSettings.drawMode = storeState.drawMode;
-    sphereSettings.algorithm = storeState.algorithm;
-    sphereSettings.numPoints = storeState.numPoints;
-    sphereSettings.jitter = storeState.jitter;
-    sphereSettings.mapType = storeState.mapType;
-    sphereSettings.outlineVisible = storeState.outlineVisible;
-    sphereSettings.numPlates = storeState.numPlates;
-    sphereSettings.viewMode = storeState.viewMode;
-    sphereSettings.elevationBias = storeState.elevationBias;
+    // Use settings if provided, otherwise keep existing sphereSettings
+    if (settings) {
+        console.log('Syncing provided settings to sphereSettings before regeneration');
+        console.log('BEFORE UPDATE - sphereSettings.numPoints:', sphereSettings.numPoints);
+        
+        // IMPORTANT: Update all sphereSettings properties from the provided settings
+        // This ensures that internal logic using sphereSettings directly has access
+        // to the latest values before any regeneration steps are performed
+        sphereSettings.drawMode = settings.drawMode;
+        sphereSettings.algorithm = settings.algorithm;
+        sphereSettings.numPoints = settings.numPoints;
+        sphereSettings.jitter = settings.jitter;
+        sphereSettings.mapType = settings.mapType;
+        sphereSettings.outlineVisible = settings.outlineVisible;
+        sphereSettings.numPlates = settings.numPlates;
+        sphereSettings.viewMode = settings.viewMode;
+        sphereSettings.elevationBias = settings.elevationBias;
+        
+        // Log the updated sphereSettings to verify they were updated correctly
+        console.log('Updated sphereSettings:', sphereSettings);
+        console.log('AFTER UPDATE - sphereSettings.numPoints:', sphereSettings.numPoints);
+    } else {
+        console.warn('No settings provided to requestPlanetRegeneration, using existing sphereSettings');
+    }
     
     // If seed is provided, update currentSeed in sphereSettings
     if (seed !== undefined) {
         sphereSettings.currentSeed = seed;
+        console.log('Updated sphereSettings.currentSeed to:', seed);
     }
 
+    // Generate planet with updated settings
     generatePlanet(s, wc, existingControls, pg, sh, seed);
-
-    // const newPlanetGroup = getPlanetGroup(); 
-    // const newControls = getControls(); 
-    // const cam = getCamera();
-    // updateComponentUIDisplay(); // This was for old UI, remove or adapt
     
     reinitializeControls(); // This might re-setup orbit controls, ensure it's compatible
     debug('Planet regeneration complete.');
 }
 
-export function triggerPlanetColorUpdate() {
+// Modified to accept settings as a parameter instead of accessing the store
+export function triggerPlanetColorUpdate(settings) {
+    console.log('triggerPlanetColorUpdate called with settings:', settings);
+    
     if (!getPlanetGroup()) {
         error('Cannot update planet colors: planet group not initialized.');
         return;
     }
     debug('Requesting planet color update...');
     
-    // Sync view-related settings from worldSettingsStore to sphereSettings
-    const storeState = useWorldSettingsStore.getState();
-    console.log('Syncing view settings from worldSettingsStore to sphereSettings:', {
-        outlineVisible: storeState.outlineVisible,
-        viewMode: storeState.viewMode,
-        elevationBias: storeState.elevationBias
-    });
+    // Use view-related settings if provided
+    if (settings) {
+        console.log('Syncing view settings to sphereSettings before color update');
+        
+        // IMPORTANT: Update view-related properties from the provided settings
+        // This ensures that internal logic using sphereSettings directly has access
+        // to the latest values before any color update steps are performed
+        sphereSettings.outlineVisible = settings.outlineVisible;
+        sphereSettings.viewMode = settings.viewMode;
+        sphereSettings.elevationBias = settings.elevationBias;
+        
+        // Log the updated view settings to verify they were updated correctly
+        console.log('Updated view settings in sphereSettings:', {
+            outlineVisible: sphereSettings.outlineVisible,
+            viewMode: sphereSettings.viewMode,
+            elevationBias: sphereSettings.elevationBias
+        });
+    } else {
+        console.warn('No settings provided to triggerPlanetColorUpdate, using existing sphereSettings');
+    }
     
-    // Update view-related properties from the store
-    sphereSettings.outlineVisible = storeState.outlineVisible;
-    sphereSettings.viewMode = storeState.viewMode;
-    sphereSettings.elevationBias = storeState.elevationBias;
-    
+    // Update planet colors with the updated settings
     updatePlanetColors();
+    debug('Planet color update complete.');
 } 

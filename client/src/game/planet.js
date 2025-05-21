@@ -30,6 +30,18 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
   
   try {
     debug(`Generating planet with config: ${JSON.stringify(currentWorldConfig)}`);
+    console.log('Current sphereSettings in generateAndDisplayPlanet:', {
+      drawMode: sphereSettings.drawMode,
+      algorithm: sphereSettings.algorithm,
+      numPoints: sphereSettings.numPoints,
+      jitter: sphereSettings.jitter,
+      mapType: sphereSettings.mapType,
+      outlineVisible: sphereSettings.outlineVisible,
+      numPlates: sphereSettings.numPlates,
+      viewMode: sphereSettings.viewMode,
+      elevationBias: sphereSettings.elevationBias,
+      currentSeed: sphereSettings.currentSeed
+    });
     
     if (_existingPlanetGroup) {
       _scene.remove(_existingPlanetGroup);
@@ -49,6 +61,21 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
         if(oldGlowMesh.material) oldGlowMesh.material.dispose();
     }
 
+    // Update worldConfig with current sphereSettings - this is critical!
+    currentWorldConfig.sphereSettings = { ...sphereSettings };
+    
+    // Set the seed in config to ensure it's used consistently
+    if (seed !== undefined) {
+      console.log(`Setting explicit seed "${seed}" in worldConfig for generateWorld`);
+      currentWorldConfig.seed = seed;
+    } else if (sphereSettings.currentSeed) {
+      console.log(`Using sphereSettings.currentSeed "${sphereSettings.currentSeed}" in worldConfig`);
+      currentWorldConfig.seed = sphereSettings.currentSeed;
+    }
+    
+    console.log('Passing updated worldConfig with sphereSettings to generateWorld:', currentWorldConfig);
+    console.log('VERIFICATION: numPoints in sphereSettings being passed:', sphereSettings.numPoints);
+    
     worldData = generateWorld(currentWorldConfig, seed);
     
     if (worldData && worldData.meshGroup) {

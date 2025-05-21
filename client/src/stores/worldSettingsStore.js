@@ -9,7 +9,7 @@ import {
   DEFAULT_VIEW_MODE
 } from '../config/gameConstants';
 
-// Import the actual game functions instead of using mocks
+// Import the actual game functions
 import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '../game/game.js';
 
 // --- End Game Logic Imports ---
@@ -33,52 +33,71 @@ export const useWorldSettingsStore = create((set, get) => ({
   // Actions to update settings
   setDrawMode: (drawMode) => {
     set({ drawMode });
-    requestPlanetRegeneration();
+    const settings = get();
+    console.log('setDrawMode - passing settings to requestPlanetRegeneration');
+    requestPlanetRegeneration(undefined, settings);
   },
   setAlgorithm: (algorithm) => {
     set({ algorithm });
-    requestPlanetRegeneration();
+    const settings = get();
+    console.log('setAlgorithm - passing settings to requestPlanetRegeneration');
+    requestPlanetRegeneration(undefined, settings);
   },
   setNumPoints: (numPoints) => {
+    console.log('Store: setNumPoints called with value:', numPoints);
     set({ numPoints });
-    requestPlanetRegeneration();
+    const settings = get();
+    console.log('Store: After update, numPoints in state is:', settings.numPoints);
+    console.log('setNumPoints - passing settings to requestPlanetRegeneration');
+    requestPlanetRegeneration(undefined, settings);
   },
   setJitter: (jitter) => {
     set({ jitter });
-    requestPlanetRegeneration();
+    const settings = get();
+    console.log('setJitter - passing settings to requestPlanetRegeneration');
+    requestPlanetRegeneration(undefined, settings);
   },
   setMapType: (mapType) => {
     set({ mapType });
-    requestPlanetRegeneration();
+    const settings = get();
+    console.log('setMapType - passing settings to requestPlanetRegeneration');
+    requestPlanetRegeneration(undefined, settings);
   },
   setOutlineVisible: (outlineVisible) => {
     set({ outlineVisible });
-    triggerPlanetColorUpdate();
+    const settings = get();
+    console.log('setOutlineVisible - passing settings to triggerPlanetColorUpdate');
+    triggerPlanetColorUpdate(settings);
   },
   setNumPlates: (numPlates) => {
     set({ numPlates });
-    requestPlanetRegeneration();
+    const settings = get();
+    console.log('setNumPlates - passing settings to requestPlanetRegeneration');
+    requestPlanetRegeneration(undefined, settings);
   },
   setViewMode: (viewMode) => {
     set({ viewMode });
-    triggerPlanetColorUpdate();
+    const settings = get();
+    console.log('setViewMode - passing settings to triggerPlanetColorUpdate');
+    triggerPlanetColorUpdate(settings);
   },
   setElevationBias: (elevationBias) => {
     set({ elevationBias });
-    triggerPlanetColorUpdate();
+    const settings = get();
+    console.log('setElevationBias - passing settings to triggerPlanetColorUpdate');
+    triggerPlanetColorUpdate(settings);
   },
   setCurrentSeed: (currentSeed) => {
     set({ currentSeed });
     // Regeneration with new seed is typically explicit via a button
-    // requestPlanetRegeneration(currentSeed); // Or handle in UI component
   },
   regenerateWorldWithCurrentSettings: (seed) => {
     // If seed is provided, it overrides currentSeed for this regeneration only
     // The store's currentSeed is updated via setCurrentSeed if a specific seed input is used
     const settings = get();
-    console.log('Store Action: Regenerating world with seed:', seed || settings.currentSeed, 'and settings:', settings);
-    requestPlanetRegeneration(seed || settings.currentSeed);
-    triggerPlanetColorUpdate(); // Often needed after regeneration
+    console.log('regenerateWorldWithCurrentSettings - Regenerating world with seed:', seed || settings.currentSeed, 'and settings:', settings);
+    requestPlanetRegeneration(seed || settings.currentSeed, settings);
+    triggerPlanetColorUpdate(settings); // Often needed after regeneration
   },
 
   // Full reset action (optional)

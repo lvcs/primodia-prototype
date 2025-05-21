@@ -38,37 +38,15 @@ import {
 
 // --- Mock/Placeholder Game Logic Imports ---
 
-// Mock RandomService
+// Mock RandomService - might be needed for other parts of GlobeTab
 const RandomService = {
-  getCurrentSeed: () => mockSphereSettings.currentSeed || String(Date.now()).slice(-5),
+  getCurrentSeed: () => String(Date.now()).slice(-5),
   nextFloat: Math.random // Simplistic mock
 };
 
-let mockSphereSettings = {
-  drawMode: DrawMode.VORONOI,
-  algorithm: 1,
-  numPoints: DEFAULT_NUMBER_OF_GLOBE_TILES,
-  jitter: DEFAULT_JITTER,
-  mapType: defaultMapType,
-  outlineVisible: true,
-  numPlates: DEFAULT_TECHTONIC_PLATES,
-  viewMode: DEFAULT_VIEW_MODE,
-  elevationBias: DEFAULT_ELEVATION_BIAS,
-  currentSeed: '12345'
-};
+// We don't need the mock sphereSettings and functions anymore as we're using the store
+// and real functions from game.js
 
-const requestPlanetRegeneration = (seed) => {
-  if (seed !== undefined) {
-    mockSphereSettings.currentSeed = String(seed);
-  } else {
-    // mockSphereSettings.currentSeed = String(Date.now()).slice(-5);
-  }
-  console.log(`TODO: Request planet regeneration. Seed: ${mockSphereSettings.currentSeed}, Points: ${mockSphereSettings.numPoints}, Algo: ${mockSphereSettings.algorithm}, Draw: ${mockSphereSettings.drawMode}, Jitter: ${mockSphereSettings.jitter}, Map: ${mockSphereSettings.mapType}, Plates: ${mockSphereSettings.numPlates}`);
-};
-
-const triggerPlanetColorUpdate = () => {
-  console.log(`TODO: Trigger planet color update. Outline visible: ${mockSphereSettings.outlineVisible}, Elevation Bias: ${mockSphereSettings.elevationBias}, View Mode: ${mockSphereSettings.viewMode}`);
-};
 // --- End Mock/Placeholder Game Logic Imports ---
 
 function GlobeTab() {
@@ -92,12 +70,28 @@ function GlobeTab() {
     setWorldSeedInput(currentSeed || '');
   }, [currentSeed]);
 
-  const handleNumPointsChange = (newValue) => setNumPoints(newValue[0]);
-  const handleJitterChange = (newValue) => setJitter(newValue[0]);
-  const handleNumPlatesChange = (newValue) => setNumPlates(newValue[0]);
-  const handleElevationBiasChange = (newValue) => setElevationBias(newValue[0]);
+  const handleNumPointsChange = (newValue) => {
+    console.log('UI Slider changed numPoints to:', newValue[0], 'from previous value:', numPoints);
+    setNumPoints(newValue[0]);
+  };
+
+  const handleJitterChange = (newValue) => {
+    console.log('UI Slider changed jitter to:', newValue[0], 'from previous value:', jitter);
+    setJitter(newValue[0]);
+  };
+
+  const handleNumPlatesChange = (newValue) => {
+    console.log('UI Slider changed numPlates to:', newValue[0], 'from previous value:', numPlates);
+    setNumPlates(newValue[0]);
+  };
+
+  const handleElevationBiasChange = (newValue) => {
+    console.log('UI Slider changed elevationBias to:', newValue[0], 'from previous value:', elevationBias);
+    setElevationBias(newValue[0]);
+  };
 
   const handleRegenerateWorld = () => {
+    console.log('handleRegenerateWorld called');
     let seedToUse = worldSeedInput.trim();
     if (seedToUse === '') {
       seedToUse = undefined; 
@@ -105,10 +99,19 @@ function GlobeTab() {
     // Update the store's currentSeed if a specific seed is entered
     // The store action `regenerateWorldWithCurrentSettings` will use the store's `currentSeed` if seedToUse is undefined here.
     if (seedToUse !== undefined) {
-        setCurrentSeed(String(seedToUse)); // Commit typed seed to store
+        console.log('Using seed from input:', seedToUse);
+        // First update the store's currentSeed value
+        setCurrentSeed(String(seedToUse)); 
+        
+        // Then regenerate the world with this seed, getting all other settings from the store
+        console.log('Calling regenerateWorldWithCurrentSettings with seed input');
         regenerateWorldWithCurrentSettings(String(seedToUse));
     } else {
-        regenerateWorldWithCurrentSettings(); // Use whatever seed is in store (or let game logic decide if store seed is also undefined)
+        console.log('Using seed from store or generating new seed');
+        // No seed provided, so just use whatever is in the store
+        // The store will pass its current state to the game functions
+        console.log('Calling regenerateWorldWithCurrentSettings without seed');
+        regenerateWorldWithCurrentSettings(); 
     }
     // The input field will be updated by the useEffect watching currentSeed from store.
   };

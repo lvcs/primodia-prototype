@@ -8,9 +8,32 @@ export default class SeedableRandom {
    *                        If 0 is provided, it defaults to a common arbitrary value.
    */
   constructor(seed) {
+    // Convert any seed type to a stable number
+    let numericSeed;
+    
+    // If seed is a string, convert it to a numeric hash
+    if (typeof seed === 'string') {
+      // Simple string hash function
+      numericSeed = Array.from(seed).reduce((acc, char) => {
+        return ((acc << 5) - acc) + char.charCodeAt(0);
+      }, 0);
+      console.log(`SeedableRandom: Converting string seed "${seed}" to numeric hash ${numericSeed}`);
+    } else if (typeof seed === 'number') {
+      numericSeed = seed;
+    } else {
+      // Default seed for undefined or other types
+      numericSeed = 19831108;
+      console.warn(`SeedableRandom: Unexpected seed type ${typeof seed}, using default`);
+    }
+    
+    // Ensure seed is a positive integer (Mulberry32 works best with positive integers)
+    numericSeed = Math.abs(Math.floor(numericSeed));
+    
     // Mulberry32 algorithm requires a non-zero seed.
-    // If seed is 0, it can lead to an output of 0 consistently.
-    this.seed = seed === 0 ? 19831108 : seed; // Default to an arbitrary non-zero if seed is 0
+    // If seed is 0, use a default non-zero value
+    this.seed = numericSeed === 0 ? 19831108 : numericSeed;
+    
+    console.log(`SeedableRandom: Initialized with final seed value: ${this.seed}`);
   }
 
   /**
