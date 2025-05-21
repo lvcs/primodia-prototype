@@ -5,16 +5,15 @@ import * as Const from '../../config/gameConfig.js';
 // --- State ---
 let isDragging = false;
 const previousMousePosition = { x: 0, y: 0 };
-let localControls, localCamera, localRenderer, orbitController;
+let localControls, localCamera, localRenderer;
 
 /**
  * Initialize mouse controls for camera orbit.
  */
-export function initMouseControls(camera, controls, renderer, controller) {
+export function initMouseControls(camera, controls, renderer) {
     localCamera = camera;
     localControls = controls;
     localRenderer = renderer;
-    orbitController = controller;
     localRenderer.domElement.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
@@ -32,28 +31,12 @@ function onMouseDown(event) {
 }
 
 /**
- * Handle mouse move event to orbit the camera.
+ * Handle mouse move event for camera interaction.
+ * Note: Basic OrbitControls will handle most camera movement automatically.
+ * This would be for any custom behaviors beyond basic OrbitControls.
  */
 function onMouseMove(event) {
     if (!isDragging) return;
-    if (window.cameraAnimator && window.cameraAnimator.isAnimating) return;
-    const deltaX = event.clientX - previousMousePosition.x;
-    const deltaY = event.clientY - previousMousePosition.y;
-    let currentRotationSpeed = Const.MOUSE_PAN_SPEED;
-    // Adjust rotation speed based on zoom level
-    if (localControls && localControls.target && localCamera && localCamera.position) {
-        const currentDistance = localCamera.position.length();
-        const minZoomDist = localControls.minDistance;
-        const maxZoomDist = localControls.maxDistance;
-        const zoomFactor = THREE.MathUtils.clamp((currentDistance - minZoomDist) / (maxZoomDist - minZoomDist), 0, 1);
-        const speedAtMaxZoomIn = Const.MOUSE_PAN_SPEED * 0.01;
-        const speedAtMaxZoomOut = Const.MOUSE_PAN_SPEED * 2;
-        currentRotationSpeed = THREE.MathUtils.lerp(speedAtMaxZoomIn, speedAtMaxZoomOut, zoomFactor);
-    }
-    // Update camera orbit
-    if (orbitController) {
-        orbitController.rotate(deltaY * currentRotationSpeed, deltaX * currentRotationSpeed);
-    }
     previousMousePosition.x = event.clientX;
     previousMousePosition.y = event.clientY;
 }

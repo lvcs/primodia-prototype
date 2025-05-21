@@ -106,6 +106,7 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
       _scene.add(planetGroup);
       debug('Planet mesh group added to scene.');
     } else {
+      // Only create fallback if worldData or meshGroup is missing
       error('Failed to generate planet mesh group. worldData:', worldData);
       const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 6400;
       const fallbackGeometry = new THREE.SphereGeometry(fallbackRadius, 32, 32);
@@ -133,26 +134,15 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     const actualSeed = worldData?.actualSeed || seed || (sphereSettings.currentSeed ? String(sphereSettings.currentSeed) : String(Date.now()));
     return { planetGroup, globe: worldData?.globe, actualSeed };
 
-  } catch (err) {
-    console.error('Caught error in generateAndDisplayPlanet. Original error object:', err);
-    if (err && err.message) error('Error in generateAndDisplayPlanet (message): ', err.message);
-    if (err && err.stack) console.error('Error stack trace:', err.stack);
-    error('Error in generateAndDisplayPlanet: Processing fallback.'); 
-
-    if (_existingPlanetGroup) _scene.remove(_existingPlanetGroup);
-    const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 6400;
-    const fallbackGeometry = new THREE.SphereGeometry(fallbackRadius, 32, 32);
-    const fallbackMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-    planetGroup = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
-    planetGroup.rotation.y = 0; 
-    planetGroup.userData = { 
-        angularVelocity: new THREE.Vector3(0, 0, 0),
-        targetAngularVelocity: new THREE.Vector3(0, 0, 0),
-        isBeingDragged: false
-    };
+  } catch (e) {
+    error('Error in generateAndDisplayPlanet:', e);
+    // Create emergency fallback sphere in case of error
+    const emergencyRadius = currentWorldConfig?.radius || _worldConfig?.radius || 6400;
+    const emergencyGeometry = new THREE.SphereGeometry(emergencyRadius, 32, 32);
+    const emergencyMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true });
+    planetGroup = new THREE.Mesh(emergencyGeometry, emergencyMaterial);
     _scene.add(planetGroup);
-    worldData = null; 
-    return { planetGroup, worldData: null, actualSeed: seed || String(Date.now()) };
+    return { planetGroup, globe: null, actualSeed: null };
   }
 }
 

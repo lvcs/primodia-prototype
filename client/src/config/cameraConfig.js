@@ -1,5 +1,5 @@
 // Camera Distance Constants
-export const GLOBE_VIEW_CAMERA_DISTANCE = 16000;
+export const GLOBE_VIEW_CAMERA_DISTANCE = 12000;
 export const TILE_VIEW_CAMERA_DISTANCE = 9600;
 
 // Easing functions
@@ -16,7 +16,11 @@ export const DEFAULT_EASING_CURVE = CAMERA_EASINGS.easeInOutCubic;
 export const CAMERA_VIEWS = {
   globe: {
     label: 'Globe',
-    defaultPosition: { x: 0, y: GLOBE_VIEW_CAMERA_DISTANCE, z: 0 }, // Use the constant
+    defaultPosition: { 
+      x: GLOBE_VIEW_CAMERA_DISTANCE * 0.5, 
+      y: GLOBE_VIEW_CAMERA_DISTANCE * 0.5, 
+      z: GLOBE_VIEW_CAMERA_DISTANCE * 0.5 
+    },
     defaultTilt: 30, // Degrees
     animation: {
       durationMs: 1500, // Can override DEFAULT_ANIMATION_DURATION_MS

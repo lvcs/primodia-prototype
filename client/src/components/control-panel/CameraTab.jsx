@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
 import { useCameraStore } from '@stores/cameraStore';
-import { GLOBE_RADIUS, CAMERA_MIN_DISTANCE_FACTOR, CAMERA_MAX_DISTANCE_FACTOR } from '@config/gameConfig';
+import { GLOBE_RADIUS, CAMERA_MIN_DISTANCE_FROM_CENTER, CAMERA_MAX_DISTANCE_FROM_CENTER } from '@config/gameConfig';
 
 function CameraTab() {
   const zoom = useCameraStore(state => state.zoom);
@@ -11,8 +11,6 @@ function CameraTab() {
   const phi = useCameraStore(state => state.phi);
   const setZoom = useCameraStore(state => state.setZoom);
 
-  const minZoom = GLOBE_RADIUS * CAMERA_MIN_DISTANCE_FACTOR;
-  const maxZoom = GLOBE_RADIUS * CAMERA_MAX_DISTANCE_FACTOR;
 
   const handleZoomChange = (newValue) => {
     const value = newValue[0];
@@ -60,9 +58,9 @@ function CameraTab() {
       <ControlSectionWrapper label={`Zoom Distance: ${zoom.toFixed(0)} km`}>
         <Slider
           value={[zoom]}
-          min={minZoom}
-          max={maxZoom}
-          step={(maxZoom - minZoom) / 200}
+          min={CAMERA_MIN_DISTANCE_FROM_CENTER}
+          max={CAMERA_MAX_DISTANCE_FROM_CENTER}
+          step={1}
           onValueChange={handleZoomChange}
         />
       </ControlSectionWrapper>

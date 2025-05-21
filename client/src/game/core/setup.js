@@ -1,14 +1,11 @@
 // Three.js scene, camera, renderer, lighting, and initial controls setup 
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-// Adjust path for Const if it moves to client/src/config
 import * as ConstFromGameConfig from '../../config/gameConfig.js'; // Renamed to avoid conflict
-import { GLOBE_VIEW_CAMERA_DISTANCE } from '../../config/cameraConfig.js'; // Import specific constant
-// Adjust path for debug if it moves
-import { debug } from '../utils/debug.js'; 
+import { debug } from '../utils/debug.js';
+import { initializeCameraSystem, getCameraInstance, getControlsInstance } from '../camera/cameraSystem.js';
 
-let scene, camera, renderer, controls;
-let worldConfig;
+let scene, renderer, worldConfig;
+let cameraSystem = { camera: null, controls: null };
 
 export function setupThreeJS(canvasElement) {
   if (!canvasElement) {
@@ -17,20 +14,24 @@ export function setupThreeJS(canvasElement) {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(ConstFromGameConfig.SCENE_BACKGROUND_COLOR);
   
-  // Use canvas dimensions for aspect ratio initially, but it should adapt on resize
-  const aspectRatio = canvasElement.clientWidth / canvasElement.clientHeight;
-  camera = new THREE.PerspectiveCamera(ConstFromGameConfig.CAMERA_FOV, aspectRatio, ConstFromGameConfig.CAMERA_NEAR_PLANE, ConstFromGameConfig.CAMERA_FAR_PLANE);
-  camera.position.set(0, 0, GLOBE_VIEW_CAMERA_DISTANCE); // Use the constant for Z distance
-  camera.lookAt(0, 0, 0);
-  
+  // Create renderer
   renderer = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true, alpha: true });
-  renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight); // Use canvas size
+  renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  // Resizing should be handled by an event listener in the game setup or main loop,
-  // updating camera aspect and renderer size.
-  return { scene, camera, renderer };
+  
+  // Initialize world config before camera setup
+  worldConfig = setupInitialWorldConfig();
+  
+  // Initialize camera system
+  cameraSystem = initializeCameraSystem(canvasElement, worldConfig);
+  
+  return { 
+    scene, 
+    camera: cameraSystem.camera, 
+    renderer 
+  };
 }
 
 export function setupInitialWorldConfig() {
@@ -56,30 +57,8 @@ export function setupLighting(_scene) {
   _scene.add(hemisphereLight);
 }
 
-export function setupOrbitControls(_camera, _renderer, _worldConfig) {
-  if (controls) {
-    controls.dispose();
-  }
-  controls = new OrbitControls(_camera, _renderer.domElement);
-  controls.enableDamping = true;
-  controls.enablePan = false;
-  controls.minDistance = _worldConfig.radius * ConstFromGameConfig.CAMERA_MIN_DISTANCE_FACTOR;
-  controls.maxDistance = _worldConfig.radius * ConstFromGameConfig.CAMERA_MAX_DISTANCE_FACTOR;
-  controls.minPolarAngle = 0;
-  controls.maxPolarAngle = Math.PI;
-
-  _camera.position.set(
-    0,
-    _worldConfig.radius * ConstFromGameConfig.CAMERA_INITIAL_POS_Y_FACTOR,
-    _worldConfig.radius * ConstFromGameConfig.CAMERA_INITIAL_POS_Z_FACTOR
-  );
-  controls.target.set(0, 0, 0);
-  controls.update();
-  return controls;
-}
-
 export const getScene = () => scene;
-export const getCamera = () => camera;
+export const getCamera = () => getCameraInstance();
 export const getRenderer = () => renderer;
-export const getControls = () => controls;
+export const getControls = () => getControlsInstance();
 export const getWorldConfig = () => worldConfig; 

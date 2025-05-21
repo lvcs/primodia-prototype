@@ -1,78 +1,86 @@
 import { create } from 'zustand';
 import * as THREE from 'three';
 
-import { CAMERA_VIEWS, GLOBE_VIEW_CAMERA_DISTANCE, TILE_VIEW_CAMERA_DISTANCE } from '@config/cameraConfig';
+import { 
+  CAMERA_VIEWS, 
+  GLOBE_VIEW_CAMERA_DISTANCE, 
+  TILE_VIEW_CAMERA_DISTANCE 
+} from '@config/cameraConfig';
+import {
+  CAMERA_FOV,
+  CAMERA_NEAR_PLANE,
+  CAMERA_FAR_PLANE,
+  CAMERA_MIN_DISTANCE_FROM_CENTER,
+  CAMERA_MAX_DISTANCE_FROM_CENTER
+} from '@config/gameConfig';
 
-// Helper to get default camera parameters based on view mode
-const getDefaultCameraParams = (viewMode = 'globe') => {
-  // TODO: Define specific phi, theta, zoom for each view mode in cameraConfig.js
-  // For now, using some placeholders.
+// Helper to get default camera state
+const getDefaultCameraState = (viewMode = 'globe') => {
+  const defaultPosition = new THREE.Vector3(0, 0, 0);
+  const defaultTarget = new THREE.Vector3(0, 0, 0);
+  const defaultUp = new THREE.Vector3(0, 1, 0);
+  
   switch (viewMode) {
     case 'tile':
-      return {
-        zoom: TILE_VIEW_CAMERA_DISTANCE !== undefined ? TILE_VIEW_CAMERA_DISTANCE : 50,
-        phi: Math.PI / 4, // Example: 45 degrees
-        theta: 0,
-        target: new THREE.Vector3(0, 0, 0), // Or a specific default target for tile view
-      };
+      defaultPosition.set(0, 0, TILE_VIEW_CAMERA_DISTANCE);
+      break;
     case 'globe':
     default:
-      return {
-        zoom: GLOBE_VIEW_CAMERA_DISTANCE !== undefined ? GLOBE_VIEW_CAMERA_DISTANCE : 150,
-        phi: Math.PI / 2, // Equatorial
-        theta: 0, // Default orientation
-        target: new THREE.Vector3(0, 0, 0),
-      };
+      defaultPosition.set(0, 0, GLOBE_VIEW_CAMERA_DISTANCE);
+      break;
   }
+  
+  return {
+    position: defaultPosition,
+    target: defaultTarget,
+    up: defaultUp,
+    viewMode,
+    isAnimating: false,
+    zoom: GLOBE_VIEW_CAMERA_DISTANCE, // Add default zoom value
+    phi: 0, // Add default phi value
+    theta: 0, // Add default theta value
+    fov: CAMERA_FOV,
+    near: CAMERA_NEAR_PLANE,
+    far: CAMERA_FAR_PLANE
+  };
 };
 
 const useCameraStore = create((set, get) => ({
-  // REQ-CAM-R-001: Definitive state
-  ...getDefaultCameraParams('globe'), // Initialize with default globe view params
-  viewMode: 'globe',
-  isAnimating: false,
+  // State
+  ...getDefaultCameraState('globe'),
+  
+  // Actions
+  setTarget: (target) => set({ 
+    target: target instanceof THREE.Vector3 ? target : new THREE.Vector3(target.x, target.y, target.z) 
+  }),
+  
+  setPosition: (position) => set({ 
+    position: position instanceof THREE.Vector3 ? position : new THREE.Vector3(position.x, position.y, position.z) 
+  }),
+  
+  setUpVector: (up) => set({ 
+    up: up instanceof THREE.Vector3 ? up : new THREE.Vector3(up.x, up.y, up.z) 
+  }),
+  
+  setViewMode: (viewMode) => set({ viewMode }),
+  
+  setAnimating: (isAnimating) => set({ isAnimating }),
 
-  // REQ-CAM-R-002: Actions to update state variables
+  // Add the missing setZoom method
   setZoom: (zoom) => set({ zoom }),
-  setTarget: (target) => set({ target: new THREE.Vector3().copy(target) }),
+
+  // Add methods for phi and theta
   setPhi: (phi) => set({ phi }),
   setTheta: (theta) => set({ theta }),
-  setRotation: ({ phi, theta }) => set(state => {
-    const newPhi = phi !== undefined ? phi : state.phi;
-    const newTheta = theta !== undefined ? theta : state.theta;
-    return { phi: newPhi, theta: newTheta };
+  
+  syncFromOrbitControls: ({ position, target, up }) => set({
+    position: position instanceof THREE.Vector3 ? position : new THREE.Vector3(position.x, position.y, position.z),
+    target: target instanceof THREE.Vector3 ? target : new THREE.Vector3(target.x, target.y, target.z),
+    up: up instanceof THREE.Vector3 ? up : new THREE.Vector3(up.x, up.y, up.z)
   }),
-  setIsAnimating: (isAnimating) => set({ isAnimating }),
-
-  setViewMode: (viewMode) => set((state) => {
-    const defaultParams = getDefaultCameraParams(viewMode);
-    return {
-      viewMode,
-      ...defaultParams, // Reset zoom, phi, theta, target to defaults for the new mode
-      isAnimating: false, // Reset animation state on view mode change
-    };
-  }),
-
-  // --- Helper getters ---
-  getOrientation: () => ({
-    phi: get().phi,
-    theta: get().theta,
-  }),
-
-  getPositionState: () => ({
-    zoom: get().zoom,
-    target: get().target.clone(),
-    phi: get().phi,
-    theta: get().theta,
-  }),
-
-  // --- Deprecated actions/state (to be removed after confirming they are not used elsewhere) ---
-  // setPosition: (position) => console.warn('setPosition is deprecated'),
-  // setTilt: (tilt) => console.warn('setTilt is deprecated'),
-  // setYaw: (yaw) => console.warn('setYaw is deprecated'),
-  // setRoll: (roll) => console.warn('setRoll is deprecated'),
-  // setOrientation: (orientationUpdate) => console.warn('setOrientation (old) is deprecated'),
-  // restoreState: (state) => console.warn('restoreState is deprecated'),
+  
+  // Reset to defaults for a given view mode
+  resetToDefaults: (viewMode = 'globe') => set(getDefaultCameraState(viewMode))
 }));
 
 export { useCameraStore }; 

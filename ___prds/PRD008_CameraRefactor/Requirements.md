@@ -10,6 +10,8 @@ This document outlines the specifications and constraints for refactoring the ex
 - All camera state (target, position, zoom, viewMode, isAnimating, ) will be managed within `client/src/stores/cameraStore.js` (Zustand store).
 - `OrbitControls` state (camera position, target) will be two-way synchronized with `cameraStore` by the camera system.
 - The Three.js `PerspectiveCamera` instance will be configured by the camera system, driven by `cameraStore` and `OrbitControls`.
+- The control-panel camera tab will display target (x, y, z) and zoom values from `cameraStore`.
+- User inputs in the control-panel camera tab will update the corresponding values in `cameraStore`, which will then propagate to the camera system.
 - Leverage configuration constants from:
   - `@config/cameraConfig` (e.g. `DEFAULT_ANIMATION_DURATION_MS`, `CAMERA_EASINGS`, `CAMERA_VIEWS`)
   - `@config/gameConfig` (e.g. `GLOBE_RADIUS`, zoom factors)
@@ -67,11 +69,7 @@ Exports functions to interact with the camera system.
 // setDistance action might not directly set a 'distance' field, but rather calculate and call setPosition.
 - `setViewMode: (mode: string) => void`
 - `setAnimating: (isAnimating: boolean) => void`
-- `setFov: (fov: number) => void` (Updates store, triggers update to `camera.fov` and `camera.updateProjectionMatrix()`)
-- `setNearFarPlanes: (near: number, far: number) => void` (Updates store, triggers update to camera planes and matrix)
 - `syncFromOrbitControls: (position: THREE.Vector3, target: THREE.Vector3, up: THREE.Vector3) => void` // New: Action to update store from OrbitControls' state.
-- `resetCamera: (defaultState: Partial<CameraState>) => void` // To reset to a defined state, updating OrbitControls accordingly.
-// `applyCameraStateToThreeInstance` might be less direct; OrbitControls becomes the intermediary.
 
 ## Integration Points
 
@@ -79,6 +77,7 @@ Exports functions to interact with the camera system.
   - Import `initializeCameraSystem` from `client/src/game/camera/camera.js`.
   - Call `initializeCameraSystem` to get the camera and controls instances.
   - Pass the camera instance to the renderer and use controls as needed.
+  - **No longer directly create or configure the `THREE.PerspectiveCamera` or `OrbitControls` - this is the camera system's responsibility.**
 - The two-way synchronization logic between `OrbitControls` and `cameraStore` will be encapsulated within the camera system initialized by `camera.js` (likely within an internal module or `initializeCameraSystem` itself).
 - Remove or replace existing references to:
   - `BaseCameraController.js`
@@ -90,7 +89,7 @@ Exports functions to interact with the camera system.
 
 ## Directory Context
 
-- `client/src/game/camera`: existing class-based controllers to be replaced.
+- `client/src/game/camera`: existing class-based controllers to be replaced, will contain all camera-related logic including creation and configuration of camera and controls.
 - `client/src/config`: source of all camera, game, and keyboard constants.
 - `client/src/game/core/eventHandlers.js`: entry point wiring camera into user events.
 - `client/src/stores/cameraStore.js`: authoritative state for camera – must be the single source of truth.

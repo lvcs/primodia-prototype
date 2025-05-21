@@ -26,7 +26,6 @@ import {
   setupThreeJS,
   setupInitialWorldConfig,
   setupLighting,
-  setupOrbitControls,
   getCamera,
   getRenderer,
   getScene,
@@ -49,6 +48,14 @@ import {
 } from './core/eventHandlers.js';
 
 import { startAnimationLoop } from './core/mainLoop.js';
+
+// Import camera system functions
+import {
+  setViewMode,
+  focusOnLatLong
+} from './camera/cameraSystem.js';
+
+import { GLOBE_VIEW_CAMERA_DISTANCE } from '@config/cameraConfig';
 
 let scene, camera, renderer, controls, worldConfig;
 // let worldData; 
@@ -83,18 +90,18 @@ export function initGame(canvasElement) {
     // UI Mounting is now handled by React in App.jsx
 
     setupLighting(scene);
-    // Controls are set up after initial planet generation, so camera can target planet center
-    controls = setupOrbitControls(camera, renderer, worldConfig);
+    
+    // Controls are now initialized by setupThreeJS
+    controls = getControls();
     
     // Event listeners and mouse tracking might need adjustment if they rely on global DOM state
     // that React now manages. setupRootEventListeners might need renderer.domElement if it attaches there.
     gameCameraAnimator = setupRootEventListeners(renderer.domElement); // Pass canvas if needed
     setupMouseTrackingState(renderer.domElement); // Pass canvas if needed
     
-    // const currentPlanetGroup = getPlanetGroup(); 
-    // const currentControls = getControls(); 
-    // const currentWorldConfig = getWorldConfig();
-
+    // Explicitly set up the camera to view the globe
+    setViewMode('globe', false);
+    
     setupSocketConnection(); // Assuming this doesn't do direct DOM manipulation for UI
     startAnimationLoop(); // Starts the game loop
     
@@ -176,6 +183,9 @@ export function requestPlanetRegeneration(seed, worldSettings) {
       console.error('Error updating seed in store:', err);
     }
   }
+  
+  // Reset camera view after planet regeneration
+  setViewMode('globe', true);
   
   reinitializeControls(); // This might re-setup orbit controls, ensure it's compatible
   debug('Planet regeneration complete.');
