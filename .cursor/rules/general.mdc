@@ -15,8 +15,10 @@ This file outlines rules and guidelines applicable across the entire monorepo.
 
 # Tools
 - Express.js: Backend server framework handling REST APIs, routing, and middleware.
+- React: Frontend App
+- Zustand: UI and Game state management 
 - THREE.JS: 3D rendering on client-side
-- React: Frontend UI and local ephemeral state management.
+- Redix UI: UI Components
 - Vite: Frontend build tool providing rapid hot reloading and bundling.
 - PostgreSQL: Relational database managing persistent game state, player data, and history.
 

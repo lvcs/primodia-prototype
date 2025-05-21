@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
 import { MapTypes, defaultMapType, generateMapTerrain } from './registries/MapTypeRegistry.js';
-import { debug } from '../utils/debug.js';
+import { debug } from '@game/utils/debug';
 import { terrainById, Terrains } from './registries/TerrainRegistry.js';
 import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
-import * as Const from '../../config/gameConstants.js'; // Import constants
+import * as Const from '@config/gameConstants'; // Import constants
 import { DrawMode } from '../../config/gameConstants.js'; // CORRECTED PATH
 import RandomService from '../core/RandomService.js'; // Added import
 

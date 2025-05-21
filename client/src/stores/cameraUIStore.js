@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import { CAMERA_VIEWS } from '../config/cameraViewsConfig'; // Updated import path
+import zukeeper from 'zukeeper';
+
+import { CAMERA_VIEWS } from '@config/cameraViewsConfig'; // Updated import path
 
 // Default state for each view
 const getDefaultState = (view = 'globe') => {

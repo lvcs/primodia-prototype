@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { ControlSectionWrapper } from '../ui/ControlSectionWrapper';
-import { useDebugStore } from '../../stores';
+import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
+import { useDebugStore } from '@stores';
 
 // TODO: This tab should subscribe to a Zustand store (e.g., useCameraUIStore or a debug store)
 // that gets updated by the game logic instead of relying on a window global.

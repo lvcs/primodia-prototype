@@ -1,4 +1,4 @@
-import MoistureLevel from '../model/MoistureLevel.js';
+import MoistureLevel from '@game/world/model/MoistureLevel';
 
 // Define moisture levels with corresponding colors and names
 // These should be ordered by minMoisture DESCENDING for the getClosestMoistureLevel logic to work correctly.

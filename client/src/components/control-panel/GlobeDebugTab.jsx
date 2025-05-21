@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { ControlSectionWrapper } from '../ui/ControlSectionWrapper';
-import { Slider } from '../ui/Slider';
-import { useDebugStore } from '../../stores';
+import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
+import { Slider } from '@components/ui/Slider';
+import { useDebugStore } from '@stores';
 
 // TODO: If these sliders are to control the globe, the game logic needs to subscribe to these store values.
 // And the initial values should also be set by the game logic via the store.

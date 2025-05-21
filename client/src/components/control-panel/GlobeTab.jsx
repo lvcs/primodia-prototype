@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Button } from '../ui/Button';
-import { ControlSectionWrapper } from '../ui/ControlSectionWrapper';
-import { Slider } from '../ui/Slider';
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../ui/Select';
-import { Switch } from '../ui/Switch';
-import { Input } from '../ui/Input';
-import { useWorldSettingsStore } from '../../stores/worldSettingsStore';
+import { Button } from '@components/ui/Button';
+import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
+import { Slider } from '@components/ui/Slider';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@components/ui/Select';
+import { Switch } from '@components/ui/Switch';
+import { Input } from '@components/ui/Input';
+import { useWorldSettingsStore } from '@stores/worldSettingsStore';
 
 // Import constants for slider ranges
 import {
@@ -32,7 +32,7 @@ import {
   DEFAULT_VIEW_MODE,
   globeViewOptions,
   algorithms
-} from '../../config/gameConstants';
+} from '@config/gameConstants';
 
 // TODO: Integrate MapRegistry for live data
 

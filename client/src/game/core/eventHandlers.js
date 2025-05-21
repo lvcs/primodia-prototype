@@ -2,24 +2,24 @@
 
 import * as THREE from 'three';
 // Adjust path for debug.js, now a sibling in utils/
-import { debug, error, updateTileDebugInfo } from '../utils/debug.js'; 
+import { debug, error, updateTileDebugInfo } from '@game/utils/debug'; 
 // Adjust path for planetSphereVoronoi.js, assuming it will be in client/src/game/world/
-import { classifyTerrain } from '../world/planetSphereVoronoi.js'; 
+import { classifyTerrain } from '@game/world/planetSphereVoronoi'; 
 // Adjust path for mouseControls.js, assuming it will be in client/src/game/controls/
-import { initMouseControls, disposeMouseControls } from '../controls/mouseControls.js'; 
+import { initMouseControls, disposeMouseControls } from '@game/controls/mouseControls'; 
 // Adjust path for keyboardControls.js, assuming it will be in client/src/game/controls/
-import { initKeyboardControls, disposeKeyboardControls } from '../controls/keyboardControls.js'; 
+import { initKeyboardControls, disposeKeyboardControls } from '@game/controls/keyboardControls'; 
 // Adjust path for CameraOrbitController.js, assuming it will be in client/src/game/controls/
-import CameraOrbitController from '../controls/CameraOrbitController.js';
+import CameraOrbitController from '@game/controls/CameraOrbitController';
 
 // Import getters for shared state - these are fine as they are in the same directory (core)
 import { getCamera, getRenderer, getWorldConfig, getControls } from './setup.js'; 
 // Adjust path for planet.js, assuming it will be in client/src/game/
-import { getPlanetGroup, getWorldData } from '../planet.js'; 
+import { getPlanetGroup, getWorldData } from '@game/planet'; 
 import RandomService from './RandomService.js';
 // Adjust path for Camera.js, assuming it will be in client/src/camera/
 // This might need to be a new React-based camera control system or store interaction later.
-import { Camera } from '../../camera/Camera.js'; 
+import { Camera } from '@/camera/Camera'; 
 
 const HIGHLIGHT_SCALE_FACTOR = 1.003;
 const MAX_DRAG_DIST_FOR_CLICK = 10; 

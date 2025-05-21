@@ -8,12 +8,12 @@ import { Terrains } from './world/registries/TerrainRegistry.js';
 import { setupSocketConnection } from './multiplayer/socket.js';
 import { debug, error, initDebug } from './utils/debug.js';
 import RandomService from './core/RandomService.js'; 
-import * as Const from '../config/gameConstants.js'; // Corrected path
+import * as Const from '@config/gameConstants'; // Corrected path
 import { DrawMode } from '../config/gameConstants.js'; // Added direct import for DrawMode
 // import { getActionForKey, Actions } from '../config/keybindings.js'; // Corrected path if used
 
 // Import store safely at the top
-import { useWorldSettingsStore } from '../stores/worldSettingsStore.js';
+import { useWorldSettingsStore } from '@stores/worldSettingsStore';
 
 // Import new control modules
 import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';

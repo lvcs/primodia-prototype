@@ -1,14 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/Tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@components/ui/Tabs';
 import GlobeTab from './GlobeTab'; // Import the GlobeTab component
 import CameraTab from './CameraTab'; // Import CameraTab
 import TileDebugTab from './TileDebugTab'; // Import TileDebugTab
 import CameraDebugTab from './CameraDebugTab'; // Import CameraDebugTab
 import GlobeDebugTab from './GlobeDebugTab'; // Import GlobeDebugTab
-// import { Button } from '../ui/Button';
-// import { Slider } from '../ui/Slider';
-// import { Input } from '../ui/Input';
+// import { Button } from '@components/ui/Button';
+// import { Slider } from '@components/ui/Slider';
+// import { Input } from '@components/ui/Input';
 
 function UnifiedControlPanel({ className }) {
   // TODO: Fetch or determine tab structure dynamically if needed

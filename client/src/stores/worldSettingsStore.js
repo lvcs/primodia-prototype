@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import zukeeper from 'zukeeper';
+
 import {
   DEFAULT_NUMBER_OF_GLOBE_TILES,
   DEFAULT_JITTER,
@@ -7,10 +9,10 @@ import {
   DrawMode,
   defaultMapType,
   DEFAULT_VIEW_MODE
-} from '../config/gameConstants';
+} from '@config/gameConstants';
 
 // Import the actual game functions
-import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '../game/game.js';
+import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '@game/game';
 
 // --- End Game Logic Imports ---
 
@@ -30,7 +32,7 @@ const initialWorldSettings = {
   currentSeed: generateDefaultSeed(), // Use a timestamp-based seed by default
 };
 
-export const useWorldSettingsStore = create((set, get) => ({
+export const useWorldSettingsStore = create(zukeeper((set, get) => ({
   ...initialWorldSettings,
 
   // Actions to update settings
@@ -105,4 +107,4 @@ export const useWorldSettingsStore = create((set, get) => ({
 
   // Full reset action (optional)
   resetWorldSettings: () => set(initialWorldSettings),
-})); 
+}))); 

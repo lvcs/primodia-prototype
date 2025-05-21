@@ -1,4 +1,4 @@
-import ResourceType from '../model/ResourceType.js';
+import ResourceType from '@game/world/model/ResourceType';
 
 export const Resources = {
   GRAIN:     new ResourceType({ id:'GRAIN',     name:'Grain',     color:0xffff00, symbol:'🌾' }),

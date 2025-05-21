@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'; // Added for future use with props like onSwitchToRegister
-import { useAuthStore } from '../stores';
+import { useAuthStore } from '@stores';
 
 function LoginPage({ onSwitchToRegister }) {
   const [username, setUsername] = useState('');

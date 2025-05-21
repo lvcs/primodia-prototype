@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import zukeeper from 'zukeeper';  
 
 // Mock API functions (replace with actual API calls later)
 const mockLoginApi = async (username, password) => {
@@ -33,7 +34,7 @@ const mockRegisterApi = async (username, password, email) => {
   });
 };
 
-const useAuthStore = create((set, get) => ({
+const useAuthStore = create(zukeeper((set, get) => ({
   currentUser: null,
   token: null,
   isLoading: false,
@@ -91,6 +92,6 @@ const useAuthStore = create((set, get) => ({
       }
     }
   }
-}));
+})));
 
 export { useAuthStore }; 

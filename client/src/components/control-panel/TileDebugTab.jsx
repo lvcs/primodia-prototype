@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { useDebugStore } from '../../stores'; // Adjusted import path
+import { useDebugStore } from '@stores'; // Adjusted import path
 
 // TODO: This tab should subscribe to a Zustand store slice 
 // that gets updated by the game logic instead of relying on a window global.

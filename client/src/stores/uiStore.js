@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import zukeeper from 'zukeeper';
 
 // Initial state for the UI store
 const initialState = {
@@ -8,7 +9,7 @@ const initialState = {
   activeTooltip: null, // { id, content, position }
 };
 
-export const useUIStore = create((set, get) => ({
+export const useUIStore = create(zukeeper((set, get) => ({
   ...initialState,
 
   // Actions to modify state
@@ -34,4 +35,4 @@ export const useUIStore = create((set, get) => ({
 
   // Reset to initial state (optional)
   resetUIState: () => set(initialState),
-})); 
+}))); 

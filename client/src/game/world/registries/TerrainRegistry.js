@@ -1,4 +1,4 @@
-import TerrainType from '../model/TerrainType.js';
+import TerrainType from '@game/world/model/TerrainType';
 
 // Define terrain types with classification criteria
 // Priority: Lower numbers are checked first.

@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { useCameraUIStore, useWorldSettingsStore } from '../../../stores';
-import { ControlSectionWrapper } from '../../ui/ControlSectionWrapper';
-import { Slider } from '../../ui/Slider';
+import { useCameraUIStore, useWorldSettingsStore } from '@stores';
+import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
+import { Slider } from '@components/ui/Slider';
 
 const DEGREES_TO_RADIANS = Math.PI / 180;
 const RADIANS_TO_DEGREES = 180 / Math.PI;

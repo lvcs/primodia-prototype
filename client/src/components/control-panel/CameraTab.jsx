@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { ControlSectionWrapper } from '../ui/ControlSectionWrapper';
-import { Slider } from '../ui/Slider';
-// import { Button } from '../ui/Button';
+import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
+import { Slider } from '@components/ui/Slider';
+// import { Button } from '@components/ui/Button';
 
 // --- Mock/Placeholder Game Logic Imports ---
 // TODO: These would come from a store (e.g., useCameraStore) or props

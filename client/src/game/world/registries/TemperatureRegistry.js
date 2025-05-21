@@ -1,4 +1,4 @@
-import TemperatureLevel from '../model/TemperatureLevel.js';
+import TemperatureLevel from '@game/world/model/TemperatureLevel';
 
 // Define temperature levels inspired by the crochet blanket chart.
 // Thresholds are upper bounds (exclusive for next level).

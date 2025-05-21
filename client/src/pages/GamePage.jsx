@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import UnifiedControlPanel from '../components/control-panel/UnifiedControlPanel';
-import UserInfo from '../components/layout/UserInfo';
-import TopBar from '../components/layout/TopBar';
-import MiniMap from '../components/layout/MiniMap';
-import { initGame } from '../game/game';
-import { useAuthStore } from '../stores';
+import UnifiedControlPanel from '@components/control-panel/UnifiedControlPanel';
+import UserInfo from '@components/layout/UserInfo';
+import TopBar from '@components/layout/TopBar';
+import MiniMap from '@components/layout/MiniMap';
+import { initGame } from '@game/game';
+import { useAuthStore } from '@stores';
 
 function GamePage({ onSignOut, onGlobeViewClick }) {
   const canvasRef = useRef(null);

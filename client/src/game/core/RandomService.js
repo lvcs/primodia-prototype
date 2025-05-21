@@ -1,4 +1,4 @@
-import SeedableRandom from '../../utils/SeedableRandom.js'; // Corrected relative path
+import SeedableRandom from '@utils/SeedableRandom.js'; // Corrected relative path
 
 class RandomServiceController {
   constructor() {
