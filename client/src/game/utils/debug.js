@@ -101,20 +101,14 @@ export function logWorldStructure(world) {
 
 export function initDebug() {
   if (!DEBUG) return;
-  // createDebugUI(); // This was for the old DOM panel, should remain commented or removed.
-  debug('Debug mode initialized (new client).');
-  // updateDebugStatus('Debug initialized (new client).'); // Use console.log instead
-  console.log('[STATUS UPDATE]: Debug initialized (new client).');
-
+  
   // Global error listeners are fine, they use console.error and our local error() / debug()
   window.addEventListener('error', (event) => {
     error('Unhandled error:', event.error);
-    // updateDebugStatus(`ERROR: ${event.error.message}`); // Avoid DOM manipulation
     console.log(`[STATUS UPDATE FROM ERROR HANDLER]: ERROR: ${event.error.message}`);
   });
   window.addEventListener('unhandledrejection', (event) => {
     error('Unhandled promise rejection:', event.reason);
-    // updateDebugStatus(`Promise Error: ${event.reason}`); // Avoid DOM manipulation
     console.log(`[STATUS UPDATE FROM ERROR HANDLER]: Promise Error: ${event.reason}`);
   });
 } 

@@ -28,21 +28,7 @@ function addPlanetaryGlow(_scene, radius) {
 export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _existingPlanetGroup, _existingSelectedHighlight, seed) {
   let currentWorldConfig = { ..._worldConfig };
   
-  try {
-    debug(`Generating planet with config: ${JSON.stringify(currentWorldConfig)}`);
-    console.log('Current sphereSettings in generateAndDisplayPlanet:', {
-      drawMode: sphereSettings.drawMode,
-      algorithm: sphereSettings.algorithm,
-      numPoints: sphereSettings.numPoints,
-      jitter: sphereSettings.jitter,
-      mapType: sphereSettings.mapType,
-      outlineVisible: sphereSettings.outlineVisible,
-      numPlates: sphereSettings.numPlates,
-      viewMode: sphereSettings.viewMode,
-      elevationBias: sphereSettings.elevationBias,
-      currentSeed: sphereSettings.currentSeed
-    });
-    
+  try {    
     if (_existingPlanetGroup) {
       _scene.remove(_existingPlanetGroup);
       _existingPlanetGroup.traverse(obj => {
@@ -74,7 +60,6 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     }
     
     console.log('Passing updated worldConfig with sphereSettings to generateWorld:', currentWorldConfig);
-    console.log('VERIFICATION: numPoints in sphereSettings being passed:', sphereSettings.numPoints);
     
     worldData = generateWorld(currentWorldConfig, seed);
     
@@ -104,7 +89,6 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
       planetGroup.add(southPoleMarker);
 
       _scene.add(planetGroup);
-      debug('Planet mesh group added to scene.');
     } else {
       error('Failed to generate planet mesh group. worldData:', worldData);
       const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 6400;
@@ -128,7 +112,6 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     addPlanetaryGlow(_scene, currentWorldConfig.radius);
     updatePlanetColors(); 
 
-    debug('Planet generation and display complete.');
     // Return the actual seed that was used along with other data
     const actualSeed = worldData?.actualSeed || seed || (sphereSettings.currentSeed ? String(sphereSettings.currentSeed) : String(Date.now()));
     return { planetGroup, globe: worldData?.globe, actualSeed };

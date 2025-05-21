@@ -18,17 +18,18 @@ import { getPlanetGroup, getWorldData } from '@game/planet';
 import RandomService from './RandomService.js';
 // Adjust path for Camera.js, assuming it will be in client/src/game/camera/
 // This might need to be a new React-based camera control system or store interaction later.
-import { Camera } from '@/game/camera/Camera'; 
-import CameraOrbitController from '@/game/camera/CameraOrbitController';
+// import { Camera } from '@/game/camera/Camera'; 
+// import CameraOrbitController from '@/game/camera/CameraOrbitController';
 import { useCameraStore } from '@stores/cameraStore'; // Import camera store
+import * as camera from '@game/camera/camera'; // Import the new camera API
 
 const HIGHLIGHT_SCALE_FACTOR = 1.003;
 const MAX_DRAG_DIST_FOR_CLICK = 10; 
 const MAX_DRAG_TIME_FOR_CLICK = 250;
 
 let selectedHighlight = null;
-let cameraAnimator = null; 
-let orbitController = null;
+// let cameraAnimator = null; 
+// let orbitController = null;
 
 let mouseDownTime;
 let mouseDownPosition = new THREE.Vector2();
@@ -52,35 +53,15 @@ function addGlobeViewButton(cameraAnimatorInstance) {
 }
 
 export function setupRootEventListeners(canvasElement) { // canvasElement is renderer.domElement
-    const cameraInstance = getCamera(); 
+    // const cameraInstance = getCamera(); // Not needed directly here anymore for animator
     const rendererInstance = getRenderer(); 
     const planetGroupInstance = getPlanetGroup(); 
-    const orbitControlsInstance = getControls(); 
+    // const orbitControlsInstance = getControls(); // Not needed directly here for animator
     const worldConfigInstance = getWorldConfig();   
 
-    if (cameraInstance && planetGroupInstance && orbitControlsInstance && worldConfigInstance) {
-      cameraAnimator = new Camera(
-        cameraInstance,
-        planetGroupInstance,
-        orbitControlsInstance,      
-        worldConfigInstance.radius  
-      );
-      window.cameraAnimator = cameraAnimator; // TODO: Avoid global exposure if possible, use stores/context
-      
-      const initialRadius = cameraInstance.position.length();
-      const initialPhi = Math.acos(cameraInstance.position.y / initialRadius);
-      const initialTheta = Math.atan2(cameraInstance.position.z, cameraInstance.position.x);
-      orbitController = new CameraOrbitController(cameraInstance, orbitControlsInstance, initialRadius, initialPhi, initialTheta);
-      window.orbitController = orbitController; // TODO: Avoid global exposure
-      
-      
-      
-      // addGlobeViewButton(cameraAnimator); // Deprecated: UserInfo.jsx handles this via props
-    } else {
-      error("Failed to initialize CameraAnimator/OrbitController: Missing dependencies.");
-    }
+    // cameraAnimator and orbitController are no longer initialized here.
+    // Their functionalities will be replaced by direct calls to camera or OrbitControls features.
     
-
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -199,19 +180,28 @@ export function setupRootEventListeners(canvasElement) { // canvasElement is ren
 
             const clickedTile = wData.globe.getTile(tileId);
             if (clickedTile) {
-                if (cameraAnimator) {
-                  const tileDataForCamera = {
-                    latitude: clickedTile.lat,
-                    longitude: clickedTile.lon
-                  };
-                  cameraAnimator.animateToTile(tileDataForCamera, () => {
-                    // const globeBtn = document.getElementById('globe-view-btn-old-eventhandler');
-                    // if (globeBtn) globeBtn.style.display = 'block'; // Old DOM button
-                    // New: Trigger UI store state if needed, e.g., to show a globe view button in React UI
-                  });
-                } else {
-                  error("CameraAnimator not initialized. Cannot animate to tile.");
-                }
+                // if (cameraAnimator) { // Old way
+                //   const tileDataForCamera = {
+                //     latitude: clickedTile.lat,
+                //     longitude: clickedTile.lon
+                //   };
+                //   cameraAnimator.animateToTile(tileDataForCamera, () => {
+                //     // const globeBtn = document.getElementById('globe-view-btn-old-eventhandler');
+                //     // if (globeBtn) globeBtn.style.display = 'block'; // Old DOM button
+                //     // New: Trigger UI store state if needed, e.g., to show a globe view button in React UI
+                //   });
+                // } else {
+                //   error("CameraAnimator not initialized. Cannot animate to tile.");
+                // }
+                // New way: Use camera
+                const distanceToFocus = worldConfigInstance.radius * 1.5; // Example distance, adjust as needed
+                camera.focusOnLatLong(
+                    clickedTile.lat,
+                    clickedTile.lon,
+                    distanceToFocus,
+                    true // Animate
+                    // Default duration and easing will be used from camera/cameraConfig
+                );
             }
         });
     } else {
@@ -224,13 +214,15 @@ export function setupRootEventListeners(canvasElement) { // canvasElement is ren
     // const rend = getRenderer(); // rend is already rendererInstance here
     const wConfig = getWorldConfig();
 
-    if (cam && pGroup && orbitControls && rendererInstance && wConfig && orbitController) {
-        initMouseControls(cam, orbitControls, rendererInstance, orbitController);
-        initKeyboardControls(cam, orbitControls, wConfig, orbitController);
+    // if (cam && pGroup && orbitControls && rendererInstance && wConfig && orbitController) { // orbitController is removed
+    if (cam && pGroup && orbitControls && rendererInstance && wConfig) {
+        initMouseControls(cam, orbitControls, rendererInstance); // orbitController removed
+        initKeyboardControls(cam, orbitControls, wConfig); // orbitController removed
     } else {
         error('One or more dependencies for control (mouse/keyboard) initialization are missing in setupRootEventListeners.');
     }
-    return cameraAnimator; 
+    // return cameraAnimator; // cameraAnimator is removed
+    return; // setupRootEventListeners doesn't need to return the animator anymore
 }
 
 export function setupMouseTrackingState(canvasElement) { // canvasElement is renderer.domElement
@@ -246,11 +238,12 @@ export function reinitializeControls() {
     const rend = getRenderer();
     const wConfig = getWorldConfig();
 
-    if (cam && pGroup && orbitControls && rend && wConfig && orbitController) {
+    // if (cam && pGroup && orbitControls && rend && wConfig && orbitController) { // orbitController is removed
+    if (cam && pGroup && orbitControls && rend && wConfig) {
         disposeMouseControls(); 
         disposeKeyboardControls();
-        initMouseControls(cam, orbitControls, rend, orbitController);
-        initKeyboardControls(cam, orbitControls, wConfig, orbitController);
+        initMouseControls(cam, orbitControls, rend); // orbitController removed
+        initKeyboardControls(cam, orbitControls, wConfig); // orbitController removed
         debug('Mouse and Keyboard controls re-initialized.');
     } else {
         error('Failed to re-initialize controls due to missing dependencies.');

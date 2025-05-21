@@ -1,36 +1,39 @@
 // Three.js scene, camera, renderer, lighting, and initial controls setup 
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-// Adjust path for Const if it moves to client/src/config
-import * as ConstFromGameConfig from '../../config/gameConfig.js'; // Renamed to avoid conflict
-import { GLOBE_VIEW_CAMERA_DISTANCE } from '../../config/cameraConfig.js'; // Import specific constant
-// Adjust path for debug if it moves
+// OrbitControls is now managed by camera.js
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; 
+import * as ConstFromGameConfig from '../../config/gameConfig.js'; 
+// GLOBE_VIEW_CAMERA_DISTANCE might be sourced from cameraStore defaults now via camera
+// import { GLOBE_VIEW_CAMERA_DISTANCE } from '../../config/cameraConfig.js'; 
 import { debug } from '../utils/debug.js'; 
+import { initializeCameraSystem } from '../camera/camera.js'; // Import the new camera system initializer
 
 let scene, camera, renderer, controls;
 let worldConfig;
 
-export function setupThreeJS(canvasElement) {
+export function setupThreeJS(canvasElement, _worldConfig) { // Pass worldConfig for camera system
   if (!canvasElement) {
     throw new Error("setupThreeJS requires a canvasElement argument.");
   }
+  if (!_worldConfig) {
+    throw new Error("setupThreeJS requires a worldConfig argument for camera initialization.");
+  }
+
   scene = new THREE.Scene();
   scene.background = new THREE.Color(ConstFromGameConfig.SCENE_BACKGROUND_COLOR);
   
-  // Use canvas dimensions for aspect ratio initially, but it should adapt on resize
-  const aspectRatio = canvasElement.clientWidth / canvasElement.clientHeight;
-  camera = new THREE.PerspectiveCamera(ConstFromGameConfig.CAMERA_FOV, aspectRatio, ConstFromGameConfig.CAMERA_NEAR_PLANE, ConstFromGameConfig.CAMERA_FAR_PLANE);
-  camera.position.set(0, 0, GLOBE_VIEW_CAMERA_DISTANCE); // Use the constant for Z distance
-  camera.lookAt(0, 0, 0);
+  // Initialize camera and controls using the new camera system
+  const cameraSystem = initializeCameraSystem(canvasElement, _worldConfig);
+  camera = cameraSystem.camera;
+  controls = cameraSystem.controls;
   
   renderer = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true, alpha: true });
-  renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight); // Use canvas size
+  renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight); 
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  // Resizing should be handled by an event listener in the game setup or main loop,
-  // updating camera aspect and renderer size.
-  return { scene, camera, renderer };
+
+  return { scene, camera, renderer, controls }; // Return controls as well
 }
 
 export function setupInitialWorldConfig() {
@@ -56,6 +59,8 @@ export function setupLighting(_scene) {
   _scene.add(hemisphereLight);
 }
 
+// setupOrbitControls is now part of initializeCameraSystem in camera.js
+/*
 export function setupOrbitControls(_camera, _renderer, _worldConfig) {
   if (controls) {
     controls.dispose();
@@ -77,9 +82,10 @@ export function setupOrbitControls(_camera, _renderer, _worldConfig) {
   controls.update();
   return controls;
 }
+*/
 
 export const getScene = () => scene;
-export const getCamera = () => camera;
+export const getCamera = () => camera; // This will now return the camera managed by camera
 export const getRenderer = () => renderer;
-export const getControls = () => controls;
+export const getControls = () => controls; // This will now return the controls managed by camera
 export const getWorldConfig = () => worldConfig; 

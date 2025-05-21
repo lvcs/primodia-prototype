@@ -1,78 +1,74 @@
 import { create } from 'zustand';
 import * as THREE from 'three';
+import { CAMERA_FOV, CAMERA_NEAR_PLANE, CAMERA_FAR_PLANE, GLOBE_RADIUS } from '@config/gameConfig';
+import { CAMERA_VIEWS, DEFAULT_ANIMATION_DURATION_MS, DEFAULT_EASING_CURVE } from '@config/cameraConfig'; // Assuming these are needed for reset or view modes
 
-import { CAMERA_VIEWS, GLOBE_VIEW_CAMERA_DISTANCE, TILE_VIEW_CAMERA_DISTANCE } from '@config/cameraConfig';
-
-// Helper to get default camera parameters based on view mode
-const getDefaultCameraParams = (viewMode = 'globe') => {
-  // TODO: Define specific phi, theta, zoom for each view mode in cameraConfig.js
-  // For now, using some placeholders.
-  switch (viewMode) {
-    case 'tile':
-      return {
-        zoom: TILE_VIEW_CAMERA_DISTANCE !== undefined ? TILE_VIEW_CAMERA_DISTANCE : 50,
-        phi: Math.PI / 4, // Example: 45 degrees
-        theta: 0,
-        target: new THREE.Vector3(0, 0, 0), // Or a specific default target for tile view
-      };
-    case 'globe':
-    default:
-      return {
-        zoom: GLOBE_VIEW_CAMERA_DISTANCE !== undefined ? GLOBE_VIEW_CAMERA_DISTANCE : 150,
-        phi: Math.PI / 2, // Equatorial
-        theta: 0, // Default orientation
-        target: new THREE.Vector3(0, 0, 0),
-      };
-  }
-};
+// Initial state, also used for reset
+const getDefaultCameraState = () => ({
+  target: new THREE.Vector3(0, 0, 0),
+  position: new THREE.Vector3(0, GLOBE_RADIUS * 0.5, GLOBE_RADIUS * 2.5), // Default initial position
+  up: new THREE.Vector3(0, 1, 0),
+  viewMode: 'globe', // Default view mode
+  isAnimating: false,
+  fov: CAMERA_FOV,
+  near: CAMERA_NEAR_PLANE,
+  far: CAMERA_FAR_PLANE,
+});
 
 const useCameraStore = create((set, get) => ({
-  // REQ-CAM-R-001: Definitive state
-  ...getDefaultCameraParams('globe'), // Initialize with default globe view params
-  viewMode: 'globe',
-  isAnimating: false,
+  ...getDefaultCameraState(),
 
-  // REQ-CAM-R-002: Actions to update state variables
-  setZoom: (zoom) => set({ zoom }),
+  // Actions to update state
+  // These actions primarily update the store. The synchronization to OrbitControls
+  // will be handled by a separate mechanism (e.g., useEffect in a component or if OrbitControls instance is made available here)
   setTarget: (target) => set({ target: new THREE.Vector3().copy(target) }),
-  setPhi: (phi) => set({ phi }),
-  setTheta: (theta) => set({ theta }),
-  setRotation: ({ phi, theta }) => set(state => {
-    const newPhi = phi !== undefined ? phi : state.phi;
-    const newTheta = theta !== undefined ? theta : state.theta;
-    return { phi: newPhi, theta: newTheta };
-  }),
-  setIsAnimating: (isAnimating) => set({ isAnimating }),
+  setPosition: (position) => set({ position: new THREE.Vector3().copy(position) }),
+  setUpVector: (up) => set({ up: new THREE.Vector3().copy(up) }),
+  setViewMode: (viewMode) => {
+    const viewConfig = CAMERA_VIEWS[viewMode];
+    if (viewConfig) {
+      set({
+        viewMode,
+        // Optionally, update target/position based on viewConfig if provided
+        // For now, just sets the mode. API layer will handle transitions.
+        isAnimating: false, // Reset animation state on view mode change
+      });
+    } else {
+      console.warn(`CameraStore: Unknown viewMode "${viewMode}"`);
+    }
+  },
+  setAnimating: (isAnimating) => set({ isAnimating }),
+  setFov: (fov) => set({ fov }),
+  setNearFarPlanes: ({ near, far }) => set({ near, far }),
 
-  setViewMode: (viewMode) => set((state) => {
-    const defaultParams = getDefaultCameraParams(viewMode);
-    return {
-      viewMode,
-      ...defaultParams, // Reset zoom, phi, theta, target to defaults for the new mode
-      isAnimating: false, // Reset animation state on view mode change
-    };
-  }),
+  // Action to update store from OrbitControls' state
+  syncFromOrbitControls: (position, target, up) => {
+    set({
+      position: new THREE.Vector3().copy(position),
+      target: new THREE.Vector3().copy(target),
+      up: new THREE.Vector3().copy(up),
+    });
+  },
 
-  // --- Helper getters ---
-  getOrientation: () => ({
-    phi: get().phi,
-    theta: get().theta,
-  }),
+  // Reset camera to a default or specified state
+  resetCamera: (initialState) => {
+    const defaults = getDefaultCameraState();
+    const newState = { ...defaults, ...initialState }; // Merge provided state with defaults
+    set(newState);
+    // This should also trigger an update to OrbitControls to reflect the reset state.
+  },
 
-  getPositionState: () => ({
-    zoom: get().zoom,
+  // Getter for convenience, though direct subscription to properties is preferred for React components
+  getCameraState: () => ({
     target: get().target.clone(),
-    phi: get().phi,
-    theta: get().theta,
+    position: get().position.clone(),
+    up: get().up.clone(),
+    viewMode: get().viewMode,
+    isAnimating: get().isAnimating,
+    fov: get().fov,
+    near: get().near,
+    far: get().far,
   }),
-
-  // --- Deprecated actions/state (to be removed after confirming they are not used elsewhere) ---
-  // setPosition: (position) => console.warn('setPosition is deprecated'),
-  // setTilt: (tilt) => console.warn('setTilt is deprecated'),
-  // setYaw: (yaw) => console.warn('setYaw is deprecated'),
-  // setRoll: (roll) => console.warn('setRoll is deprecated'),
-  // setOrientation: (orientationUpdate) => console.warn('setOrientation (old) is deprecated'),
-  // restoreState: (state) => console.warn('restoreState is deprecated'),
 }));
 
-export { useCameraStore }; 
+export { useCameraStore, getDefaultCameraState }; 
