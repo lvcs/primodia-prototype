@@ -19,7 +19,6 @@ const TerrainTypeIds = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
 const terrainColors = Object.fromEntries(Object.values(Terrains).map(t=>[t.id,t.color]));
 
 function generateFibonacciSphere1(N, jitter, randomFloat) {
-    console.log(`[generateFibonacciSphere1] Called with N=${N}, jitter=${jitter}`);
     const points = [];
     const phi = Math.PI * (Math.sqrt(5) - 1); // golden ratio
     
@@ -54,7 +53,6 @@ function generateFibonacciSphere1(N, jitter, randomFloat) {
     // Add south pole point
     points.push(0, -1, 0);
     
-    console.log(`[generateFibonacciSphere1] Generated ${points.length/3} points (expected ${N})`);
     return points;
 }
 
@@ -471,22 +469,7 @@ export const DEFAULT_VIEW_MODE = 'elevation'; // Added constant for default view
 
 // Debug function to troubleshoot potential issues with numPoints
 function debugAndFixNumPoints() {
-  console.log('=== DEBUG: numPoints sanity check ===');
-  console.log('Const.DEFAULT_NUMBER_OF_GLOBE_TILES = ', Const.DEFAULT_NUMBER_OF_GLOBE_TILES);
-  console.log('Current sphereSettings.numPoints = ', sphereSettings.numPoints);
   
-  // Ensure numPoints is a number that makes sense for planet generation
-  if (typeof sphereSettings.numPoints !== 'number' || 
-      isNaN(sphereSettings.numPoints) || 
-      sphereSettings.numPoints < 50 || 
-      sphereSettings.numPoints > 128000) {
-    console.warn('FIXING numPoints: Invalid value detected:', sphereSettings.numPoints);
-    sphereSettings.numPoints = Const.DEFAULT_NUMBER_OF_GLOBE_TILES;
-    console.log('FIXED numPoints to:', sphereSettings.numPoints);
-  }
-  
-  console.log('=== END DEBUG CHECK ===');
-  return sphereSettings.numPoints;
 }
 
 // Settings object to store sphere generation parameters
@@ -506,21 +489,6 @@ export const sphereSettings = {
 // Main function to generate the planet geometry
 export function generatePlanetGeometryGroup(config) {
     // Check RandomService state
-    console.log('[generatePlanetGeometryGroup] RandomService current seed:', RandomService.getCurrentSeed());
-    console.log('[generatePlanetGeometryGroup] Sampling RandomService:', 
-                RandomService.nextFloat(), RandomService.nextFloat());
-    
-    console.log('[generatePlanetGeometryGroup] Starting planet geometry generation with sphereSettings:', {
-      drawMode: sphereSettings.drawMode,
-      algorithm: sphereSettings.algorithm,
-      numPoints: sphereSettings.numPoints,
-      jitter: sphereSettings.jitter,
-      mapType: sphereSettings.mapType,
-      outlineVisible: sphereSettings.outlineVisible,
-      numPlates: sphereSettings.numPlates,
-      viewMode: sphereSettings.viewMode,
-      elevationBias: sphereSettings.elevationBias
-    });
     
     // Use the latest sphereSettings values
     const { radius = Const.GLOBE_RADIUS } = config; // Default to the global constant if not provided
@@ -533,21 +501,15 @@ export function generatePlanetGeometryGroup(config) {
     const algorithm = sphereSettings.algorithm;
     const drawMode = sphereSettings.drawMode;
     
-    console.log(`[generatePlanetGeometryGroup] Using numPoints=${N}, jitter=${jitter}, algorithm=${algorithm}, drawMode=${drawMode}`);
-    
     let points;
     // Bind RandomService.nextFloat for convenience
     const randomFloat = RandomService.nextFloat.bind(RandomService);
 
-    console.log(`[generatePlanetGeometryGroup] FINAL CHECK - About to generate sphere with numPoints=${N}`);
-    
     if(algorithm === 1){
         points = generateFibonacciSphere1(N, jitter, randomFloat);
     } else {
         points = generateFibonacciSphere2(N, jitter, randomFloat);
     }
-    
-    console.log(`[generatePlanetGeometryGroup] Generated points array with length=${points.length/3} (expected ${N})`);
     
     // Project points for triangulation
     const { projected, southPoleIndex, originalIndicesMap } = stereographicProjection(points);

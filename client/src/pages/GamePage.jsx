@@ -13,10 +13,8 @@ function GamePage({ onSignOut, onGlobeViewClick }) {
 
   useEffect(() => {
     if (canvasRef.current) {
-      console.log('Initializing game with canvas:', canvasRef.current);
       try {
         initGame(canvasRef.current);
-        console.log('Game initialized successfully');
       } catch (error) {
         console.error('Failed to initialize game:', error);
       }

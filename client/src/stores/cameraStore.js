@@ -6,6 +6,7 @@ import { CAMERA_VIEWS } from '@config/cameraParameters';
 const getDefaultState = (view = 'globe') => {
   const config = CAMERA_VIEWS[view] || CAMERA_VIEWS.globe;
   return {
+    camera: null,
     viewMode: view,
     position: null, // { x, y, z } or null
     zoom: config.defaultZoom,
@@ -18,6 +19,8 @@ const getDefaultState = (view = 'globe') => {
 
 export const useCameraStore = create((set, get) => ({
   ...getDefaultState(),
+  camera: null,
+  
 
   // Switch view mode and reset to default for that view
   setViewMode: (view) => set((state) => ({

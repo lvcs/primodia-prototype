@@ -17,13 +17,13 @@ export default class SeedableRandom {
       numericSeed = Array.from(seed).reduce((acc, char) => {
         return ((acc << 5) - acc) + char.charCodeAt(0);
       }, 0);
-      console.log(`SeedableRandom: Converting string seed "${seed}" to numeric hash ${numericSeed}`);
+      // console.log(`SeedableRandom: Converting string seed "${seed}" to numeric hash ${numericSeed}`);
     } else if (typeof seed === 'number') {
       numericSeed = seed;
     } else {
       // Default seed for undefined or other types
       numericSeed = 19831108;
-      console.warn(`SeedableRandom: Unexpected seed type ${typeof seed}, using default`);
+      // console.warn(`SeedableRandom: Unexpected seed type ${typeof seed}, using default`);
     }
     
     // Ensure seed is a positive integer (Mulberry32 works best with positive integers)
@@ -33,7 +33,7 @@ export default class SeedableRandom {
     // If seed is 0, use a default non-zero value
     this.seed = numericSeed === 0 ? 19831108 : numericSeed;
     
-    console.log(`SeedableRandom: Initialized with final seed value: ${this.seed}`);
+    // console.log(`SeedableRandom: Initialized with final seed value: ${this.seed}`);
   }
 
   /**

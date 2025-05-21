@@ -10,7 +10,7 @@ class RandomServiceController {
     const effectiveSeed = seed === undefined ? this._defaultSeed : seed;
     this.prng = new SeedableRandom(effectiveSeed);
     this._defaultSeed = effectiveSeed;
-    console.log(`RandomService initialized with seed: ${effectiveSeed}`);
+    // console.log(`RandomService initialized with seed: ${effectiveSeed}`);
   }
 
   _ensureInitialized() {

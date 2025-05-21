@@ -10,7 +10,8 @@ import { updateCameraDebugInfo, updateGlobeDebugInfo } from '@game/utils/debug.j
 // Adjust path for planetSphereVoronoi.js
 import { sphereSettings } from '@game/world/planetSphereVoronoi.js';
 // Imports from ./setup.js are correct as it's a sibling
-import { getCamera, getRenderer, getScene, getControls } from './setup.js'; 
+import { getRenderer, getScene, getControls } from './setup.js'; 
+import { useCameraStore } from '@stores';
 // Adjust path for gameConstants.js
 import * as Const from '@config/gameConstants.js';
 
@@ -24,7 +25,7 @@ function animate() {
     animationFrameId = requestAnimationFrame(animate);
     const deltaTime = clock.getDelta();
 
-    const camera = getCamera();
+    const camera = useCameraStore.getState().camera;
     const renderer = getRenderer();
     const scene = getScene();
     const controls = getControls();
@@ -35,14 +36,7 @@ function animate() {
     }
 
     handleKeyboardInput(deltaTime);
-    // updateComponentUIDisplay(); // Obsolete: Old UI component update
-
-    // Update camera debug info via store if necessary, or rely on CameraDebugTab subscribing to cameraUIStore
-    // For now, let's assume CameraDebugTab gets its primary data from cameraUIStore or directly.
-    // If specific derived data from this loop is needed, it can update useDebugStore.cameraDebugInfo
-    // updateCameraDebugInfo(camera, controls); // Calls the neutered debug.js version (console.logs)
-    // Example: useDebugStore.getState().setCameraDebugInfo({ customLoopData: 'value' });
-
+    
     if (planetGroup && planetGroup.userData) { // Check userData exists
         const rotationDeg = {
             x: THREE.MathUtils.radToDeg(planetGroup.rotation.x).toFixed(2),

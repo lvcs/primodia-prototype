@@ -5,6 +5,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as Const from '../../config/gameConstants.js'; 
 // Adjust path for debug if it moves
 import { debug } from '../utils/debug.js'; 
+import { initializeCam } from '@game/camera/cam.js';
+import { useCameraStore } from '@stores';
 
 let scene, camera, renderer, controls;
 let worldConfig;
@@ -18,9 +20,8 @@ export function setupThreeJS(canvasElement) {
   
   // Use canvas dimensions for aspect ratio initially, but it should adapt on resize
   const aspectRatio = canvasElement.clientWidth / canvasElement.clientHeight;
-  camera = new THREE.PerspectiveCamera(Const.CAMERA_FOV, aspectRatio, Const.CAMERA_NEAR_PLANE, Const.CAMERA_FAR_PLANE);
-  camera.position.set(0, 0, 16000); 
-  camera.lookAt(0, 0, 0);
+  initializeCam({aspectRatio: aspectRatio});
+  camera = useCameraStore.getState().camera;
   
   renderer = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true, alpha: true });
   renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight); // Use canvas size
@@ -37,7 +38,6 @@ export function setupInitialWorldConfig() {
     radius: Const.GLOBE_RADIUS,
     detail: Const.DEFAULT_WORLD_DETAIL,
   };
-  debug('Initial worldConfig set:', worldConfig);
   return worldConfig;
 }
 
@@ -60,6 +60,7 @@ export function setupOrbitControls(_camera, _renderer, _worldConfig) {
     controls.dispose();
   }
   controls = new OrbitControls(_camera, _renderer.domElement);
+  useCameraStore.setState({orbitControls: controls});
   controls.enableDamping = true;
   controls.enablePan = false;
   controls.minDistance = _worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
@@ -69,16 +70,23 @@ export function setupOrbitControls(_camera, _renderer, _worldConfig) {
 
   _camera.position.set(
     0,
-    _worldConfig.radius * Const.CAMERA_INITIAL_POS_Y_FACTOR,
+    0,
     _worldConfig.radius * Const.CAMERA_INITIAL_POS_Z_FACTOR
   );
-  controls.target.set(0, 0, 0);
+  
   controls.update();
+  controls.addEventListener('change', () => {
+    console.log('Camera has changed'); 
+    console.log(useCameraStore.getState().camera.position);
+    const x = useCameraStore.getState().camera.position.x;
+    const y = useCameraStore.getState().camera.position.y;
+    const z = useCameraStore.getState().camera.position.z;
+    useCameraStore.setState({camera: {position: {x: x, y: y, z: z}}});
+  });
   return controls;
 }
 
 export const getScene = () => scene;
-export const getCamera = () => camera;
 export const getRenderer = () => renderer;
 export const getControls = () => controls;
 export const getWorldConfig = () => worldConfig; 

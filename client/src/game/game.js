@@ -1,34 +1,13 @@
-import * as THREE from 'three';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { generateWorld } from './world/worldGenerator.js';
-// Import sphere settings and draw mode
-import { sphereSettings, classifyTerrain } from './world/planetSphereVoronoi.js';
-import { MapTypes, MapRegistry } from './world/registries/MapTypeRegistry.js';
-import { Terrains } from './world/registries/TerrainRegistry.js';
-import { setupSocketConnection } from './multiplayer/socket.js';
+import { sphereSettings } from './world/planetSphereVoronoi.js';
 import { debug, error, initDebug } from './utils/debug.js';
 import RandomService from './core/RandomService.js'; 
-import * as Const from '@config/gameConstants'; // Corrected path
-import { DrawMode } from '../config/gameConstants.js'; // Added direct import for DrawMode
-// import { getActionForKey, Actions } from '../config/keybindings.js'; // Corrected path if used
-
-// Import store safely at the top
 import { useWorldStore } from '@stores';
-
-// Import new control modules
-import { initMouseControls, disposeMouseControls } from './controls/mouseControls.js';
-import { initKeyboardControls, handleKeyboardInput, disposeKeyboardControls } from './controls/keyboardControls.js';
-// Old UI imports - to be removed or handled differently
-// import { CameraControlsSectionComponent, updateCameraControlsUI as updateComponentUIDisplay } from '@/ui/components/CameraControlsSection.js';
-// import { UnifiedControlPanel } from '@/ui/components/UnifiedControlPanel.js';
 
 import {
   setupThreeJS,
   setupInitialWorldConfig,
   setupLighting,
   setupOrbitControls,
-  getCamera,
-  getRenderer,
   getScene,
   getControls,
   getWorldConfig
@@ -38,24 +17,15 @@ import {
     generateAndDisplayPlanet as generatePlanet,
     updatePlanetColors,
     getPlanetGroup,
-    getWorldData
 } from './planet.js';
 
-import {
-    setupRootEventListeners,
-    setupMouseTrackingState,
-    getSelectedHighlight,
-    reinitializeControls
-} from './core/eventHandlers.js';
-
+import { getSelectedHighlight } from './core/eventHandlers.js';
 import { startAnimationLoop } from './core/mainLoop.js';
 
+import { useCameraStore } from '@stores';
+
 let scene, camera, renderer, controls, worldConfig;
-// let worldData; 
-// let planetGroup; 
-// let isMouseDown = false; // Likely managed by eventHandlers or controls
-// let selectedHighlight = null; // Likely managed by eventHandlers or controls
-let gameCameraAnimator = null;
+
 
 export function initGame(canvasElement) {
   try {
@@ -66,41 +36,23 @@ export function initGame(canvasElement) {
     }
     const threeContext = setupThreeJS(canvasElement); 
     scene = threeContext.scene; 
-    camera = threeContext.camera;
+    camera = useCameraStore.getState().camera;
     renderer = threeContext.renderer;
     
-    // Review initDebug: if it manipulates DOM for a separate debug panel, it might conflict or be obsolete.
-    // For now, assume it's for console logging and global error catching.
-    initDebug(); 
-
     worldConfig = setupInitialWorldConfig();
     
     const currentSelectedHighlight = getSelectedHighlight(); // From eventHandlers
-    generatePlanet(scene, worldConfig, null /* controls not set yet */, getPlanetGroup() /* pass current if any */, currentSelectedHighlight);
+    generatePlanet(scene, worldConfig, null , getPlanetGroup() , currentSelectedHighlight);
     sphereSettings.currentSeed = RandomService.getCurrentSeed();
-    debug(`Initial map seed set in sphereSettings: ${sphereSettings.currentSeed}`);
-
-    // UI Mounting is now handled by React in App.jsx
+  
 
     setupLighting(scene);
     // Controls are set up after initial planet generation, so camera can target planet center
     controls = setupOrbitControls(camera, renderer, worldConfig);
     
-    // Event listeners and mouse tracking might need adjustment if they rely on global DOM state
-    // that React now manages. setupRootEventListeners might need renderer.domElement if it attaches there.
-    gameCameraAnimator = setupRootEventListeners(renderer.domElement); // Pass canvas if needed
-    setupMouseTrackingState(renderer.domElement); // Pass canvas if needed
-    
-    // const currentPlanetGroup = getPlanetGroup(); 
-    // const currentControls = getControls(); 
-    // const currentWorldConfig = getWorldConfig();
-
-    setupSocketConnection(); // Assuming this doesn't do direct DOM manipulation for UI
     startAnimationLoop(); // Starts the game loop
     
-    debug('Game initialized successfully (React client).');
-    // Loading/game container display is handled by App.jsx state
-
+  
   } catch (e) {
     error('Error initializing game (React client):', e);
     // Propagate error for React component to handle (e.g., display an error message)
@@ -149,12 +101,6 @@ export function requestPlanetRegeneration(seed, worldSettings) {
       console.warn('No settings provided to requestPlanetRegeneration, using existing sphereSettings');
   }
   
-  // If seed is provided, update currentSeed in sphereSettings
-  if (seed !== undefined) {
-      sphereSettings.currentSeed = seed;
-      console.log('Updated sphereSettings.currentSeed to:', seed);
-  }
-
   // Generate planet with updated settings
   const result = generatePlanet(s, wc, existingControls, pg, sh, seed);
   
@@ -177,7 +123,7 @@ export function requestPlanetRegeneration(seed, worldSettings) {
     }
   }
   
-  reinitializeControls(); // This might re-setup orbit controls, ensure it's compatible
+
   debug('Planet regeneration complete.');
   
   return result;

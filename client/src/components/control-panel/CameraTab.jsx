@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
+import { useCameraStore } from '@stores';
 // import { Button } from '@components/ui/Button';
 
 // --- Mock/Placeholder Game Logic Imports ---
@@ -26,15 +27,21 @@ const mockControls = {
 
 // Mock function to apply camera controls to the game engine
 const applyCameraPanelControls = (newCameraState) => {
-  console.log('TODO: Apply camera controls to game engine:', newCameraState);
-  // This would interact with THREE.js camera and controls
+  const camera = useCameraStore.getState().camera;
+  camera.position.x = newCameraState.targetX;
+  camera.position.y = newCameraState.targetY;
+  camera.position.z = newCameraState.targetZ;
+  useCameraStore.setState({camera: camera});
+  console.log(useCameraStore.getState().camera.position);
+  
 };
-// --- End Mock/Placeholder Game Logic Imports ---
+
 
 function CameraTab() {
   const [targetX, setTargetX] = useState(mockCameraState.targetX);
   const [targetY, setTargetY] = useState(mockCameraState.targetY);
-  const [targetZ, setTargetZ] = useState(mockCameraState.targetZ);
+  // const [targetZ, setTargetZ] = useState(mockCameraState.targetZ);
+  const [targetZ, setTargetZ] = useState(useCameraStore.getState().camera ? useCameraStore.getState().camera.position.z : 0);
   const [zoomDistance, setZoomDistance] = useState(mockCameraState.zoomDistance);
   const [yaw, setYaw] = useState(mockCameraState.yaw);
   const [roll, setRoll] = useState(mockCameraState.roll);
@@ -42,6 +49,7 @@ function CameraTab() {
   const worldRadius = mockWorldConfig.radius;
   const minZoom = mockControls.minDistance;
   const maxZoom = mockControls.maxDistance;
+
 
   // Generic handler for slider changes that calls applyCameraPanelControls
   const handleSliderChange = (setter, propertyName) => (newValue) => {
@@ -82,12 +90,12 @@ function CameraTab() {
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label={`Target Z: ${targetZ.toFixed(0)} km`}>
+      <ControlSectionWrapper label={`Target Z (Zoom Distance): ${targetZ.toFixed(0)} km`}>
         <Slider
           defaultValue={[targetZ]}
-          min={-worldRadius}
-          max={worldRadius}
-          step={worldRadius / 100}
+          min={minZoom}
+          max={maxZoom}
+          step="1"
           onValueChange={handleSliderChange(setTargetZ, 'targetZ')}
         />
       </ControlSectionWrapper>
@@ -97,7 +105,7 @@ function CameraTab() {
           defaultValue={[zoomDistance]}
           min={minZoom}
           max={maxZoom}
-          step={(maxZoom - minZoom) / 200} // 200 steps for zoom range
+          step="1"
           onValueChange={handleSliderChange(setZoomDistance, 'zoomDistance')}
         />
       </ControlSectionWrapper>
