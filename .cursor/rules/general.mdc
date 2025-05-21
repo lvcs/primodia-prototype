@@ -22,7 +22,7 @@ This file outlines rules and guidelines applicable across the entire monorepo.
 
 # Root Directory Structure
 primodia/
-├── client/               # Frontend
+├── client/               # Frontend, 
 │   ├── src/
 │   │   ├── components/   # Components used in the game UI
 │   │   ├── config/       # Configuration files
@@ -40,12 +40,13 @@ primodia/
 ├── package.json          # Project dependencies
 └── README.md             # Project documentation
 
+
+
 # State Management
 ## Game store
 - Purpose: Authoritative and persistent representation of the game world including map data, player progress, units, resources, turn order, and history.
 - Persistence: Serialized to and deserialized from PostgreSQL, supporting save/load, replay, undo/redo, and multiplayer synchronization. Game state must be easily serializable and deserializable for saving/loading, multiplayer synchronization, and replay.
 - Temporary/local-only state: Animations, tooltips, etc.
-- State Synchronization: Implement robust synchronization mechanisms.
 
 ## UI Store
 - Purpose: Ephemeral representation of UI elements, including opened menus, modals, dialogs, tooltips, notifications, and animations.
