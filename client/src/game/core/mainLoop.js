@@ -6,8 +6,6 @@ import { getPlanetGroup, getWorldData } from '@game/planet.js';
 // updateComponentUIDisplay from old CameraControlsSection is obsolete with React UI
 import { getRenderer, getScene, getControls } from './setup.js'; 
 import { useCameraStore } from '@stores';
-// Adjust path for gameConstants.js
-import * as Const from '@config/gameConstants.js';
 
 // Import the new debug store for updating debug info from the main loop
 import { useDebugStore } from '@stores';

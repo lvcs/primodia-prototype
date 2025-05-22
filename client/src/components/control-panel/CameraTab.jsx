@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import * as Const from '../../config/gameConstants.js'; 
+import * as Const from '@config/gameConfig.js'; 
 
 import { calculateSphericalCoords } from '@game/camera/cam.js';
 import { useCameraStore } from '@stores';
