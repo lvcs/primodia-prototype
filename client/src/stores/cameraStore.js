@@ -26,7 +26,7 @@ const getDefaultCameraParams = (viewMode = 'globe') => {
   }
 };
 
-const useCameraStore = create((set, get) => ({
+export const useCameraStore = create((set, get) => ({
   // REQ-CAM-R-001: Definitive state
   ...getDefaultCameraParams('globe'), // Initialize with default globe view params
   viewMode: 'globe',
@@ -74,5 +74,3 @@ const useCameraStore = create((set, get) => ({
   // setOrientation: (orientationUpdate) => console.warn('setOrientation (old) is deprecated'),
   // restoreState: (state) => console.warn('restoreState is deprecated'),
 }));
-
-export default useCameraStore; 
