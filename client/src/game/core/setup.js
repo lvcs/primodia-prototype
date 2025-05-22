@@ -56,9 +56,7 @@ export function setupLighting(_scene) {
 }
 
 export function setupOrbitControls(_camera, _renderer, _worldConfig) {
-  if (controls) {
-    controls.dispose();
-  }
+
   controls = new OrbitControls(_camera, _renderer.domElement);
   useCameraStore.setState({orbitControls: controls});
   controls.enableDamping = true;
@@ -76,12 +74,17 @@ export function setupOrbitControls(_camera, _renderer, _worldConfig) {
   
   controls.update();
   controls.addEventListener('change', () => {
-    console.log('Camera has changed'); 
+    // console.log('Camera has changed'); 
     console.log(useCameraStore.getState().camera.position);
-    const x = useCameraStore.getState().camera.position.x;
-    const y = useCameraStore.getState().camera.position.y;
-    const z = useCameraStore.getState().camera.position.z;
-    useCameraStore.setState({camera: {position: {x: x, y: y, z: z}}});
+    // const x = useCameraStore.getState().camera.position.x;
+    // const y = useCameraStore.getState().camera.position.y;
+    // const z = useCameraStore.getState().camera.position.z;
+    const tempCamera = _camera;;
+    // tempCamera.position.x = x;
+    // tempCamera.position.y = y;
+    // tempCamera.position.z = z;
+    useCameraStore.getState().setCamera(tempCamera);
+
   });
   return controls;
 }

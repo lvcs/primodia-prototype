@@ -45,6 +45,10 @@ export const CAMERA_MAX_DISTANCE_FACTOR = 5;   // Max zoom distance as a factor 
 export const CAMERA_INITIAL_POS_Y_FACTOR = 0; // Initial camera Y position factor
 export const CAMERA_INITIAL_POS_Z_FACTOR = 2.5; // Initial camera Z position factor
 
+export const CAMERA_ZOOM_DISTANCE_MIN = 6800
+export const CAMERA_ZOOM_DISTANCE_DEFAULT = 16000;
+export const CAMERA_ZOOM_DISTANCE_MAX = 32000;
+
 // Scene (from game.js)
 export const SCENE_BACKGROUND_COLOR = 0x0a0a2a;
 
@@ -68,7 +72,7 @@ export const MOUSE_RELEASE_INERTIA_FACTOR = 30.0; // Multiplier for mouse delta 
 
 // Tile View Angle
 export const TILE_VIEW_TILT_ANGLE = -Math.PI / 4; // -45 degrees 
-export const TILE_VIEW_SPHERE_DISTANCE = 16000; // Distance from globe center for tile view (2.5x radius)
+export const TILE_VIEW_SPHERE_DISTANCE = 16000; 
 export const TILE_VIEW_ZOOM = 1.0; // Default zoom level for tile view 
 
 // UI Specific Constants

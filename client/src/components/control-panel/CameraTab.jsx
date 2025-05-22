@@ -1,138 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
+import { useCameraStore } from '@stores';
+
+import * as Const from '../../config/gameConstants.js'; 
+
 import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
-import { useCameraStore } from '@stores';
-// import { Button } from '@components/ui/Button';
-
-// --- Mock/Placeholder Game Logic Imports ---
-// TODO: These would come from a store (e.g., useCameraStore) or props
-const mockCameraState = {
-  targetX: 0,
-  targetY: 0,
-  targetZ: 0,
-  zoomDistance: 16000, // Example default
-  yaw: 0,
-  roll: 0,
-};
-
-const mockWorldConfig = {
-  radius: 6400, // km, example
-};
-
-const mockControls = {
-  minDistance: mockWorldConfig.radius * 1.02,
-  maxDistance: mockWorldConfig.radius * 5,
-};
-
-// Mock function to apply camera controls to the game engine
-const applyCameraPanelControls = (newCameraState) => {
-  const camera = useCameraStore.getState().camera;
-  camera.position.x = newCameraState.targetX;
-  camera.position.y = newCameraState.targetY;
-  camera.position.z = newCameraState.targetZ;
-  useCameraStore.setState({camera: camera});
-  console.log(useCameraStore.getState().camera.position);
-  
-};
 
 
-function CameraTab() {
-  const [targetX, setTargetX] = useState(mockCameraState.targetX);
-  const [targetY, setTargetY] = useState(mockCameraState.targetY);
-  // const [targetZ, setTargetZ] = useState(mockCameraState.targetZ);
-  const [targetZ, setTargetZ] = useState(useCameraStore.getState().camera ? useCameraStore.getState().camera.position.z : 0);
-  const [zoomDistance, setZoomDistance] = useState(mockCameraState.zoomDistance);
-  const [yaw, setYaw] = useState(mockCameraState.yaw);
-  const [roll, setRoll] = useState(mockCameraState.roll);
+const applyCameraPanelControls = (newPosition) => {
+  useCameraStore.setState((state) => {
+    const currentCamera = state.camera || {};
+    const currentPosition = currentCamera.position || {};
 
-  const worldRadius = mockWorldConfig.radius;
-  const minZoom = mockControls.minDistance;
-  const maxZoom = mockControls.maxDistance;
-
-
-  // Generic handler for slider changes that calls applyCameraPanelControls
-  const handleSliderChange = (setter, propertyName) => (newValue) => {
-    const value = newValue[0];
-    setter(value);
-    // Update a temporary state object to pass to the apply function
-    // In a real app, this might come from a store or a combined state object
-    const updatedState = {
-      targetX: propertyName === 'targetX' ? value : targetX,
-      targetY: propertyName === 'targetY' ? value : targetY,
-      targetZ: propertyName === 'targetZ' ? value : targetZ,
-      zoomDistance: propertyName === 'zoomDistance' ? value : zoomDistance,
-      yaw: propertyName === 'yaw' ? value : yaw,
-      roll: propertyName === 'roll' ? value : roll,
+    return {
+      camera: {
+        ...currentCamera,
+        position: { 
+          ...currentPosition, 
+          ...newPosition
+        },
+      },
     };
-    applyCameraPanelControls(updatedState);
+  });
+};
+
+
+const CameraTab = () => {
+  const camera = useCameraStore((state) => state.camera);
+
+  const [x, setX] = useState(camera ? camera.position.x : 0);
+  const [y, setY] = useState(camera ? camera.position.y : 0);
+  const [z, setZ] = useState(camera ? camera.position.z : Const.CAMERA_ZOOM_DISTANCE_DEFAULT);
+
+  useEffect(() => {
+    if (camera) {
+      setX(camera.position.x);
+      setY(camera.position.y);
+      setZ(camera.position.z);
+    }
+  }, [camera]);
+
+  const handleValueChange = (setter, propertyName) => (newValue) => {
+    const value = parseFloat(newValue[0]);
+    setter(value);
+
+    const newAttributes = {
+      x: propertyName === 'x' ? value : x,
+      y: propertyName === 'y' ? value : y,
+      z: propertyName === 'z' ? value : z,
+    };
+    applyCameraPanelControls(newAttributes);
   };
 
   return (
-    <div>
-      <ControlSectionWrapper label={`Target X: ${targetX.toFixed(0)} km`}>
+    <section>
+      <ControlSectionWrapper label={`Position X: ${x.toFixed(0)} km`}>
         <Slider
-          defaultValue={[targetX]}
-          min={-worldRadius}
-          max={worldRadius}
-          step={worldRadius / 100}
-          onValueChange={handleSliderChange(setTargetX, 'targetX')}
+          value={[x]}
+          min={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * -2}
+          max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 2}
+          step={"1"}
+          onValueChange={handleValueChange(setX, 'x')}
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label={`Target Y: ${targetY.toFixed(0)} km`}>
+      <ControlSectionWrapper label={`Position Y: ${y.toFixed(0)} km`}>
         <Slider
-          defaultValue={[targetY]}
-          min={-worldRadius}
-          max={worldRadius}
-          step={worldRadius / 100}
-          onValueChange={handleSliderChange(setTargetY, 'targetY')}
+          value={[y]}
+          min={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * -2}
+          max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 2}
+          step={"1"}
+          onValueChange={handleValueChange(setY, 'y')}
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label={`Target Z (Zoom Distance): ${targetZ.toFixed(0)} km`}>
+      <ControlSectionWrapper label={`Position Z (Zoom Distance): ${z.toFixed(0)} km`}>
         <Slider
-          defaultValue={[targetZ]}
-          min={minZoom}
-          max={maxZoom}
+          value={[z]}
+          min={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * -2}
+          max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 2}
           step="1"
-          onValueChange={handleSliderChange(setTargetZ, 'targetZ')}
+          onValueChange={handleValueChange(setZ, 'z')}
         />
       </ControlSectionWrapper>
-
-      <ControlSectionWrapper label={`Zoom Distance: ${zoomDistance.toFixed(0)} km`}>
-        <Slider
-          defaultValue={[zoomDistance]}
-          min={minZoom}
-          max={maxZoom}
-          step="1"
-          onValueChange={handleSliderChange(setZoomDistance, 'zoomDistance')}
-        />
-      </ControlSectionWrapper>
-
-      <ControlSectionWrapper label={`Yaw: ${yaw.toFixed(2)} rad`}>
-        <Slider
-          defaultValue={[yaw]}
-          min={-Math.PI}
-          max={Math.PI}
-          step={Math.PI / 180} // 1 degree steps
-          onValueChange={handleSliderChange(setYaw, 'yaw')}
-        />
-      </ControlSectionWrapper>
-
-      <ControlSectionWrapper label={`Roll: ${roll.toFixed(2)} rad`}>
-        <Slider
-          defaultValue={[roll]}
-          min={-Math.PI}
-          max={Math.PI}
-          step={Math.PI / 180} // 1 degree steps
-          onValueChange={handleSliderChange(setRoll, 'roll')}
-        />
-      </ControlSectionWrapper>
-    </div>
+    </section>
   );
 }
-
-CameraTab.propTypes = {};
 
 export default CameraTab; 

@@ -1,6 +1,6 @@
 ```mdc
 ---
-description: 
+description: Use when working with Requirements.md files
 globs: Requirements.md
 alwaysApply: true
 ---

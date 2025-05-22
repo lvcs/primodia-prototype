@@ -48,13 +48,9 @@ function animate() {
         }
 
         const globeDebugData = {
-            rotation: `CurrentRotationDeg: ${JSON.stringify(rotationDeg)}<br/>TargetAngularVelocity: ${JSON.stringify(targetAngularVelocity)}<br/>AngularDamping: ${Const.GLOBE_ANGULAR_DAMPING_FACTOR}`,
-            // If individual slider values for rotation are needed in debugStore:
-            // rotationX: planetGroup.rotation.x,
-            // rotationY: planetGroup.rotation.y,
-            // rotationZ: planetGroup.rotation.z
+
         };
-        // updateGlobeDebugInfo(planetGroup, globeDebugData); // Calls the neutered debug.js version
+        
         useDebugStore.getState().setGlobeDebugInfo(globeDebugData); // Update store directly
     }
 
