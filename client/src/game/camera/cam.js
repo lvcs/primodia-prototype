@@ -30,7 +30,7 @@ export const initializeCam = ({aspectRatio}) => {
 export const newsetupOrbitControls = (_renderer) => {
   let camera = useCameraStore.getState().camera;
   let orbitControls = new OrbitControls(camera, _renderer.domElement);
-  console.log(orbitControls);
+  // console.log(orbitControls);
 
   orbitControls.enableDamping = true;
   orbitControls.dampingFactor = 0.125;
@@ -48,11 +48,12 @@ export const newsetupOrbitControls = (_renderer) => {
   
   orbitControls.update();
   orbitControls.addEventListener('change', () => {
-    console.log(useCameraStore.getState().camera);
+    // console.log(useCameraStore.getState().camera);
     const tempCamera = camera;
     useCameraStore.getState().setCamera(tempCamera);
   });
 
   useCameraStore.getState().setOrbitControls(orbitControls);
-  return useCameraStore.getState().orbitControls;
+  window.orbitControls = orbitControls;
+  // return useCameraStore.getState().orbitControls;
 }
