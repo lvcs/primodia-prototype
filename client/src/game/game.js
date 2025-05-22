@@ -67,7 +67,7 @@ export function requestPlanetRegeneration(seed, worldSettings) {
   
   const s = getScene();
   const wc = getWorldConfig();
-  const existingControls = getControls();
+  const existingControls = useCameraStore.getState().orbitControls;
   const pg = getPlanetGroup();
   const sh = getSelectedHighlight();
 
