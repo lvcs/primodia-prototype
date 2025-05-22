@@ -19,20 +19,6 @@ import * as Const from '@config/gameConfig';
 export function generateWorld(config, seed){
   // If config contains sphereSettings, use it to override the global sphereSettings object
   if (config.sphereSettings) {
-    console.log('[generateWorld] Received sphereSettings in config:', config.sphereSettings);
-    console.log('[generateWorld] Original sphereSettings:', {
-      drawMode: sphereSettings.drawMode,
-      algorithm: sphereSettings.algorithm,
-      numPoints: sphereSettings.numPoints,
-      jitter: sphereSettings.jitter,
-      mapType: sphereSettings.mapType,
-      outlineVisible: sphereSettings.outlineVisible,
-      numPlates: sphereSettings.numPlates,
-      viewMode: sphereSettings.viewMode,
-      elevationBias: sphereSettings.elevationBias
-    });
-    
-    console.log('[generateWorld] IMPORTANT: numPoints before update:', sphereSettings.numPoints, 'new value from config:', config.sphereSettings.numPoints);
     
     // Update the global sphereSettings with the values from config
     sphereSettings.drawMode = config.sphereSettings.drawMode;
@@ -45,34 +31,15 @@ export function generateWorld(config, seed){
     sphereSettings.viewMode = config.sphereSettings.viewMode;
     sphereSettings.elevationBias = config.sphereSettings.elevationBias;
     
-    console.log('[generateWorld] Updated sphereSettings:', sphereSettings);
-    console.log('[generateWorld] VERIFICATION: numPoints after update:', sphereSettings.numPoints);
   } else {
     console.warn('[generateWorld] No sphereSettings received in config, using existing values');
   }
 
-  // Debug logging to verify sphereSettings values being used
-  console.log('[generateWorld] Current sphereSettings after possible update:', {
-    drawMode: sphereSettings.drawMode,
-    algorithm: sphereSettings.algorithm,
-    numPoints: sphereSettings.numPoints,
-    jitter: sphereSettings.jitter,
-    mapType: sphereSettings.mapType,
-    outlineVisible: sphereSettings.outlineVisible,
-    numPlates: sphereSettings.numPlates,
-    viewMode: sphereSettings.viewMode,
-    elevationBias: sphereSettings.elevationBias,
-    currentSeed: sphereSettings.currentSeed
-  });
-
-  // Critical verification of numPoints
-  console.log('[generateWorld] FINAL VERIFICATION - numPoints value right before planet generation:', sphereSettings.numPoints);
 
   // Always use a string seed for consistent results and check before RandomService initialization
   let effectiveSeed = (seed === undefined) ? String(Date.now()) : String(seed);
   
-  console.log('[generateWorld] About to initialize RandomService with seed:', effectiveSeed);
-  
+ 
   // Explicitly reset the Random Service state before initialization to avoid any state carryover
   RandomService.prng = null;
   
@@ -80,10 +47,7 @@ export function generateWorld(config, seed){
   // All subsequent procedural generation steps will use this seeded PRNG.
   RandomService.initialize(effectiveSeed);
   
-  // Check first few random values to verify deterministic behavior
-  console.log('[generateWorld] First 3 random values from newly initialized RandomService:',
-    RandomService.nextFloat(), RandomService.nextFloat(), RandomService.nextFloat());
-
+ 
   // Bind RandomService.nextFloat for convenience where needed in this scope or passed down
   const randomFloat = RandomService.nextFloat.bind(RandomService);
 
@@ -173,10 +137,6 @@ export function generateWorld(config, seed){
 
   // generatePlates will internally use RandomService for its random choices.
   const { plates, tilePlate } = generatePlates(globe, numPlatesToUse);
-
-  // DEBUG: Log the generated tectonic plates
-  console.log('[worldGenerator] Generated Tectonic Plates:', plates);
-  console.log(`[worldGenerator] Number of plates requested by UI: ${sphereSettings.numPlates}, Number of plates used for generation: ${numPlatesToUse}, Actual plates generated: ${plates.length}`);
 
   // Store tilePlate mapping in mainMesh for coloring later
   if(mainMesh){

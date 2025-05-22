@@ -3,14 +3,11 @@ import * as THREE from 'three';
 import { handleKeyboardInput } from '@game/controls/keyboardControls.js'; 
 // Adjust path for planet.js
 import { getPlanetGroup, getWorldData } from '@game/planet.js'; 
-// Adjust path for debug.js and ensure its update... functions are safe (console.log or store update)
-import { updateCameraDebugInfo, updateGlobeDebugInfo } from '@game/utils/debug.js';
-// Adjust path for planetSphereVoronoi.js
-import { sphereSettings } from '@game/world/planetSphereVoronoi.js';
-// Imports from ./setup.js are correct as it's a sibling
-import { getCamera, getRenderer, getScene, getControls } from './setup.js'; 
-// Adjust path for gameConfig.js
-import * as Const from '@config/gameConfig.js';
+// updateComponentUIDisplay from old CameraControlsSection is obsolete with React UI
+import { getRenderer, getScene, getControls } from './setup.js'; 
+import { useCameraStore } from '@stores';
+// Adjust path for gameConstants.js
+import * as Const from '@config/gameConstants.js';
 
 // Import the new debug store for updating debug info from the main loop
 import { useDebugStore } from '@stores';
@@ -22,7 +19,7 @@ function animate() {
     animationFrameId = requestAnimationFrame(animate);
     const deltaTime = clock.getDelta();
 
-    const camera = getCamera();
+    const camera = useCameraStore.getState().camera;
     const renderer = getRenderer();
     const scene = getScene();
     const controls = getControls();
@@ -33,14 +30,7 @@ function animate() {
     }
 
     handleKeyboardInput(deltaTime);
-    // updateComponentUIDisplay(); // Obsolete: Old UI component update
-
-    // Update camera debug info via store if necessary, or rely on CameraDebugTab subscribing to cameraUIStore
-    // For now, let's assume CameraDebugTab gets its primary data from cameraUIStore or directly.
-    // If specific derived data from this loop is needed, it can update useDebugStore.cameraDebugInfo
-    // updateCameraDebugInfo(camera, controls); // Calls the neutered debug.js version (console.logs)
-    // Example: useDebugStore.getState().setCameraDebugInfo({ customLoopData: 'value' });
-
+    
     if (planetGroup && planetGroup.userData) { // Check userData exists
         const rotationDeg = {
             x: THREE.MathUtils.radToDeg(planetGroup.rotation.x).toFixed(2),
@@ -58,13 +48,9 @@ function animate() {
         }
 
         const globeDebugData = {
-            rotation: `CurrentRotationDeg: ${JSON.stringify(rotationDeg)}<br/>TargetAngularVelocity: ${JSON.stringify(targetAngularVelocity)}<br/>AngularDamping: ${Const.GLOBE_ANGULAR_DAMPING_FACTOR}`,
-            // If individual slider values for rotation are needed in debugStore:
-            // rotationX: planetGroup.rotation.x,
-            // rotationY: planetGroup.rotation.y,
-            // rotationZ: planetGroup.rotation.z
+
         };
-        // updateGlobeDebugInfo(planetGroup, globeDebugData); // Calls the neutered debug.js version
+        
         useDebugStore.getState().setGlobeDebugInfo(globeDebugData); // Update store directly
     }
 

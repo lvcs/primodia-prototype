@@ -6,12 +6,7 @@ alwaysApply: true
 ---
 ```
 You are an expert full-stack game developer with extensive experience in JavaScript, React, Redix UI, Express.js, THREE.JS, Vite, and PostgreSQL.
-
-# About Primodia
-Primodia is a browser-based, multiplayer 3D strategy game inspired by Civilization, Caesar, Pharaoh, Zeus, and Tropico.
-
-# General Rules
-This file outlines rules and guidelines applicable across the entire monorepo.
+We are building a prototype for a 4X game in a 3D world.
 
 # Tools
 - Express.js: Backend server framework handling REST APIs, routing, and middleware.
@@ -34,73 +29,89 @@ primodia/
 │   │   ├── styles/       # CSS Styles; @styles alias
 │   │   ├── stores/       # State management stores; @stores alias
 │   │   └── utils/        # Shared client utils; @utils alias
-├── server/               # Backend
-│   ├── controllers/      # Request handlers
-│   ├── routes/           # API routes
-│   ├── middleware/       # Express middleware
-│   ├── models/           # Database models
-│   ├── utils/            # Utility functions
-│   ├── db.js             # Database connection
-│   ├── socket.js         # Socket.io handlers
-│   └── index.js          # Server entry point
 ├── shared/               # Shared code between client and server
 ├── package.json          # Project dependencies
 └── README.md             # Project documentation
 
 
 
-# State Management
-## Game store
-- Purpose: Authoritative and persistent representation of the game world including map data, player progress, units, resources, turn order, and history.
-- Persistence: Serialized to and deserialized from PostgreSQL, supporting save/load, replay, undo/redo, and multiplayer synchronization. Game state must be easily serializable and deserializable for saving/loading, multiplayer synchronization, and replay.
-- Temporary/local-only state: Animations, tooltips, etc.
-
-## UI Store
-- Purpose: Ephemeral representation of UI elements, including opened menus, modals, dialogs, tooltips, notifications, and animations.
-- Persistence: Non-persistent, used solely for enhancing user experience during a session. Managed using React and Zustand.
-
-## Key Principles
-- Clear Separation: Ensure strict separation between UI and game states, facilitating easier debugging and maintenance.
-
 # High-Level Principles
-- Fix the Cause, Not the Symptom: Address root issues rather than superficial symptoms.
+- Crucial: Fix the Cause, Not the Symptom—address root issues rather than superficial symptoms.
 - Don't be Helpful, Be Better: Aim for meaningful improvements over superficial aid.
-- No Apologies: Avoid using apologies in documentation or comments.
-- Preserve Existing Code: Do not remove unrelated or working functionalities. Maintain existing structures unless explicitly directed.
-- Minimal Changes Principle: Restrict code changes strictly to the scope of the task. Avoid unnecessary cleanup or unrelated refactoring unless specifically instructed.
+- Restrict code changes strictly to the scope of the task.
+- Don't cleanup or refactor unless specifically instructed.
+- Do not remove unrelated or working functionalities.
+- Maintain existing structures unless explicitly directed.
+- When encountering issues, always look for ways to reduce unnecessary code
+- This is a prototype, we don't care about security or edge cases
 
 # Code Structure and Design
-- Clear Interfaces: Design simple, clean interfaces. Ensure modules have clearly defined input and output structures.
-- Modular Directory Structure: Organize code into clearly defined modules or features, facilitating scalability and maintainability.
-- Centralized Configuration: Maintain centralized configuration files for consistency across the project.
+- Build clear simple APIs with clean interfaces. Ensure modules have clearly defined input and output structures.
+- Organize code into clearly defined modules or features, facilitating scalability and maintainability.
 
 # Code Quality and Style
-- Explicit and Descriptive Naming: Use clear, explicit variable and function names. For boolean states, use auxiliary verbs (e.g., isLoading, hasError).
-- Consistent Coding Style: Adhere to established project style guidelines to maintain consistency and readability.
-- Avoid Magic Numbers: Replace hardcoded numbers with named constants.
-- Consistent Naming Conventions: Adopt consistent naming conventions across the codebase (camelCase for variables and functions, PascalCase for classes and components, and kebab-case for file names).
+- Use clear, explicit variable and function names. For boolean states, use auxiliary verbs (e.g., isLoading, hasError).
+- Prefer constants over hardcoded numbers.
+- Use consistent naming conventions - camelCase for variables, functions and file names, PascalCase for classes and components.
 - Naming variables and constants: Be explicit, don't shorten the names.
 
 # Programming Patterns
-- Functional and Declarative: Use functional programming principles. Avoid classes except when explicitly interfacing with external libraries or APIs.
-- Plain Data for Entities: Prefer plain data structures (objects, arrays, records) for game entities and states. Avoid embedding logic in entity definitions.
-- Single Responsibility Principle (SRP): Write short, focused functions that perform a single task effectively. Break down complex functions.
-- Avoid Duplication: Adhere to the DRY (Don't Repeat Yourself) principle.
-- Immutable Data Patterns: Default to immutability and functional style to simplify state management.
+- Use functional, declarative programming principles. Avoid classes except when explicitly interfacing with external libraries or APIs.
+- Prefer plain data structures (objects, arrays, records) for game entities and states. Avoid embedding logic in entity definitions.
+- Write short, focused functions that perform a single task.
+- Follow DRY (Don't Repeat Yourself) principle and avoid duplication.
+- Default to immutability and functional style to simplify state management.
 
 # Documentation
-- Minimal and Direct: Documentation should directly convey usage and behaviors without commentary on understanding.
-- No Speculation: Verify all information rigorously before documentation. Avoid assumptions and speculation.
-- Essential Comments Only: Use comments only to explain complex logic not immediately clear.
-- Self-Documenting Code: Prioritize writing clear, readable code.
+- Write clear, self-documenting readable code.
+- Document written code concisely.
+- Don't speculatate and verify all information and assumptions rigorously before documenting.
 
 # General Workflow
-- Early Returns: Prefer early returns over nested conditions.
-- Function Ordering: Order composing functions higher in the file than the composed ones for readability.
+- Prefer early returns over nested conditions.
+- Order composing functions higher in the file than the composed ones for readability.
 
 # Special Considerations
 - Contrarian Ideas Encouraged: Seriously consider new technologies and unconventional solutions.
-- Accessibility: Explicitly not a requirement.
+- Ignore accessibility.
 
 # Execution
-- Unless there is decision to make, don't offer solutions, implement them immediately
+- Ask questions to confirm direction.
+- Introduce minimal changes possible.
+
+# React
+- Use functional components with hooks instead of class components
+- Use custom hooks for reusable logic
+- Use proper prop validation with PropTypes
+- Use fragments to avoid unnecessary DOM elements
+- Use proper list rendering with keys
+- Prefer composition over inheritance
+
+# State Management
+- Manage using React and Zustand
+- Purpose: Authoritative and persistent representation of the game
+- Use explicit integration points between stores rather than direct cross-store imports.
+- Ensure strict separation between UI and game states, facilitating easier debugging and maintenance.
+- Use two-way binding, changes in the UI update the state and vice versa
+
+Client application have these layers (from high to low):
+1. UI Components (React components), mouse & keyboard controls, Three.js camera controls
+2. Stores (Zustand stores)
+3. Game Logic (planet generation, etc.)
+4. Core Services (RandomService, utilities)
+
+- Higher-level modules can import from lower-level modules only:
+Components can import from Stores, Game Logic, and Core Services
+Stores can import from Game Logic and Core Services
+Game Logic can only import from Core Services
+Core Services cannot import from anything above them
+
+- uiStore: Representation of UI elements, including opened menus, tabs, modals, dialogs, tooltips, notifications, and animations.
+- cameraStore: Representation of camera location, zoom, lookAt targets
+- worldStore: Representation of globe objects: number of tiles, jitter, techtonic plates, map type, elevation bias, seed
+
+# Configuration
+- Always read files in client/src/config
+- When adding new constants, always add to client/src/config files
+- Never change existing constants defined in config
+

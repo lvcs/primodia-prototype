@@ -6,15 +6,11 @@ import CameraTab from './CameraTab'; // Import CameraTab
 import TileDebugTab from './TileDebugTab'; // Import TileDebugTab
 import CameraDebugTab from './CameraDebugTab'; // Import CameraDebugTab
 import GlobeDebugTab from './GlobeDebugTab'; // Import GlobeDebugTab
-// import { Button } from '@components/ui/Button';
-// import { Slider } from '@components/ui/Slider';
-// import { Input } from '@components/ui/Input';
 
 function UnifiedControlPanel({ className }) {
-  // TODO: Fetch or determine tab structure dynamically if needed
   const tabs = [
-    { id: 'globe', label: 'Globe', Component: GlobeTab },
     { id: 'camera', label: 'Camera', Component: CameraTab },
+    { id: 'globe', label: 'Globe', Component: GlobeTab },  
     { id: 'tile-debug', label: 'Tile (debug)', Component: TileDebugTab },
     { id: 'camera-debug', label: 'Camera (debug)', Component: CameraDebugTab },
     { id: 'globe-debug', label: 'Globe (debug)', Component: GlobeDebugTab },

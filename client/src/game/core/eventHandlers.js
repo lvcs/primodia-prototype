@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Event listeners for window resize, mouse clicks (tile selection), etc. 
 
 import * as THREE from 'three';
@@ -26,16 +27,14 @@ const HIGHLIGHT_SCALE_FACTOR = 1.003;
 const MAX_DRAG_DIST_FOR_CLICK = 10; 
 const MAX_DRAG_TIME_FOR_CLICK = 250;
 
+=======
+>>>>>>> manual-camera
 let selectedHighlight = null;
-let cameraAnimator = null; 
-let orbitController = null;
-
-let mouseDownTime;
-let mouseDownPosition = new THREE.Vector2();
 
 export function getSelectedHighlight() {
     return selectedHighlight;
 }
+<<<<<<< HEAD
 
 // This function creates DOM elements directly. This should be handled by React UI if needed.
 // For now, it will likely not work as expected or append to document.body which is bad form in React.
@@ -298,3 +297,5 @@ export function reinitializeControls() {
         error('Failed to re-initialize controls due to missing dependencies.');
     }
 } 
+=======
+>>>>>>> manual-camera

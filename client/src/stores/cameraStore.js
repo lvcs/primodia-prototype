@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as THREE from 'three';
 
+<<<<<<< HEAD
 import { CAMERA_VIEWS, GLOBE_VIEW_CAMERA_DISTANCE, TILE_VIEW_CAMERA_DISTANCE } from '@config/cameraConfig';
 
 // Helper to get default camera parameters based on view mode
@@ -74,3 +75,15 @@ export const useCameraStore = create((set, get) => ({
   // setOrientation: (orientationUpdate) => console.warn('setOrientation (old) is deprecated'),
   // restoreState: (state) => console.warn('restoreState is deprecated'),
 }));
+=======
+const useCameraStore = create((set, get) => ({
+  camera: null,
+  orbitControls: null,
+  setCamera: (camera) => set({ camera }),
+  setOrbitControls: (orbitControls) => set({ orbitControls }),
+  getCamera: () => get().camera,
+  getOrbitControls: () => get().orbitControls,
+})); 
+
+export { useCameraStore };
+>>>>>>> manual-camera

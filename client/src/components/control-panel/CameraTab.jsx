@@ -1,95 +1,190 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, useEffect } from 'react';
+
+import * as Const from '../../config/gameConstants.js'; 
+
+import { calculateSphericalCoords } from '@game/camera/cam.js';
+import { useCameraStore } from '@stores';
+
 import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
-import { useCameraStore } from '@stores/cameraStore';
-import { GLOBE_RADIUS, CAMERA_MIN_DISTANCE_FACTOR, CAMERA_MAX_DISTANCE_FACTOR } from '@config/gameConfig';
 
-function CameraTab() {
-  const zoom = useCameraStore(state => state.zoom);
-  const target = useCameraStore(state => state.target);
-  const phi = useCameraStore(state => state.phi);
-  const setZoom = useCameraStore(state => state.setZoom);
+const applyCameraPanelControls = (updatedCamera) => {
+  const camera = useCameraStore.getState().camera;
+  camera.position.x = updatedCamera.x;
+  camera.position.y = updatedCamera.y;
+  camera.position.z = updatedCamera.z;
+  useCameraStore.setState({camera: camera});
+};
 
-  const minZoom = GLOBE_RADIUS * CAMERA_MIN_DISTANCE_FACTOR;
-  const maxZoom = GLOBE_RADIUS * CAMERA_MAX_DISTANCE_FACTOR;
+const applyOrbitalControlPanelControls = (updatedOrbital) => {
+  const orbitControls = useCameraStore.getState().orbitControls;
+  orbitControls.target.x = updatedOrbital.x;
+  orbitControls.target.y = updatedOrbital.y;
+  orbitControls.target.z = updatedOrbital.z;
+  useCameraStore.setState({orbitControls: orbitControls});
+};
 
-  const handleZoomChange = (newValue) => {
-    const value = newValue[0];
-    setZoom(value);
+
+const CameraTab = () => {
+  const camera = useCameraStore((state) => state.camera);
+  const orbitControls = useCameraStore((state) => state.orbitControls);
+
+  const initialPosition = camera?.position || { x: 0, y: 0, z: Const.CAMERA_ZOOM_DISTANCE_DEFAULT };
+  const [x, setX] = useState(initialPosition.x);
+  const [y, setY] = useState(initialPosition.y);
+  const [z, setZ] = useState(initialPosition.z);
+  
+  const [distance, setDistance] = useState(0);
+  const [longitude, setLongitude] = useState(0);
+  const [latitude, setLatitude] = useState(0);
+
+  const initialTarget = orbitControls?.target || { targetX: 0, targetY: 0, targetZ: 0 };
+  const [targetX, setTargetX] = useState(orbitControls?.target?.x ?? 0);
+  const [targetY, setTargetY] = useState(orbitControls?.target?.y ?? 0);
+  const [targetZ, setTargetZ] = useState(orbitControls?.target?.z ?? 0);
+
+  useEffect(() => {
+    if (camera && camera.position) {
+      const { x: camX, y: camY, z: camZ } = camera.position;
+      setX(camX);
+      setY(camY);
+      setZ(camZ);
+
+      const sphericalCoords = calculateSphericalCoords(camX, camY, camZ);
+      setDistance(sphericalCoords.distance);
+      setLongitude(sphericalCoords.longitude);
+      setLatitude(sphericalCoords.latitude);
+
+    }
+    if (orbitControls && orbitControls.target) {
+      setTargetX(orbitControls.target.x ?? 0);
+      setTargetY(orbitControls.target.y ?? 0);
+      setTargetZ(orbitControls.target.z ?? 0);
+    } else {
+      setTargetX(0);
+      setTargetY(0);
+      setTargetZ(0);
+    }
+  }, [camera, orbitControls]);
+
+  const handleCameraControls = (setter, propertyName) => (newValue) => {
+    const value = parseFloat(newValue[0]);
+    setter(value);
+
+    const positionUpdate = {
+      x: propertyName === 'x' ? value : x,
+      y: propertyName === 'y' ? value : y,
+      z: propertyName === 'z' ? value : z,
+    };
+
+    applyCameraPanelControls(positionUpdate);
+  }
+
+  const handleOrbitalControls = (setter, propertyName) => (newValue) => {
+    const value = parseFloat(newValue[0]);
+    setter(value);
+
+    const targetUpdate = {
+      x: propertyName === 'x' ? value : targetX,
+      y: propertyName === 'y' ? value : targetY,
+      z: propertyName === 'z' ? value : targetZ,
+    };
+
+    applyOrbitalControlPanelControls(targetUpdate);
   };
 
-  const displayTargetX = target?.x || 0;
-  const displayTargetY = target?.y || 0;
-  const displayTargetZ = target?.z || 0;
-  const displayYaw = phi || 0;
-  const displayRoll = 0;
-
   return (
-    <div>
-      <ControlSectionWrapper label={`Target X: ${displayTargetX.toFixed(0)} km`}>
+    <section>
+      <ControlSectionWrapper label={`Position X: ${x.toFixed(0)} km`}>
         <Slider
-          value={[displayTargetX]}
-          min={-GLOBE_RADIUS}
-          max={GLOBE_RADIUS}
-          step={GLOBE_RADIUS / 100}
-          disabled
+          value={[x]}
+          min={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * -2}
+          max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 2}
+          step={"1"}
+          onValueChange={handleCameraControls(setX, 'x')}
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label={`Target Y: ${displayTargetY.toFixed(0)} km`}>
+      <ControlSectionWrapper label={`Position Y: ${y.toFixed(0)} km`}>
         <Slider
-          value={[displayTargetY]}
-          min={-GLOBE_RADIUS}
-          max={GLOBE_RADIUS}
-          step={GLOBE_RADIUS / 100}
-          disabled
+          value={[y]}
+          min={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * -2}
+          max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 2}
+          step={"1"}
+          onValueChange={handleCameraControls(setY, 'y')}
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label={`Target Z: ${displayTargetZ.toFixed(0)} km`}>
+      <ControlSectionWrapper label={`Position Z: ${z.toFixed(0)} km`}>
         <Slider
-          value={[displayTargetZ]}
-          min={-GLOBE_RADIUS}
-          max={GLOBE_RADIUS}
-          step={GLOBE_RADIUS / 100}
-          disabled
+          value={[z]}
+          min={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * -2}
+          max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 2}
+          step="1"
+          onValueChange={handleCameraControls(setZ, 'z')}
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label={`Zoom Distance: ${zoom.toFixed(0)} km`}>
+      <ControlSectionWrapper label={`Longitude: ${longitude.toFixed(0)}º`}>
         <Slider
-          value={[zoom]}
-          min={minZoom}
-          max={maxZoom}
-          step={(maxZoom - minZoom) / 200}
-          onValueChange={handleZoomChange}
+          value={[longitude]}
+          min={-180}
+          max={180}
+          step={"1"}
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label={`Yaw (Phi): ${displayYaw.toFixed(2)} rad`}>
+      <ControlSectionWrapper label={`Latitude: ${latitude.toFixed(0)}º`}>
         <Slider
-          value={[displayYaw]}
+          value={[latitude]}
+          min={-180}
+          max={180}
+          step={"1"}
+        />
+      </ControlSectionWrapper>
+
+      <ControlSectionWrapper label={`Distance: ${distance.toFixed(0)} km`}>
+        <Slider
+          value={[distance]}
           min={0}
-          max={Math.PI}
-          step={Math.PI / 180}
-          disabled
+          max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 3}
+          step={"1"}
         />
-      </ControlSectionWrapper>
+        </ControlSectionWrapper>
 
-      <ControlSectionWrapper label={`Roll: ${displayRoll.toFixed(2)} rad`}>
-        <Slider
-          defaultValue={[displayRoll]}
-          min={-Math.PI}
-          max={Math.PI}
-          step={Math.PI / 180}
-          disabled
-        />
-      </ControlSectionWrapper>
-    </div>
+        <ControlSectionWrapper label={`Target X: ${targetX.toFixed(0)} km`}>
+          <Slider
+            value={[targetX]}
+            min={-16000}
+            max={16000}
+            step={"100"}
+            onValueChange={handleOrbitalControls(setTargetX, 'x')}
+          />
+        </ControlSectionWrapper>
+
+        <ControlSectionWrapper label={`Target Y: ${targetY.toFixed(0)} km`}>
+          <Slider
+            value={[targetY]}
+            min={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * -2}
+            max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 2}
+            step={"1"}
+            onValueChange={handleOrbitalControls(setTargetY, 'y')}
+          />
+          </ControlSectionWrapper>
+
+          <ControlSectionWrapper label={`Target Z: ${targetZ.toFixed(0)} km`}>
+            <Slider
+              value={[targetZ]}
+              min={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * -2}
+              max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 2}  
+              step={"1"}
+              onValueChange={handleOrbitalControls(setTargetZ, 'z')}
+            />
+          </ControlSectionWrapper>
+
+          
+    </section>
   );
 }
-
-CameraTab.propTypes = {};
 
 export default CameraTab; 
