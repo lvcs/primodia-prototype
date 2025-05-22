@@ -6,21 +6,12 @@ import * as Const from '../../config/gameConstants.js';
 import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
 
-const applyCameraPanelControls = (newPosition) => {
-  useCameraStore.setState((state) => {
-    const currentCamera = state.camera || {};
-    const currentPosition = currentCamera.position || {};
-
-    return {
-      camera: {
-        ...currentCamera,
-        position: { 
-          ...currentPosition, 
-          ...newPosition
-        },
-      },
-    };
-  });
+const applyCameraPanelControls = (updatedCamera) => {
+  const camera = useCameraStore.getState().camera;
+  camera.position.x = updatedCamera.x;
+  camera.position.y = updatedCamera.y;
+  camera.position.z = updatedCamera.z;
+  useCameraStore.setState({camera: camera});
 };
 
 
@@ -43,12 +34,12 @@ const CameraTab = () => {
     const value = parseFloat(newValue[0]);
     setter(value);
 
-    const newAttributes = {
+    const positionUpdate = {
       x: propertyName === 'x' ? value : x,
       y: propertyName === 'y' ? value : y,
       z: propertyName === 'z' ? value : z,
     };
-    applyCameraPanelControls(newAttributes);
+    applyCameraPanelControls(positionUpdate);
   };
 
   return (
