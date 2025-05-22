@@ -643,7 +643,7 @@ export function generatePlanetGeometryGroup(config) {
             const lineMat = new THREE.LineBasicMaterial({
                 color:0x000000,
                 transparent:true,
-                opacity:0.16,
+                opacity:0.35,
                 depthTest:true,
                 depthWrite:false,
                 polygonOffset:true,
