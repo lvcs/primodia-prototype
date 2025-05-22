@@ -1,15 +1,13 @@
 import { sphereSettings } from './world/planetSphereVoronoi.js';
 import { debug, error, initDebug } from './utils/debug.js';
 import RandomService from './core/RandomService.js'; 
-import { useWorldStore } from '@stores';
+import { useCameraStore, useWorldStore } from '@stores';
 
 import {
   setupThreeJS,
   setupInitialWorldConfig,
   setupLighting,
-  setupOrbitControls,
   getScene,
-  getControls,
   getWorldConfig
 } from './core/setup.js';
 
@@ -22,7 +20,7 @@ import {
 import { getSelectedHighlight } from './core/eventHandlers.js';
 import { startAnimationLoop } from './core/mainLoop.js';
 
-import { useCameraStore } from '@stores';
+import { newsetupOrbitControls } from './camera/cam.js';
 
 let scene, camera, renderer, controls, worldConfig;
 
@@ -48,8 +46,11 @@ export function initGame(canvasElement) {
 
     setupLighting(scene);
     // Controls are set up after initial planet generation, so camera can target planet center
-    controls = setupOrbitControls(camera, renderer, worldConfig);
+    // controls = setupOrbitControls(camera, renderer, worldConfig);
+    // console.log(controls);
     
+    controls = newsetupOrbitControls(renderer);
+    console.log(controls);
     startAnimationLoop(); // Starts the game loop
     
   

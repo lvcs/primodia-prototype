@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useCameraStore } from '@stores';
 
 import * as Const from '../../config/gameConstants.js'; 
+
+import { calculateSphericalCoords } from '@game/camera/cam.js';
+import { useCameraStore } from '@stores';
 
 import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
@@ -18,15 +20,28 @@ const applyCameraPanelControls = (updatedCamera) => {
 const CameraTab = () => {
   const camera = useCameraStore((state) => state.camera);
 
-  const [x, setX] = useState(camera ? camera.position.x : 0);
-  const [y, setY] = useState(camera ? camera.position.y : 0);
-  const [z, setZ] = useState(camera ? camera.position.z : Const.CAMERA_ZOOM_DISTANCE_DEFAULT);
+  const initialPosition = camera?.position || { x: 0, y: 0, z: Const.CAMERA_ZOOM_DISTANCE_DEFAULT };
+  const [x, setX] = useState(initialPosition.x);
+  const [y, setY] = useState(initialPosition.y);
+  const [z, setZ] = useState(initialPosition.z);
+  
+  const [distance, setDistance] = useState(0);
+  const [longitude, setLongitude] = useState(0);
+  const [latitude, setLatitude] = useState(0); 
+
 
   useEffect(() => {
-    if (camera) {
-      setX(camera.position.x);
-      setY(camera.position.y);
-      setZ(camera.position.z);
+    if (camera && camera.position) {
+      const { x: camX, y: camY, z: camZ } = camera.position;
+      setX(camX);
+      setY(camY);
+      setZ(camZ);
+
+      const sphericalCoords = calculateSphericalCoords(camX, camY, camZ);
+      setDistance(sphericalCoords.distance);
+      setLongitude(sphericalCoords.longitude);
+      setLatitude(sphericalCoords.latitude);
+
     }
   }, [camera]);
 
@@ -64,7 +79,7 @@ const CameraTab = () => {
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label={`Position Z (Zoom Distance): ${z.toFixed(0)} km`}>
+      <ControlSectionWrapper label={`Position Z: ${z.toFixed(0)} km`}>
         <Slider
           value={[z]}
           min={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * -2}
@@ -73,6 +88,33 @@ const CameraTab = () => {
           onValueChange={handleValueChange(setZ, 'z')}
         />
       </ControlSectionWrapper>
+
+      <ControlSectionWrapper label={`Longitude: ${longitude.toFixed(0)}º`}>
+        <Slider
+          value={[longitude]}
+          min={-180}
+          max={180}
+          step={"1"}
+        />
+      </ControlSectionWrapper>
+
+      <ControlSectionWrapper label={`Latitude: ${latitude.toFixed(0)}º`}>
+        <Slider
+          value={[latitude]}
+          min={-180}
+          max={180}
+          step={"1"}
+        />
+      </ControlSectionWrapper>
+
+      <ControlSectionWrapper label={`Distance: ${distance.toFixed(0)} km`}>
+        <Slider
+          value={[distance]}
+          min={0}
+          max={Const.CAMERA_ZOOM_DISTANCE_DEFAULT * 3}
+          step={"1"}
+        />
+        </ControlSectionWrapper>
     </section>
   );
 }

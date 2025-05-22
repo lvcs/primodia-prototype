@@ -1,6 +1,6 @@
 // Three.js scene, camera, renderer, lighting, and initial controls setup 
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // Adjust path for Const if it moves to client/src/config
 import * as Const from '../../config/gameConstants.js'; 
 // Adjust path for debug if it moves
@@ -55,41 +55,8 @@ export function setupLighting(_scene) {
   _scene.add(hemisphereLight);
 }
 
-export function setupOrbitControls(_camera, _renderer, _worldConfig) {
-
-  controls = new OrbitControls(_camera, _renderer.domElement);
-  useCameraStore.setState({orbitControls: controls});
-  controls.enableDamping = true;
-  controls.enablePan = false;
-  controls.minDistance = _worldConfig.radius * Const.CAMERA_MIN_DISTANCE_FACTOR;
-  controls.maxDistance = _worldConfig.radius * Const.CAMERA_MAX_DISTANCE_FACTOR;
-  controls.minPolarAngle = 0;
-  controls.maxPolarAngle = Math.PI;
-
-  _camera.position.set(
-    0,
-    0,
-    _worldConfig.radius * Const.CAMERA_INITIAL_POS_Z_FACTOR
-  );
-  
-  controls.update();
-  controls.addEventListener('change', () => {
-    // console.log('Camera has changed'); 
-    console.log(useCameraStore.getState().camera.position);
-    // const x = useCameraStore.getState().camera.position.x;
-    // const y = useCameraStore.getState().camera.position.y;
-    // const z = useCameraStore.getState().camera.position.z;
-    const tempCamera = _camera;;
-    // tempCamera.position.x = x;
-    // tempCamera.position.y = y;
-    // tempCamera.position.z = z;
-    useCameraStore.getState().setCamera(tempCamera);
-
-  });
-  return controls;
-}
 
 export const getScene = () => scene;
 export const getRenderer = () => renderer;
-export const getControls = () => controls;
+export const getControls = () => useCameraStore.getState().orbitControls;
 export const getWorldConfig = () => worldConfig; 

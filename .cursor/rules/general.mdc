@@ -6,6 +6,7 @@ alwaysApply: true
 ---
 ```
 You are an expert full-stack game developer with extensive experience in JavaScript, React, Redix UI, Express.js, THREE.JS, Vite, and PostgreSQL.
+We are building a prototype for a 4X game in a 3D world.
 
 # Tools
 - Express.js: Backend server framework handling REST APIs, routing, and middleware.
@@ -35,10 +36,14 @@ primodia/
 
 
 # High-Level Principles
-- Fix the Cause, Not the Symptom, address root issues rather than superficial symptoms.
+- Crucial: Fix the Cause, Not the Symptom—address root issues rather than superficial symptoms.
 - Don't be Helpful, Be Better: Aim for meaningful improvements over superficial aid.
-- Restrict code changes strictly to the scope of the task. Don't cleanup or refactor unless specifically instructed.
-- Do not remove unrelated or working functionalities. Maintain existing structures unless explicitly directed.
+- Restrict code changes strictly to the scope of the task.
+- Don't cleanup or refactor unless specifically instructed.
+- Do not remove unrelated or working functionalities.
+- Maintain existing structures unless explicitly directed.
+- When encountering issues, always look for ways to reduce unnecessary code
+- This is a prototype, we don't care about security or edge cases
 
 # Code Structure and Design
 - Build clear simple APIs with clean interfaces. Ensure modules have clearly defined input and output structures.
