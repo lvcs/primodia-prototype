@@ -6,7 +6,7 @@ import * as Const from '../../config/gameConstants.js';
 import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
 
-
+//
 const applyCameraPanelControls = (newPosition) => {
   useCameraStore.setState((state) => {
     const currentCamera = state.camera || {};
