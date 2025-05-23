@@ -9,12 +9,10 @@ import { generatePlates } from './platesGenerator.js';
 import RandomService from '@game/core/RandomService';
 import * as Const from '@config/gameConfig';
 import { 
-  createTreeGeometry, 
-  createTreeMaterials, 
-  shouldHaveTrees, 
-  generateTreesForTile, 
-  addTreesToScene 
-} from './TreeComponent.js';
+  shouldHaveTrees,
+  addTreesToScene,
+  clearTrees
+} from './Tree.js';
 
 // All radius values are now in kilometers (1 unit = 1 km)
 
@@ -269,7 +267,7 @@ export function generateWorld(config, seed){
   meshGroup.userData.globe = globe;
   meshGroup.userData.actualSeed = effectiveSeed; // Store seed in userData for easy access
 
-  // Add trees to qualifying tiles
+  // Add trees to qualifying tiles using optimized system
   
   // Get polygon vertices from mesh if available (only for Voronoi mode)
   const tilePolygonVertices = mainMesh && mainMesh.userData.tilePolygonVertices ? mainMesh.userData.tilePolygonVertices : {};
@@ -312,24 +310,16 @@ export function generateWorld(config, seed){
     console.log(`[Trees] Using circular distribution (no polygon data available)`);
   }
 
-  // Add trees to the scene using functional approach
+  // Add optimized trees to the scene
   if (tilesForTrees.length > 0) {
-    // Create tree resources once
-    const treeGeometry = createTreeGeometry();
-    const treeMaterials = createTreeMaterials();
-    
-    // Add trees to scene and get the tree data for management
-    const treeData = addTreesToScene(tilesForTrees, meshGroup, treeGeometry, treeMaterials);
+    const treeResult = addTreesToScene(tilesForTrees, meshGroup);
     
     // Store tree data for potential cleanup
-    meshGroup.userData.treeData = {
-      geometry: treeGeometry,
-      materials: treeMaterials,
-      treeGroup: treeData.treeGroup,
-      treeGroups: treeData.treeGroups
-    };
+    meshGroup.userData.treeData = treeResult;
     
-    console.log(`[Trees] Generated ${treeData.treeGroups.length} tree groups for ${tilesForTrees.length} tiles`);
+    if (treeResult.stats) {
+      console.log(`[Trees] Generated ${treeResult.stats.totalTrees} trees using instanced rendering (Memory: ${(treeResult.stats.memoryUsage / 1024 / 1024).toFixed(2)} MB)`);
+    }
   } else {
     console.log(`[Trees] No forest tiles found - no trees generated`);
   }

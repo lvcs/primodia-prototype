@@ -8,7 +8,7 @@ import { generateWorld } from './world/worldGenerator.js';
 import { Terrains, getColorForTerrain } from './world/registries/TerrainRegistry.js';
 import { getColorForTemperature } from './world/registries/TemperatureRegistry.js';
 import { getColorForMoisture } from './world/registries/MoistureRegistry.js';
-import { clearTrees, disposeTreeResources } from './world/TreeComponent.js';
+import { clearTrees } from './world/Tree.js';
 
 let planetGroup;
 let worldData;
@@ -35,11 +35,10 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     if (_existingPlanetGroup) {
       _scene.remove(_existingPlanetGroup);
       
-      // Dispose of tree components if they exist (functional approach)
-      if (_existingPlanetGroup.userData.treeData) {
-        const { geometry, materials, treeGroup, treeGroups } = _existingPlanetGroup.userData.treeData;
-        clearTrees(_scene, treeGroup, treeGroups);
-        disposeTreeResources(geometry, materials);
+      // Dispose of tree components if they exist
+      if (_existingPlanetGroup.userData.treeData || _existingPlanetGroup.userData.optimizedTreeData) {
+        clearTrees(_scene);
+        console.log('[Planet] Cleaned up tree system');
       }
       
       _existingPlanetGroup.traverse(obj => {
