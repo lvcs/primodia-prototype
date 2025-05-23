@@ -1,3 +1,4 @@
+# Build artifacts and temp files
 client/coverage/
 client/dist/
 client/node_modules/
@@ -6,14 +7,57 @@ client/logs/
 client/test/
 client/test-results/
 
+# Lock files and package management
 client/package-lock.json
-
-server/
-shared/
-
-___chats/
-
 node_modules/
-
 package-lock.json
 yarn.lock
+
+# Configuration files (stable, rarely changed)
+client/.eslintrc.cjs
+client/tailwind.config.js
+client/postcss.config.js
+client/vite.config.js
+client/vitest.config.js
+client/playwright.config.js
+client/test-setup-verification.js
+
+# Authentication/Login system (non-game features)
+client/src/pages/LoginPage.jsx
+client/src/pages/RegisterPage.jsx
+client/src/stores/authStore.js
+
+# Debug/Development UI (not core features)
+client/src/components/control-panel/GlobeDebugTab.jsx
+client/src/components/control-panel/TileDebugTab.jsx
+client/src/components/control-panel/CameraDebugTab.jsx
+client/src/stores/debugStore.js
+
+# Layout components (stable UI chrome)
+client/src/components/layout/UserInfo.jsx
+client/src/components/layout/TopBar.jsx
+client/src/components/layout/MiniMap.jsx
+client/src/components/layout/LoadingIndicator.jsx
+
+# UI framework boilerplate
+client/src/components/ui/
+client/src/index.css
+client/src/styles/
+
+# Root level files
+client/index.html
+
+# Metadata and system files
+**/.DS_Store
+*.log
+
+# Other directories
+server/
+shared/
+___chats/
+
+# Documentation and project management
+___prds/
+*.md
+ROADMAP.md
+AGENTS.md
