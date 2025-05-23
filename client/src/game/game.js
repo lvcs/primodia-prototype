@@ -1,6 +1,6 @@
 import { sphereSettings } from './world/planetSphereVoronoi.js';
 import { debug, error, initDebug } from './utils/debug.js';
-import RandomService from './core/RandomService.js'; 
+import Random from './core/random.js';
 import { useCameraStore, useWorldStore } from '@stores';
 
 import {
@@ -41,7 +41,7 @@ export function initGame(canvasElement) {
     
     const currentSelectedHighlight = getSelectedHighlight(); // From eventHandlers
     generatePlanet(scene, worldConfig, null , getPlanetGroup() , currentSelectedHighlight);
-    sphereSettings.currentSeed = RandomService.getCurrentSeed();
+    sphereSettings.currentSeed = Random.getCurrentSeed();
   
 
     setupLighting(scene);

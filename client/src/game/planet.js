@@ -5,6 +5,7 @@ import { debug, error } from './utils/debug.js';
 import * as Const from '@config/gameConfig.js'; // Adjusted path
 import { sphereSettings } from './world/planetSphereVoronoi.js'; 
 import { generateWorld } from './world/worldGenerator.js';
+import { generateSeed } from './core/random.js';
 import { Terrains, getColorForTerrain } from './world/registries/TerrainRegistry.js';
 import { getColorForTemperature } from './world/registries/TemperatureRegistry.js';
 import { getColorForMoisture } from './world/registries/MoistureRegistry.js';
@@ -122,7 +123,7 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     updatePlanetColors(); 
 
     // Return the actual seed that was used along with other data
-    const actualSeed = worldData?.actualSeed || seed || (sphereSettings.currentSeed ? String(sphereSettings.currentSeed) : String(Date.now()));
+    const actualSeed = worldData?.actualSeed || seed || (sphereSettings.currentSeed ? String(sphereSettings.currentSeed) : generateSeed());
     return { planetGroup, globe: worldData?.globe, actualSeed };
 
   } catch (err) {
@@ -144,7 +145,7 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     };
     _scene.add(planetGroup);
     worldData = null; 
-    return { planetGroup, worldData: null, actualSeed: seed || String(Date.now()) };
+    return { planetGroup, worldData: null, actualSeed: seed || generateSeed() };
   }
 }
 
