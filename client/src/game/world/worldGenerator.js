@@ -8,7 +8,13 @@ import { getColorForMoisture } from './registries/MoistureRegistry.js';
 import { generatePlates } from './platesGenerator.js';
 import RandomService from '@game/core/RandomService';
 import * as Const from '@config/gameConfig';
-import TreeComponent from './TreeComponent.js';
+import { 
+  createTreeGeometry, 
+  createTreeMaterials, 
+  shouldHaveTrees, 
+  generateTreesForTile, 
+  addTreesToScene 
+} from './TreeComponent.js';
 
 // All radius values are now in kilometers (1 unit = 1 km)
 
@@ -264,7 +270,6 @@ export function generateWorld(config, seed){
   meshGroup.userData.actualSeed = effectiveSeed; // Store seed in userData for easy access
 
   // Add trees to qualifying tiles
-  const treeComponent = new TreeComponent();
   
   // Get polygon vertices from mesh if available (only for Voronoi mode)
   const tilePolygonVertices = mainMesh && mainMesh.userData.tilePolygonVertices ? mainMesh.userData.tilePolygonVertices : {};
@@ -272,7 +277,7 @@ export function generateWorld(config, seed){
   // Create an array of tile data for tree generation
   const tilesForTrees = [];
   globe.tiles.forEach(tile => {
-    if (treeComponent.shouldHaveTrees(tile.terrain.id)) {
+    if (shouldHaveTrees(tile.terrain.id)) {
       // Convert tile center from normalized coordinates to world coordinates
       const worldCenter = {
         x: tile.center[0] * config.radius,
@@ -307,21 +312,24 @@ export function generateWorld(config, seed){
     console.log(`[Trees] Using circular distribution (no polygon data available)`);
   }
 
-  // Add trees to the scene
+  // Add trees to the scene using functional approach
   if (tilesForTrees.length > 0) {
-    tilesForTrees.forEach(tileData => {
-      const tileTreeGroup = treeComponent.generateTreesForTile(tileData);
-      treeComponent.treeGroup.add(tileTreeGroup);
-      treeComponent.trees.push(tileTreeGroup);
-    });
+    // Create tree resources once
+    const treeGeometry = createTreeGeometry();
+    const treeMaterials = createTreeMaterials();
     
-    // Add the tree group to the main mesh group
-    meshGroup.add(treeComponent.treeGroup);
+    // Add trees to scene and get the tree data for management
+    const treeData = addTreesToScene(tilesForTrees, meshGroup, treeGeometry, treeMaterials);
     
-    // Store tree component for potential cleanup
-    meshGroup.userData.treeComponent = treeComponent;
+    // Store tree data for potential cleanup
+    meshGroup.userData.treeData = {
+      geometry: treeGeometry,
+      materials: treeMaterials,
+      treeGroup: treeData.treeGroup,
+      treeGroups: treeData.treeGroups
+    };
     
-    console.log(`[Trees] Generated ${treeComponent.trees.length} tree groups for ${tilesForTrees.length} tiles`);
+    console.log(`[Trees] Generated ${treeData.treeGroups.length} tree groups for ${tilesForTrees.length} tiles`);
   } else {
     console.log(`[Trees] No forest tiles found - no trees generated`);
   }
