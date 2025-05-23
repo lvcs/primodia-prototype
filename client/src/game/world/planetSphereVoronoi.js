@@ -7,7 +7,7 @@ import WorldGlobe from './model/WorldGlobe.js';
 import Tile from './model/Tile.js';
 import * as Const from '@config/gameConfig'; // Import constants
 import { DrawMode } from '../../config/gameConfig.js'; // CORRECTED PATH
-import RandomService from '../core/RandomService.js'; // Added import
+import Random from '../core/random.js';
 
 // All radius values are now in kilometers (1 unit = 1 km)
 
@@ -342,7 +342,7 @@ function generateDelaunayGeometry(xyz, delaunay) {
         const centroid = new THREE.Vector3(centroidX, centroidY, centroidZ).normalize();
         
         // Determine terrain type based on position
-        const terrainType = determineTerrainType(centroid, RandomService.nextFloat.bind(RandomService));
+        const terrainType = determineTerrainType(centroid, Random.nextFloat.bind(Random));
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[t] = terrainType;
 
@@ -429,7 +429,7 @@ function generateVoronoiGeometry(points, delaunay) {
         }).sort((a, b) => a.angle - b.angle);
 
         // Determine terrain type based on vertex position
-        const terrainType = determineTerrainType(normal, RandomService.nextFloat.bind(RandomService));
+        const terrainType = determineTerrainType(normal, Random.nextFloat.bind(Random));
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[v] = terrainType;
         
@@ -496,7 +496,7 @@ export const sphereSettings = {
 
 // Main function to generate the planet geometry
 export function generatePlanetGeometryGroup(config) {
-    // Check RandomService state
+    // Check Random state
     
     // Use the latest sphereSettings values
     const { radius = Const.GLOBE_RADIUS } = config; // Default to the global constant if not provided
@@ -510,8 +510,8 @@ export function generatePlanetGeometryGroup(config) {
     const drawMode = sphereSettings.drawMode;
     
     let points;
-    // Bind RandomService.nextFloat for convenience
-    const randomFloat = RandomService.nextFloat.bind(RandomService);
+    // Bind Random.nextFloat for convenience
+    const randomFloat = Random.nextFloat.bind(Random);
 
     if(algorithm === 1){
         points = generateFibonacciSphere1(N, jitter, randomFloat);

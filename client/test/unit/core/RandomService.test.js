@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import RandomService from '@/game/core/RandomService';
+import Random from '@/game/core/random';
 
 // Mock the SeedableRandom class
-vi.mock('@/utils/SeedableRandom', () => {
+vi.mock('@/game/core/random', () => {
   return {
-    default: class MockSeedableRandom {
+    SeedableRandom: class MockSeedableRandom {
       constructor(seed) {
         this.seed = seed;
         this.callCount = 0;
@@ -29,40 +29,40 @@ vi.mock('@/utils/SeedableRandom', () => {
   };
 });
 
-describe('RandomService', () => {
+describe('Random', () => {
   beforeEach(() => {
     // Reset the service state before each test
-    RandomService.prng = null;
+    Random.prng = null;
   });
 
   describe('Initialization', () => {
     it('should initialize with a seed', () => {
-      RandomService.initialize('test-seed');
+      Random.initialize('test-seed');
       
-      expect(RandomService.prng).toBeTruthy();
-      expect(RandomService.prng.seed).toBe('test-seed');
+      expect(Random.prng).toBeTruthy();
+      expect(Random.prng.seed).toBe('test-seed');
     });
 
     it('should use default seed when initialized without parameter', () => {
-      RandomService.initialize();
+      Random.initialize();
       
-      expect(RandomService.prng).toBeTruthy();
-      expect(RandomService.prng.seed).toBeTruthy();
+      expect(Random.prng).toBeTruthy();
+      expect(Random.prng.seed).toBeTruthy();
     });
 
     it('should handle numeric seeds', () => {
-      RandomService.initialize(12345);
+      Random.initialize(12345);
       
-      expect(RandomService.prng).toBeTruthy();
-      expect(RandomService.prng.seed).toBe(12345);
+      expect(Random.prng).toBeTruthy();
+      expect(Random.prng.seed).toBe(12345);
     });
 
     it('should replace existing PRNG when reinitialized', () => {
-      RandomService.initialize('seed1');
-      const firstPrng = RandomService.prng;
+      Random.initialize('seed1');
+      const firstPrng = Random.prng;
       
-      RandomService.initialize('seed2');
-      const secondPrng = RandomService.prng;
+      Random.initialize('seed2');
+      const secondPrng = Random.prng;
       
       expect(secondPrng).not.toBe(firstPrng);
       expect(secondPrng.seed).toBe('seed2');
@@ -71,42 +71,42 @@ describe('RandomService', () => {
 
   describe('Auto-initialization', () => {
     it('should auto-initialize when calling nextFloat without explicit init', () => {
-      expect(RandomService.prng).toBeNull();
+      expect(Random.prng).toBeNull();
       
-      const result = RandomService.nextFloat();
+      const result = Random.nextFloat();
       
-      expect(RandomService.prng).toBeTruthy();
+      expect(Random.prng).toBeTruthy();
       expect(typeof result).toBe('number');
     });
 
     it('should auto-initialize when calling nextInt without explicit init', () => {
-      expect(RandomService.prng).toBeNull();
+      expect(Random.prng).toBeNull();
       
-      const result = RandomService.nextInt(1, 10);
+      const result = Random.nextInt(1, 10);
       
-      expect(RandomService.prng).toBeTruthy();
+      expect(Random.prng).toBeTruthy();
       expect(typeof result).toBe('number');
     });
 
     it('should auto-initialize when calling shuffleArray without explicit init', () => {
-      expect(RandomService.prng).toBeNull();
+      expect(Random.prng).toBeNull();
       
       const array = [1, 2, 3, 4, 5];
-      RandomService.shuffleArray(array);
+      Random.shuffleArray(array);
       
-      expect(RandomService.prng).toBeTruthy();
+      expect(Random.prng).toBeTruthy();
       expect(array).not.toEqual([1, 2, 3, 4, 5]); // Should be modified
     });
   });
 
   describe('Random Number Generation', () => {
     beforeEach(() => {
-      RandomService.initialize('consistent-seed');
+      Random.initialize('consistent-seed');
     });
 
     it('should generate float values', () => {
-      const value1 = RandomService.nextFloat();
-      const value2 = RandomService.nextFloat();
+      const value1 = Random.nextFloat();
+      const value2 = Random.nextFloat();
       
       expect(typeof value1).toBe('number');
       expect(typeof value2).toBe('number');
@@ -114,8 +114,8 @@ describe('RandomService', () => {
     });
 
     it('should generate integer values in range', () => {
-      const value1 = RandomService.nextInt(1, 6);
-      const value2 = RandomService.nextInt(10, 20);
+      const value1 = Random.nextInt(1, 6);
+      const value2 = Random.nextInt(10, 20);
       
       expect(Number.isInteger(value1)).toBe(true);
       expect(Number.isInteger(value2)).toBe(true);
@@ -129,7 +129,7 @@ describe('RandomService', () => {
       const original = [1, 2, 3, 4, 5];
       const array = [...original];
       
-      RandomService.shuffleArray(array);
+      Random.shuffleArray(array);
       
       expect(array).toHaveLength(original.length);
       expect(array).not.toEqual(original); // Should be different due to mock shuffle
@@ -137,34 +137,34 @@ describe('RandomService', () => {
     });
 
     it('should be consistent with same seed', () => {
-      RandomService.initialize('test-seed');
+      Random.initialize('test-seed');
       const sequence1 = [
-        RandomService.nextFloat(),
-        RandomService.nextFloat(),
-        RandomService.nextFloat()
+        Random.nextFloat(),
+        Random.nextFloat(),
+        Random.nextFloat()
       ];
       
-      RandomService.initialize('test-seed');
+      Random.initialize('test-seed');
       const sequence2 = [
-        RandomService.nextFloat(),
-        RandomService.nextFloat(),
-        RandomService.nextFloat()
+        Random.nextFloat(),
+        Random.nextFloat(),
+        Random.nextFloat()
       ];
       
       expect(sequence1).toEqual(sequence2);
     });
 
     it('should produce different sequences with different seeds', () => {
-      RandomService.initialize('seed-a');
+      Random.initialize('seed-a');
       const sequenceA = [
-        RandomService.nextFloat(),
-        RandomService.nextFloat()
+        Random.nextFloat(),
+        Random.nextFloat()
       ];
       
-      RandomService.initialize('seed-b');
+      Random.initialize('seed-b');
       const sequenceB = [
-        RandomService.nextFloat(),
-        RandomService.nextFloat()
+        Random.nextFloat(),
+        Random.nextFloat()
       ];
       
       expect(sequenceA).not.toEqual(sequenceB);
@@ -173,25 +173,25 @@ describe('RandomService', () => {
 
   describe('Current Seed Access', () => {
     it('should return current seed when initialized', () => {
-      RandomService.initialize('known-seed');
+      Random.initialize('known-seed');
       
-      expect(RandomService.getCurrentSeed()).toBe('known-seed');
+      expect(Random.getCurrentSeed()).toBe('known-seed');
     });
 
     it('should return undefined when not initialized', () => {
-      expect(RandomService.getCurrentSeed()).toBeUndefined();
+      expect(Random.getCurrentSeed()).toBeUndefined();
     });
   });
 
   describe('Service Integration', () => {
     it('should handle multiple operations in sequence', () => {
-      RandomService.initialize(42);
+      Random.initialize(42);
       
-      const float1 = RandomService.nextFloat();
-      const int1 = RandomService.nextInt(1, 100);
+      const float1 = Random.nextFloat();
+      const int1 = Random.nextInt(1, 100);
       const array = [1, 2, 3, 4];
-      RandomService.shuffleArray(array);
-      const float2 = RandomService.nextFloat();
+      Random.shuffleArray(array);
+      const float2 = Random.nextFloat();
       
       expect(typeof float1).toBe('number');
       expect(typeof int1).toBe('number');
@@ -200,11 +200,11 @@ describe('RandomService', () => {
     });
 
     it('should maintain state across calls', () => {
-      RandomService.initialize('state-test');
+      Random.initialize('state-test');
       
-      const firstCall = RandomService.nextFloat();
-      const secondCall = RandomService.nextFloat();
-      const thirdCall = RandomService.nextFloat();
+      const firstCall = Random.nextFloat();
+      const secondCall = Random.nextFloat();
+      const thirdCall = Random.nextFloat();
       
       // Due to our mock implementation, each call should increment
       expect(firstCall).toBe(0.1);
@@ -213,20 +213,20 @@ describe('RandomService', () => {
     });
 
     it('should handle edge cases gracefully', () => {
-      RandomService.initialize('edge-test');
+      Random.initialize('edge-test');
       
       // Test edge case integer ranges
-      const singleValue = RandomService.nextInt(5, 5);
+      const singleValue = Random.nextInt(5, 5);
       expect(singleValue).toBe(5);
       
       // Test empty array shuffle
       const emptyArray = [];
-      RandomService.shuffleArray(emptyArray);
+      Random.shuffleArray(emptyArray);
       expect(emptyArray).toEqual([]);
       
       // Test single element array shuffle
       const singleArray = [42];
-      RandomService.shuffleArray(singleArray);
+      Random.shuffleArray(singleArray);
       expect(singleArray).toEqual([42]);
     });
   });
@@ -234,20 +234,20 @@ describe('RandomService', () => {
   describe('World Generation Integration Scenarios', () => {
     it('should support world generation workflow', () => {
       // Simulate a typical world generation flow
-      RandomService.initialize('world-gen-test');
+      Random.initialize('world-gen-test');
       
       // Simulate plate generation
-      const numPlates = RandomService.nextInt(4, 12);
+      const numPlates = Random.nextInt(4, 12);
       expect(numPlates).toBeGreaterThanOrEqual(4);
       expect(numPlates).toBeLessThanOrEqual(12);
       
       // Simulate tile assignment
       const tileIds = [1, 2, 3, 4, 5, 6, 7, 8];
-      RandomService.shuffleArray(tileIds);
+      Random.shuffleArray(tileIds);
       expect(tileIds).toHaveLength(8);
       
       // Simulate terrain noise
-      const terrainNoise = Array.from({ length: 5 }, () => RandomService.nextFloat());
+      const terrainNoise = Array.from({ length: 5 }, () => Random.nextFloat());
       expect(terrainNoise).toHaveLength(5);
       terrainNoise.forEach(value => {
         expect(value).toBeGreaterThanOrEqual(0);
@@ -259,22 +259,22 @@ describe('RandomService', () => {
       const worldSeed = 'reproducible-world';
       
       // Generate world data first time
-      RandomService.initialize(worldSeed);
+      Random.initialize(worldSeed);
       const firstGeneration = {
-        plateCount: RandomService.nextInt(6, 10),
-        terrainValues: Array.from({ length: 3 }, () => RandomService.nextFloat()),
+        plateCount: Random.nextInt(6, 10),
+        terrainValues: Array.from({ length: 3 }, () => Random.nextFloat()),
         shuffledIds: [1, 2, 3, 4]
       };
-      RandomService.shuffleArray(firstGeneration.shuffledIds);
+      Random.shuffleArray(firstGeneration.shuffledIds);
       
       // Generate world data second time with same seed
-      RandomService.initialize(worldSeed);
+      Random.initialize(worldSeed);
       const secondGeneration = {
-        plateCount: RandomService.nextInt(6, 10),
-        terrainValues: Array.from({ length: 3 }, () => RandomService.nextFloat()),
+        plateCount: Random.nextInt(6, 10),
+        terrainValues: Array.from({ length: 3 }, () => Random.nextFloat()),
         shuffledIds: [1, 2, 3, 4]
       };
-      RandomService.shuffleArray(secondGeneration.shuffledIds);
+      Random.shuffleArray(secondGeneration.shuffledIds);
       
       // Should be identical
       expect(firstGeneration.plateCount).toBe(secondGeneration.plateCount);

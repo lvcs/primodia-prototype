@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import SeedableRandom from '@/utils/SeedableRandom';
+import { SeedableRandom } from '@/game/core/random';
 
 describe('SeedableRandom', () => {
   let rng;
