@@ -4,9 +4,6 @@ We are building Primodia, a browser-based, multiplayer 3D strategy game inspired
 
 This file outlines rules and guidelines applicable across the entire monorepo.
 
-# General Rules
-This file outlines rules and guidelines applicable across the entire monorepo.
-
 # Tools
 - Express.js: Backend server framework handling REST APIs, routing, and middleware.
 - THREE.JS: 3D rendering on client-side
