@@ -558,11 +558,21 @@ export function generatePlanetGeometryGroup(config) {
     }
     
     if (geometry && colors) {
-        // Scale geometry to desired radius
+        // Scale geometry to desired radius and clamp any overshoot
         for (let i = 0; i < geometry.length; i += 3) {
             geometry[i] *= radius;
             geometry[i + 1] *= radius;
             geometry[i + 2] *= radius;
+
+            const x = geometry[i];
+            const y = geometry[i + 1];
+            const z = geometry[i + 2];
+            const len = Math.sqrt(x * x + y * y + z * z);
+            if (len && Math.abs(len - radius) > 1e-4) {
+                geometry[i] = x / len * radius;
+                geometry[i + 1] = y / len * radius;
+                geometry[i + 2] = z / len * radius;
+            }
         }
         
         const geom = new THREE.BufferGeometry();
