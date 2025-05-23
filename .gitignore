@@ -12,6 +12,10 @@ dist/
 build/
 *.tsbuildinfo
 
+# Test coverage
+coverage/
+*.lcov
+
 # Editor and OS files
 .vscode/
 .idea/

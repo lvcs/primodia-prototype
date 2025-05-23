@@ -8,7 +8,13 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "mcp-server": "mcp-server-puppeteer --verbose --port 5050"
+    "mcp-server": "mcp-server-puppeteer --verbose --port 5050",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:verify": "node test-setup-verification.js"
   },
   "dependencies": {
     "@modelcontextprotocol/server-puppeteer": "^2025.5.12",
@@ -50,6 +56,14 @@
     "glob": "^11.0.2",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "@testing-library/react": "^14.2.1",
+    "@testing-library/jest-dom": "^6.2.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@vitest/ui": "^1.2.2",
+    "@vitest/coverage-v8": "^1.2.2",
+    "vitest": "^1.2.2",
+    "jsdom": "^24.0.0",
+    "@playwright/test": "^1.41.0"
   }
 }
