@@ -379,12 +379,18 @@ class TreeSystem {
   estimateMemoryUsage() {
     if (!this.isInitialized) return 0;
     
-    const verticesPerTrunk = this.trunkGeometry.attributes.position.count;
-    const verticesPerCanopy = this.canopyGeometry.attributes.position.count;
-    const totalVertices = (verticesPerTrunk + verticesPerCanopy) * this.trunkInstancedMesh.count;
+    // FIXED: Geometry memory is shared across all instances, not per-tree
+    const trunkVertices = this.trunkGeometry.attributes.position.count;
+    const canopyVertices = this.canopyGeometry.attributes.position.count;
+    const sharedGeometryMemory = (trunkVertices + canopyVertices) * 24; // position (12) + normal (12) bytes per vertex
     
-    // Rough estimate: position (12 bytes) + normal (12 bytes) + matrix (64 bytes per instance)
-    return totalVertices * 24 + this.trunkInstancedMesh.count * 128;
+    // Instance matrices: 64 bytes per tree for trunk + 64 bytes per tree for canopy
+    const instanceMemory = this.trunkInstancedMesh.count * 128;
+    
+    // Additional overhead for materials, textures, etc.
+    const overhead = 1024; // 1KB overhead
+    
+    return sharedGeometryMemory + instanceMemory + overhead;
   }
 }
 
