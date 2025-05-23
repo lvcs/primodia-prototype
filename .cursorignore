@@ -1,0 +1,9 @@
+server/
+shared/
+
+___chats/
+
+node_modules/
+
+package-lock.json
+yarn.lock
