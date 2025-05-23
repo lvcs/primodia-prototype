@@ -558,11 +558,21 @@ export function generatePlanetGeometryGroup(config) {
     }
     
     if (geometry && colors) {
-        // Scale geometry to desired radius
+        // Scale geometry to desired radius and clamp any overshoot
         for (let i = 0; i < geometry.length; i += 3) {
             geometry[i] *= radius;
             geometry[i + 1] *= radius;
             geometry[i + 2] *= radius;
+
+            const x = geometry[i];
+            const y = geometry[i + 1];
+            const z = geometry[i + 2];
+            const len = Math.sqrt(x * x + y * y + z * z);
+            if (len && Math.abs(len - radius) > 1e-4) {
+                geometry[i] = x / len * radius;
+                geometry[i + 1] = y / len * radius;
+                geometry[i + 2] = z / len * radius;
+            }
         }
         
         const geom = new THREE.BufferGeometry();
@@ -597,8 +607,8 @@ export function generatePlanetGeometryGroup(config) {
             const ax0 = geometry[aIdx*3], ay0 = geometry[aIdx*3+1], az0 = geometry[aIdx*3+2];
             const bx0 = geometry[bIdx*3], by0 = geometry[bIdx*3+1], bz0 = geometry[bIdx*3+2];
 
-            const vecA = new THREE.Vector3(ax0, ay0, az0).normalize().multiplyScalar(radius*1.001);
-            const vecB = new THREE.Vector3(bx0, by0, bz0).normalize().multiplyScalar(radius*1.001);
+            const vecA = new THREE.Vector3(ax0, ay0, az0).normalize().multiplyScalar(radius);
+            const vecB = new THREE.Vector3(bx0, by0, bz0).normalize().multiplyScalar(radius);
 
             const ax = vecA.x, ay = vecA.y, az = vecA.z;
             const bx = vecB.x, by = vecB.y, bz = vecB.z;
