@@ -370,6 +370,7 @@ function generateVoronoiGeometry(points, delaunay) {
     const ids = [];
     const tileTerrain = {};
     const tileSphericalExcesses = {}; // Added for area calculation
+    const tilePolygonVertices = {}; // NEW: Store polygon vertices for each tile
 
     // 1. Pre-compute triangle centers (simple centroid projected to sphere)
     const centers = [];
@@ -436,6 +437,13 @@ function generateVoronoiGeometry(points, delaunay) {
         let currentTileSphericalExcess = 0.0;
         const polygonVertices = centersWithAngle.map(cwa => cwa.vertex);
 
+        // NEW: Store polygon vertices for this tile (on unit sphere)
+        tilePolygonVertices[v] = polygonVertices.map(vertex => ({
+            x: vertex.x,
+            y: vertex.y, 
+            z: vertex.z
+        }));
+
         if (polygonVertices.length >= 3) { // Need at least 3 vertices for a polygon
             for (let j = 0; j < polygonVertices.length; j++) {
                 const p_i = polygonVertices[j];
@@ -462,7 +470,7 @@ function generateVoronoiGeometry(points, delaunay) {
         }
     }
 
-    return { geometry, colors, ids, tileTerrain, tileSphericalExcesses };
+    return { geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices };
 }
 
 export const DEFAULT_VIEW_MODE = 'elevation'; // Added constant for default view
@@ -550,9 +558,9 @@ export function generatePlanetGeometryGroup(config) {
     const group = new THREE.Group();
     
     // Generate geometry based on draw mode
-    let geometry, colors, ids, tileTerrain, tileSphericalExcesses;
+    let geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices;
     if (drawMode === DrawMode.VORONOI) {
-        ({geometry, colors, ids, tileTerrain, tileSphericalExcesses} = generateVoronoiGeometry(points, sphereTriangulation));
+        ({geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices} = generateVoronoiGeometry(points, sphereTriangulation));
     } else if (drawMode === DrawMode.DELAUNAY) {
         ({geometry, colors, ids, tileTerrain, tileSphericalExcesses} = generateDelaunayGeometry(points, sphereTriangulation));
     }
@@ -582,6 +590,9 @@ export function generatePlanetGeometryGroup(config) {
         mesh.userData.tileTerrain = tileTerrain;
         if (tileSphericalExcesses) {
             mesh.userData.tileSphericalExcesses = tileSphericalExcesses; // Store for later use
+        }
+        if (tilePolygonVertices) {
+            mesh.userData.tilePolygonVertices = tilePolygonVertices; // Store polygon vertices for tree distribution
         }
         group.add(mesh);
 

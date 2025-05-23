@@ -33,6 +33,12 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     
     if (_existingPlanetGroup) {
       _scene.remove(_existingPlanetGroup);
+      
+      // Explicitly dispose of tree components if they exist
+      if (_existingPlanetGroup.userData.treeComponent) {
+        _existingPlanetGroup.userData.treeComponent.dispose();
+      }
+      
       _existingPlanetGroup.traverse(obj => {
         if (obj.geometry) obj.geometry.dispose();
         if (obj.material) {

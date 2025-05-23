@@ -29,18 +29,27 @@ Trees should have basic randomized properties:
 #### 2.1 Placement Rules
 - Trees only appear on wood/forest tiles
 - Random placement within tile boundaries
-- Simple spacing to avoid obvious overlaps
+- Tree count based on tile area and density
+- Trees properly oriented "standing up" from surface
 
-#### 2.2 Tree Count
-- Fixed number of trees per wood tile (e.g., 3-5 trees)
-- Random count within range for variety
+#### 2.2 Tree Count & Density
+- Tree count calculated based on tile area and density constant
+- High tree density for realistic forest appearance
+- Density: trees per unit area of tile
+- Minimum 5 trees per forest tile regardless of size
 
 ### 3. Configuration
 
-#### 3.1 Basic Configuration
-- Tree count range per tile
-- Size variation ranges
+#### 3.1 Tree Configuration
+- Tree density (trees per unit area)
+- Tree size ranges (larger for better visibility)
 - Basic colors for trunk and canopy
+- Size variation ranges
+
+#### 3.2 Tree Dimensions
+- Larger base dimensions for visibility on planet scale
+- Height: 50+ units for good visibility
+- Radius: 15+ units for proportional appearance
 
 ### 4. Implementation Approach
 
