@@ -12,11 +12,12 @@ import {
 
 // Import the actual game functions
 import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '@game/game';
+import { generateSeed } from '@game/core/random';
 
 // --- End Game Logic Imports ---
 
-// Generate a default seed based on the current timestamp
-const generateDefaultSeed = () => String(Date.now());
+// Generate a default seed using the centralized random utility
+const generateDefaultSeed = () => generateSeed();
 
 const initialWorldSettings = {
   drawMode: DrawMode.VORONOI,

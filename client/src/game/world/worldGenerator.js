@@ -6,7 +6,7 @@ import { terrainById, Terrains, getColorForTerrain } from './registries/TerrainR
 import { getColorForTemperature } from './registries/TemperatureRegistry.js';
 import { getColorForMoisture } from './registries/MoistureRegistry.js';
 import { generatePlates } from './platesGenerator.js';
-import RandomService from '@game/core/RandomService';
+import Random, { generateSeed } from '@game/core/random';
 import * as Const from '@config/gameConfig';
 import { 
   shouldHaveTrees,
@@ -41,20 +41,18 @@ export function generateWorld(config, seed){
   }
 
 
-  // Always use a string seed for consistent results and check before RandomService initialization
-  let effectiveSeed = (seed === undefined) ? String(Date.now()) : String(seed);
-  
- 
-  // Explicitly reset the Random Service state before initialization to avoid any state carryover
-  RandomService.prng = null;
-  
+  // Always use a string seed for consistent results
+  let effectiveSeed = (seed === undefined) ? generateSeed() : String(seed);
+
+  // Explicitly reset the Random state before initialization to avoid any state carryover
+  Random.prng = null;
+
   // Initialize the global random service with the provided seed.
   // All subsequent procedural generation steps will use this seeded PRNG.
-  RandomService.initialize(effectiveSeed);
-  
- 
-  // Bind RandomService.nextFloat for convenience where needed in this scope or passed down
-  const randomFloat = RandomService.nextFloat.bind(RandomService);
+  Random.initialize(effectiveSeed);
+
+  // Bind Random.nextFloat for convenience where needed in this scope or passed down
+  const randomFloat = Random.nextFloat.bind(Random);
 
   const meshGroup = generatePlanetGeometryGroup(config);
   const mainMesh = meshGroup.children.find(c=>c.userData && c.userData.isMainMesh);
@@ -117,7 +115,7 @@ export function generateWorld(config, seed){
     });
   }
 
-  // Generate tectonic plates and elevations using the now-initialized RandomService.
+  // Generate tectonic plates and elevations using the now-initialized Random service.
   // Calculate numPlates based on numPoints (sphereSettings.numPoints)
   // Linear relationship: (480 points, 4 plates), (128000 points, 32 plates)
   // const N = sphereSettings.numPoints;
@@ -140,7 +138,7 @@ export function generateWorld(config, seed){
   // The SliderControl in ui/index.js already uses MIN_TECHTONIC_PLATES and MAX_TECHTONIC_PLATES from Const,
   // so sphereSettings.numPlates should already be within this valid range.
 
-  // generatePlates will internally use RandomService for its random choices.
+  // generatePlates will internally use Random for its random choices.
   const { plates, tilePlate } = generatePlates(globe, numPlatesToUse);
 
   // Store tilePlate mapping in mainMesh for coloring later
@@ -149,8 +147,8 @@ export function generateWorld(config, seed){
     // Generate plate colors using the seeded PRNG for consistency.
     const plateColors = {};
     plates.forEach(p=>{
-      // Use RandomService for reproducible colors if the seed is the same.
-      const color = new THREE.Color().setHSL(RandomService.nextFloat(), 0.6, 0.5);
+      // Use Random for reproducible colors if the seed is the same.
+      const color = new THREE.Color().setHSL(Random.nextFloat(), 0.6, 0.5);
       plateColors[p.id] = color.getHex();
     });
     mainMesh.userData.plateColors = plateColors;

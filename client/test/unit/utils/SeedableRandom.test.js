@@ -1,47 +1,47 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import SeedableRandom from '@/utils/SeedableRandom';
+import { SeedableRandom } from '@/game/core/random';
 
 describe('SeedableRandom', () => {
   let rng;
 
   describe('Constructor and Seed Handling', () => {
     it('should handle numeric seeds', () => {
-      rng = new SeedableRandom(12345);
+      rng = SeedableRandom(12345);
       expect(rng.seed).toBe(12345);
     });
 
     it('should handle string seeds consistently', () => {
-      const rng1 = new SeedableRandom('test-seed');
-      const rng2 = new SeedableRandom('test-seed');
+      const rng1 = SeedableRandom('test-seed');
+      const rng2 = SeedableRandom('test-seed');
       expect(rng1.seed).toBe(rng2.seed);
     });
 
     it('should handle zero seed by using default', () => {
-      rng = new SeedableRandom(0);
+      rng = SeedableRandom(0);
       expect(rng.seed).toBe(19831108); // Default value
     });
 
     it('should handle negative seeds by taking absolute value', () => {
-      rng = new SeedableRandom(-12345);
+      rng = SeedableRandom(-12345);
       expect(rng.seed).toBe(12345);
     });
 
     it('should handle undefined seed with default', () => {
-      rng = new SeedableRandom(undefined);
+      rng = SeedableRandom(undefined);
       expect(rng.seed).toBe(19831108);
     });
   });
 
   describe('Deterministic Generation', () => {
     beforeEach(() => {
-      rng = new SeedableRandom(42);
+      rng = SeedableRandom(42);
     });
 
     it('should generate deterministic float sequences', () => {
       const sequence1 = Array.from({ length: 10 }, () => rng.nextFloat());
       
       // Reset with same seed
-      rng = new SeedableRandom(42);
+      rng = SeedableRandom(42);
       const sequence2 = Array.from({ length: 10 }, () => rng.nextFloat());
       
       expect(sequence1).toEqual(sequence2);
@@ -59,7 +59,7 @@ describe('SeedableRandom', () => {
       const sequence1 = Array.from({ length: 10 }, () => rng.nextInt(1, 100));
       
       // Reset with same seed
-      rng = new SeedableRandom(42);
+      rng = SeedableRandom(42);
       const sequence2 = Array.from({ length: 10 }, () => rng.nextInt(1, 100));
       
       expect(sequence1).toEqual(sequence2);
@@ -76,7 +76,7 @@ describe('SeedableRandom', () => {
 
   describe('Array Shuffling', () => {
     beforeEach(() => {
-      rng = new SeedableRandom(123);
+      rng = SeedableRandom(123);
     });
 
     it('should shuffle arrays deterministically', () => {
@@ -86,7 +86,7 @@ describe('SeedableRandom', () => {
       rng.shuffleArray(arr1);
       
       // Reset and shuffle again
-      rng = new SeedableRandom(123);
+      rng = SeedableRandom(123);
       rng.shuffleArray(arr2);
       
       expect(arr1).toEqual(arr2);
@@ -113,7 +113,7 @@ describe('SeedableRandom', () => {
 
   describe('Distribution Properties', () => {
     beforeEach(() => {
-      rng = new SeedableRandom(999);
+      rng = SeedableRandom(999);
     });
 
     it('should produce reasonably uniform float distribution', () => {
