@@ -129,8 +129,8 @@ body, html {
   pointer-events: auto;
 }
 
-/* Globe Control Panel */
-#globe-control-panel {
+/* Planet Control Panel */
+#planet-control-panel {
   position: absolute;
   bottom: 1rem;
   left: 1rem;

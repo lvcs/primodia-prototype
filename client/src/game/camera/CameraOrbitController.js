@@ -8,7 +8,7 @@ class CameraOrbitController {
     /**
      * @param {THREE.Camera} camera - The camera to control.
      * @param {THREE.OrbitControls} threeOrbitControls - The main OrbitControls instance.
-     * @param {number} radius - Initial distance from the globe center.
+     * @param {number} radius - Initial distance from the planet center.
      * @param {number} phi - Initial polar angle (vertical, 0 = up, PI = down).
      * @param {number} theta - Initial azimuthal angle (horizontal, 0 = +X).
      */
@@ -18,7 +18,7 @@ class CameraOrbitController {
         this.radius = radius;
         this.phi = phi;
         this.theta = theta;
-        this.target = new THREE.Vector3(0, 0, 0); // Always look at globe center
+        this.target = new THREE.Vector3(0, 0, 0); // Always look at planet center
         this.updateCamera();
 
         // Get the setZoom action from the store

@@ -35,8 +35,8 @@ export const newsetupOrbitControls = (_renderer) => {
   orbitControls.enableDamping = true;
   orbitControls.dampingFactor = 0.125;
   orbitControls.enablePan = true;
-  orbitControls.minDistance = Const.GLOBE_RADIUS * Const.CAMERA_MIN_DISTANCE_FACTOR;
-  orbitControls.maxDistance = Const.GLOBE_RADIUS * Const.CAMERA_MAX_DISTANCE_FACTOR;
+  orbitControls.minDistance = Const.PLANET_RADIUS * Const.CAMERA_MIN_DISTANCE_FACTOR;
+  orbitControls.maxDistance = Const.PLANET_RADIUS * Const.CAMERA_MAX_DISTANCE_FACTOR;
   orbitControls.minPolarAngle = 0;
   orbitControls.maxPolarAngle = Math.PI;
 

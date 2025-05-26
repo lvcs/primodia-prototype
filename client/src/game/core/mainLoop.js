@@ -45,11 +45,11 @@ function animate() {
             };
         }
 
-        const globeDebugData = {
+        const planetDebugData = {
 
         };
         
-        useDebugStore.getState().setGlobeDebugInfo(globeDebugData); // Update store directly
+        useDebugStore.getState().setPlanetDebugInfo(planetDebugData); // Update store directly
     }
 
     if (controls.enableDamping) {

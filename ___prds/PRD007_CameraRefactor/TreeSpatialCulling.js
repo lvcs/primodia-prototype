@@ -226,7 +226,7 @@ export class SpatialCullingTreeSystem {
   }
 
   tileIntersectsChunk(tileData, chunkMin, chunkMax) {
-    // Simple sphere-box intersection test
+    // Simple planet-box intersection test
     const tileCenter = tileData.center;
     const tileRadius = Math.sqrt(tileData.area / Math.PI);
     
@@ -253,14 +253,14 @@ export class SpatialCullingTreeSystem {
     const rng = this.seededRandom(tileData.seed);
     const treeCount = Math.floor(tileData.area * 1000 * rng());
     
-    const sphereRadius = Math.sqrt(
+    const planetRadius = Math.sqrt(
       tileData.center.x ** 2 + tileData.center.y ** 2 + tileData.center.z ** 2
     );
     
     for (let i = 0; i < treeCount; i++) {
       const treeId = `${tileId}_${i}`;
       if (!this.activeTrees.has(treeId)) {
-        const position = this.generateTreePosition(tileData, sphereRadius, rng);
+        const position = this.generateTreePosition(tileData, planetRadius, rng);
         const tree = {
           position,
           tileId,
@@ -273,15 +273,15 @@ export class SpatialCullingTreeSystem {
     }
   }
 
-  generateTreePosition(tileData, sphereRadius, rng) {
+  generateTreePosition(tileData, planetRadius, rng) {
     // Simple circular distribution
     const angle = rng() * Math.PI * 2;
     const radius = rng() * Math.sqrt(tileData.area / Math.PI) * 0.8;
     
     const centerNormal = new THREE.Vector3(
-      tileData.center.x / sphereRadius,
-      tileData.center.y / sphereRadius,
-      tileData.center.z / sphereRadius
+      tileData.center.x / planetRadius,
+      tileData.center.y / planetRadius,
+      tileData.center.z / planetRadius
     );
     
     const tangent = new THREE.Vector3(1, 0, 0).cross(centerNormal).normalize();
@@ -290,7 +290,7 @@ export class SpatialCullingTreeSystem {
     const offset = tangent.clone().multiplyScalar(Math.cos(angle) * radius)
       .add(bitangent.clone().multiplyScalar(Math.sin(angle) * radius));
     
-    const finalPos = centerNormal.add(offset.multiplyScalar(1 / sphereRadius)).normalize().multiplyScalar(sphereRadius);
+    const finalPos = centerNormal.add(offset.multiplyScalar(1 / planetRadius)).normalize().multiplyScalar(planetRadius);
     
     return { x: finalPos.x, y: finalPos.y, z: finalPos.z };
   }

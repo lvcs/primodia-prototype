@@ -18,7 +18,7 @@ This document outlines the requirements for refactoring the camera control syste
     - `target` (THREE.Vector3 focus point)
     - `phi` (polar angle for orientation)
     - `theta` (azimuthal angle for orientation)
-    - `viewMode` ('globe', 'tile', or other applicable modes)
+    - `viewMode` ('planet', 'tile', or other applicable modes)
     - Potentially `isAnimating` or other UI-relevant status flags.
 - **REQ-CAM-R-002:** Actions must be provided in the store to update these state variables (e.g., `setZoom`, `setTarget`, `setRotation`, `setViewMode`).
 
@@ -31,7 +31,7 @@ This document outlines the requirements for refactoring the camera control syste
 - **REQ-CAM-R-007 (Game-to-Store Sync):** The `GameCameraController` must listen to the `'change'` event from its `THREE.OrbitControls` instance.
     - Upon this event, it must read the current state from `THREE.OrbitControls` (distance, target, orientation).
     - It must then call the appropriate actions on `cameraStore` to update the store with these actual values. This update should be throttled for performance.
-- **REQ-CAM-R-008 (Programmatic Animations):** The `GameCameraController` must provide methods for programmatic camera animations (e.g., `flyToTile(tile)`, `animateToGlobeView()`).
+- **REQ-CAM-R-008 (Programmatic Animations):** The `GameCameraController` must provide methods for programmatic camera animations (e.g., `flyToTile(tile)`, `animateToPlanetView()`).
     - These methods will calculate target camera parameters.
     - They will animate the `THREE.OrbitControls` (and/or camera directly) over time.
     - The existing `'change'` listener on `OrbitControls` (REQ-CAM-R-007) should ensure the `cameraStore` is continuously updated during these animations.
@@ -42,7 +42,7 @@ This document outlines the requirements for refactoring the camera control syste
 
 ### 3.4. System Initialization & Integration
 - **REQ-CAM-R-011:** The `GameCameraController` instance shall be created during the main game initialization sequence.
-- **REQ-CAM-R-012:** Existing camera control logic (e.g., in `Camera.js`, `CameraOrbitController.js` within `eventHandlers.js`, `GlobeCameraController.js`, `TileCameraController.js`) must be refactored and integrated into or replaced by the new `GameCameraController` and `cameraStore` architecture.
+- **REQ-CAM-R-012:** Existing camera control logic (e.g., in `Camera.js`, `CameraOrbitController.js` within `eventHandlers.js`, `PlanetCameraController.js`, `TileCameraController.js`) must be refactored and integrated into or replaced by the new `GameCameraController` and `cameraStore` architecture.
 - **REQ-CAM-R-013:** A clear `dispose` method should be implemented in `GameCameraController` to clean up subscriptions and event listeners when the game ends or the controller is no longer needed.
 
 ## 4. Non-Goals

@@ -41,7 +41,7 @@ After extensive investigation, several underlying issues were identified:
    - This caused seemingly identical settings to produce different planets
 
 3. **Settings Propagation**:
-   - Settings were passed through multiple layers (UI → store → game → world generator → sphere generator)
+   - Settings were passed through multiple layers (UI → store → game → world generator → planet generator)
    - At each step, there was potential for values to be overridden by defaults
    - No verification that the final generation functions were using the latest settings
 
@@ -98,7 +98,7 @@ let effectiveSeed = (seed === undefined) ? String(Date.now()) : String(seed);
 - Added explicit passing of settings through the entire chain:
 
 ```javascript
-currentWorldConfig.sphereSettings = { ...sphereSettings };
+currentWorldConfig.planetSettings = { ...planetSettings };
 worldData = generateWorld(currentWorldConfig, seed);
 ```
 
@@ -108,13 +108,13 @@ worldData = generateWorld(currentWorldConfig, seed);
 ```javascript
 function debugAndFixNumPoints() {
   // Ensure numPoints is valid before use
-  if (typeof sphereSettings.numPoints !== 'number' || 
-      isNaN(sphereSettings.numPoints) || 
-      sphereSettings.numPoints < 50 || 
-      sphereSettings.numPoints > 128000) {
-    sphereSettings.numPoints = Const.DEFAULT_NUMBER_OF_GLOBE_TILES;
+  if (typeof planetSettings.numPoints !== 'number' || 
+      isNaN(planetSettings.numPoints) || 
+      planetSettings.numPoints < 50 || 
+      planetSettings.numPoints > 128000) {
+    planetSettings.numPoints = Const.DEFAULT_NUMBER_OF_PLANET_TILES;
   }
-  return sphereSettings.numPoints;
+  return planetSettings.numPoints;
 }
 ```
 

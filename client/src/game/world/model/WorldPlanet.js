@@ -1,6 +1,6 @@
 import Tile from './Tile.js';
 
-export default class WorldGlobe {
+export default class WorldPlanet {
   constructor({
     id = crypto.randomUUID(),
     drawMode,

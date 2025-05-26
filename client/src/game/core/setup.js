@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // Adjust path for Const if it moves to client/src/config
 import * as ConstFromGameConfig from '../../config/gameConfig.js'; // Renamed to avoid conflict
-import { GLOBE_VIEW_CAMERA_DISTANCE } from '../../config/cameraConfig.js'; // Import specific constant
+import { PLANET_VIEW_CAMERA_DISTANCE } from '../../config/cameraConfig.js'; // Import specific constant
 // Adjust path for debug if it moves
 import { debug } from '../utils/debug.js'; 
 import { initializeCam } from '@game/camera/cam.js';
@@ -36,7 +36,7 @@ export function setupThreeJS(canvasElement) {
 
 export function setupInitialWorldConfig() {
   worldConfig = {
-    radius: ConstFromGameConfig.GLOBE_RADIUS,
+    radius: ConstFromGameConfig.PLANET_RADIUS,
     detail: ConstFromGameConfig.DEFAULT_WORLD_DETAIL,
   };
   return worldConfig;
@@ -52,8 +52,8 @@ export function setupLighting(_scene) {
   sunLight.shadow.mapSize.height = 2048;
   sunLight.shadow.bias = -0.001;
   _scene.add(sunLight);
-  const hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.8);
-  _scene.add(hemisphereLight);
+  const hemiplanetLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.8);
+  _scene.add(hemiplanetLight);
 }
 
 

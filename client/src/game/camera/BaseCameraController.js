@@ -9,13 +9,13 @@ export class BaseCameraController {
   /**
    * Create a base camera controller.
    * @param {THREE.Camera} threeJsCamera - The camera object from Three.js.
-   * @param {number} globeRadius - The radius of the globe in kilometers (1 unit = 1 km).
+   * @param {number} planetRadius - The radius of the planet in kilometers (1 unit = 1 km).
    */
-  constructor(threeJsCamera, globeRadius) {
+  constructor(threeJsCamera, planetRadius) {
     // Store the camera object
     this.threeJsCamera = threeJsCamera;
-    // Store the globe's radius in kilometers
-    this.globeRadius = globeRadius;
+    // Store the planet's radius in kilometers
+    this.planetRadius = planetRadius;
     // Store animation configuration
     this.config = {
       ANIMATION_DURATION_MS: DEFAULT_ANIMATION_DURATION_MS,
@@ -49,19 +49,19 @@ export class BaseCameraController {
   }
 
   /**
-   * Convert latitude and longitude to a 3D position on the globe.
+   * Convert latitude and longitude to a 3D position on the planet.
    * @param {number} latitude - The latitude in degrees.
    * @param {number} longitude - The longitude in degrees.
-   * @returns {THREE.Vector3} The 3D position on the globe's surface.
+   * @returns {THREE.Vector3} The 3D position on the planet's surface.
    */
   latLonToWorld(latitude, longitude) {
     // Convert latitude and longitude from degrees to radians
     const latRad = THREE.MathUtils.degToRad(latitude);
     const lonRad = THREE.MathUtils.degToRad(longitude);
-    // Calculate the x, y, z coordinates on the globe's surface
-    const x = this.globeRadius * Math.cos(latRad) * Math.cos(lonRad);
-    const y = this.globeRadius * Math.sin(latRad);
-    const z = this.globeRadius * Math.cos(latRad) * Math.sin(lonRad);
+    // Calculate the x, y, z coordinates on the planet's surface
+    const x = this.planetRadius * Math.cos(latRad) * Math.cos(lonRad);
+    const y = this.planetRadius * Math.sin(latRad);
+    const z = this.planetRadius * Math.cos(latRad) * Math.sin(lonRad);
     // Return the position as a Three.js Vector3 object
     return new THREE.Vector3(x, y, z);
   }

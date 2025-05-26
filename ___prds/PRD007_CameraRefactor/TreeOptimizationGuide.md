@@ -126,7 +126,7 @@ const minimalTrees = new MinimalTreeSystem();
 tilesForTrees.forEach(tile => {
   minimalTrees.addTrees(tile);
 });
-minimalTrees.renderTrees(scene, cameraPosition, sphereRadius);
+minimalTrees.renderTrees(scene, cameraPosition, planetRadius);
 ```
 
 **Expected result**: 99.5% memory reduction (0.43 MB total).

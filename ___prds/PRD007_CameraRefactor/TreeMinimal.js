@@ -126,14 +126,14 @@ export class MinimalTreeSystem {
     const newTreeData = new Float32Array(newTotalCount * 2); // 2 floats per tree (position + packed data)
     newTreeData.set(this.treeData);
     
-    const sphereRadius = Math.sqrt(
+    const planetRadius = Math.sqrt(
       tileData.center.x ** 2 + tileData.center.y ** 2 + tileData.center.z ** 2
     );
     
     // Generate minimal tree data
     for (let i = 0; i < treeCount; i++) {
       const treeIndex = (this.treeCount + i) * 2;
-      const position = this.generateTreePosition(tileData, sphereRadius);
+      const position = this.generateTreePosition(tileData, planetRadius);
       
       // Pack position into two floats (lossy compression)
       newTreeData[treeIndex] = this.packPosition(position);
@@ -154,7 +154,7 @@ export class MinimalTreeSystem {
 
   packPosition(pos) {
     // Pack 3D position into a single float (very lossy but tiny)
-    // Use spherical coordinates relative to sphere center
+    // Use spherical coordinates relative to planet center
     const r = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
     const theta = Math.atan2(pos.y, pos.x);
     const phi = Math.acos(pos.z / r);
@@ -173,16 +173,16 @@ export class MinimalTreeSystem {
     return (typeInt << 6) | (sizeInt << 2) | colorInt;
   }
 
-  unpackPosition(packed, sphereRadius) {
+  unpackPosition(packed, planetRadius) {
     // Unpack position from float
     const packedInt = Math.floor(packed);
     const theta = ((packedInt >> 12) & 0xFFF) / 1000;
     const phi = (packedInt & 0xFFF) / 1000;
     
     return {
-      x: sphereRadius * Math.sin(phi) * Math.cos(theta),
-      y: sphereRadius * Math.sin(phi) * Math.sin(theta), 
-      z: sphereRadius * Math.cos(phi)
+      x: planetRadius * Math.sin(phi) * Math.cos(theta),
+      y: planetRadius * Math.sin(phi) * Math.sin(theta), 
+      z: planetRadius * Math.cos(phi)
     };
   }
 
@@ -195,7 +195,7 @@ export class MinimalTreeSystem {
     };
   }
 
-  generateTreePosition(tileData, sphereRadius) {
+  generateTreePosition(tileData, planetRadius) {
     // Very simple position generation
     const angle = Math.random() * Math.PI * 2;
     const radius = Math.random() * Math.sqrt(tileData.area / Math.PI) * 0.8;
@@ -206,13 +206,13 @@ export class MinimalTreeSystem {
       z: 0
     };
     
-    // Project to sphere
+    // Project to planet
     const center = new THREE.Vector3(tileData.center.x, tileData.center.y, tileData.center.z);
     const tangent = new THREE.Vector3(1, 0, 0).cross(center).normalize();
     const bitangent = center.clone().cross(tangent).normalize();
     
     const worldOffset = tangent.multiplyScalar(offset.x).add(bitangent.multiplyScalar(offset.y));
-    const finalPos = center.add(worldOffset).normalize().multiplyScalar(sphereRadius);
+    const finalPos = center.add(worldOffset).normalize().multiplyScalar(planetRadius);
     
     return { x: finalPos.x, y: finalPos.y, z: finalPos.z };
   }
@@ -225,7 +225,7 @@ export class MinimalTreeSystem {
   /**
    * Render trees using instanced meshes based on LOD
    */
-  renderTrees(scene, cameraPosition, sphereRadius) {
+  renderTrees(scene, cameraPosition, planetRadius) {
     // Clear existing meshes
     this.meshes.forEach(mesh => scene.remove(mesh));
     this.meshes.clear();
@@ -239,7 +239,7 @@ export class MinimalTreeSystem {
     // Sort trees into LOD buckets
     for (let i = 0; i < this.treeCount; i++) {
       const dataIndex = i * 2;
-      const position = this.unpackPosition(this.treeData[dataIndex], sphereRadius);
+      const position = this.unpackPosition(this.treeData[dataIndex], planetRadius);
       const properties = this.unpackProperties(this.treeData[dataIndex + 1]);
       
       const distance = cameraPosition.distanceTo(new THREE.Vector3(position.x, position.y, position.z));
@@ -270,7 +270,7 @@ export class MinimalTreeSystem {
         const position = new THREE.Vector3(tree.position.x, tree.position.y, tree.position.z);
         const scale = 0.8 + tree.properties.size * 0.4;
         
-        // Orient tree away from sphere center
+        // Orient tree away from planet center
         const normal = position.clone().normalize();
         const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
         

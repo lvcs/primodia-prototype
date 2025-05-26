@@ -83,7 +83,6 @@ const DEFAULT_TILE_MOISTURE = 0.5;
 // Utility hash-based pseudo-noise (simple and fast)
 // Generates a deterministic pseudo-random value between 0 and 1 based on 3D input coordinates.
 // Uses sine function with arbitrary multipliers for chaotic behavior.
-// TODO: Define magic numbers as constants
 function noise3(x, y, z) {
   const s = Math.sin(x * NOISE3_X_MULTIPLIER + y * NOISE3_Y_MULTIPLIER + z * NOISE3_Z_MULTIPLIER);
   return s - Math.floor(s); // Returns a value between 0 and 1
@@ -92,7 +91,6 @@ function noise3(x, y, z) {
 // Fractional Brownian Motion (fBm) noise for more natural-looking terrain variations
 // Combines multiple "octaves" of the basic noise3 function at different frequencies and amplitudes
 // to create more complex and natural-looking patterns.
-// TODO: Define magic numbers/defaults as constants
 function fbmNoise(vec, octaves = FBM_DEFAULT_OCTAVES) {
   let total = 0;
   let frequency = FBM_INITIAL_FREQUENCY;
@@ -110,14 +108,14 @@ function fbmNoise(vec, octaves = FBM_DEFAULT_OCTAVES) {
 /**
  * Generates tectonic plates, assigns tiles to them, and calculates tile elevations
  * based on plate interactions and noise, following principles from Red Blob Games.
- * @param {import('./model/WorldGlobe.js').default} globe The world globe object containing tiles.
+ * @param {import('./model/WorldPlanet.js').default} planet The world planet object containing tiles.
  * @param {number} numPlates The desired number of tectonic plates.
  * @returns {{plates: Plate[], tilePlate: Object}} An object containing the list of plates and a map of tile IDs to plate IDs.
  */
-export function generatePlates(globe, numPlates = 16) {
-  const tileIds = Array.from(globe.tiles.keys());
+export function generatePlates(planet, numPlates = 16) {
+  const tileIds = Array.from(planet.tiles.keys());
   if (tileIds.length === 0) {
-    console.warn("No tiles in globe to generate plates for.");
+    console.warn("No tiles in planet to generate plates for.");
     return { plates: [], tilePlate: {} };
   }
 
@@ -133,7 +131,7 @@ export function generatePlates(globe, numPlates = 16) {
   }
 
   const plates = seedIds.map((seedId, idx) => {
-    const seedTile = globe.getTile(seedId);
+    const seedTile = planet.getTile(seedId);
     if (!seedTile) {
         console.error("Seed tile not found for ID:", seedId);
         // Provide a fallback Plate to prevent crashes
@@ -146,7 +144,7 @@ export function generatePlates(globe, numPlates = 16) {
         });
     }
     const center = seedTile.center;
-    // Generate a random motion vector for the plate, tangent to the sphere surface at its center.
+    // Generate a random motion vector for the plate, tangent to the planet surface at its center.
     const randomVec = new THREE.Vector3(RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5).normalize();
     const motion = new THREE.Vector3().fromArray(center).cross(randomVec).normalize(); // Cross product ensures perpendicular motion vector
 
@@ -174,7 +172,7 @@ export function generatePlates(globe, numPlates = 16) {
   const queue = [];
 
   plates.forEach(plate => {
-    if (globe.getTile(plate.seedTileId)) { // Ensure seed tile exists before adding to queue
+    if (planet.getTile(plate.seedTileId)) { // Ensure seed tile exists before adding to queue
         tilePlate[plate.seedTileId] = plate.id;
         queue.push(plate.seedTileId);
     }
@@ -200,7 +198,7 @@ export function generatePlates(globe, numPlates = 16) {
 
     const currentTileId = queue[head]; // The tile to process
     const currentPlateId = tilePlate[currentTileId];
-    const tile = globe.getTile(currentTileId);
+    const tile = planet.getTile(currentTileId);
 
     head++; // Advance head, as queue[head-1] (formerly queue[head]) is now being processed
 
@@ -219,7 +217,7 @@ export function generatePlates(globe, numPlates = 16) {
   }
 
   // Apply plate IDs to tile objects
-  globe.tiles.forEach(tile => {
+  planet.tiles.forEach(tile => {
     tile.plate = tilePlate[tile.id];
     if (tile.plate === undefined) {
         // This might happen if some tiles are disconnected from all seed points.
@@ -234,7 +232,7 @@ export function generatePlates(globe, numPlates = 16) {
   // which can be more representative than the initial seed tile, especially for irregularly shaped plates.
   plates.forEach(p => {
     const assignedTileCenters = [];
-    globe.tiles.forEach(tile => {
+    planet.tiles.forEach(tile => {
       if (tile.plate === p.id) {
         assignedTileCenters.push(vec3From(tile.center));
       }
@@ -269,7 +267,7 @@ export function generatePlates(globe, numPlates = 16) {
   // const PRIORITY_COAST_RIDGE_TRENCH = 2;
   // const PRIORITY_MOUNTAIN = 3;
 
-  globe.tiles.forEach(tile => {
+  planet.tiles.forEach(tile => {
     const currentPlate = plates[tile.plate];
     if (!currentPlate) {
       // Should be handled by the assignment logic above, but as a fallback:
@@ -284,7 +282,7 @@ export function generatePlates(globe, numPlates = 16) {
     const tileCenterVec = vec3From(tile.center);
 
     tile.neighbors.forEach(neighborId => {
-      const neighborTile = globe.getTile(neighborId);
+      const neighborTile = planet.getTile(neighborId);
       if (!neighborTile || neighborTile.plate === tile.plate) {
         return; // Skip if same plate or neighbor doesn't exist
       }
@@ -369,11 +367,11 @@ export function generatePlates(globe, numPlates = 16) {
   // const smoothingPasses = 3;
   for (let pass = 0; pass < ELEVATION_SMOOTHING_PASSES; pass++) {
     const newElevations = new Map(); // Temporarily stores newly calculated elevations for this pass.
-    globe.tiles.forEach(tile => {
+    planet.tiles.forEach(tile => {
       let elevationSum = tile.elevation;
       let neighborCount = 1;
       tile.neighbors.forEach(neighborId => {
-        const neighborTile = globe.getTile(neighborId);
+        const neighborTile = planet.getTile(neighborId);
         if (neighborTile) {
           elevationSum += neighborTile.elevation;
           neighborCount++;
@@ -384,7 +382,7 @@ export function generatePlates(globe, numPlates = 16) {
 
     // Blend current elevation with the new smoothed elevation to retain some features from before smoothing,
     // while also incorporating the averaged values for a smoother overall look.
-    globe.tiles.forEach(tile => {
+    planet.tiles.forEach(tile => {
       tile.elevation = (tile.elevation * ELEVATION_SMOOTHING_ORIGINAL_WEIGHT) + (newElevations.get(tile.id) * ELEVATION_SMOOTHING_AVERAGED_WEIGHT);
     });
   }
@@ -408,7 +406,7 @@ export function generatePlates(globe, numPlates = 16) {
     RandomService.nextFloat() * (PLATE_MOISTURE_BASE_MAX - PLATE_MOISTURE_BASE_MIN) + PLATE_MOISTURE_BASE_MIN
   );
 
-  globe.tiles.forEach(tile => {
+  planet.tiles.forEach(tile => {
     if (!tile.center || tile.center.length < 3) {
         tile.moisture = DEFAULT_TILE_MOISTURE; 
         return;
@@ -447,7 +445,7 @@ export function generatePlates(globe, numPlates = 16) {
   });
 
   // 7. Assign Temperature (Latitude and Elevation based)
-  globe.tiles.forEach(tile => {
+  planet.tiles.forEach(tile => {
     if (!tile.center || tile.center.length < 3) {
       tile.temperature = 0.5; // Default for bad data
       return;
@@ -474,7 +472,7 @@ export function generatePlates(globe, numPlates = 16) {
   // 8. Identify Ocean-Connected Water Tiles (for Lake differentiation)
   const SEA_LEVEL = -0.05; // Tiles below this might be ocean or coast
   const oceanSeedTiles = new Set();
-  globe.tiles.forEach(tile => {
+  planet.tiles.forEach(tile => {
     tile.isOceanConnected = false; // Reset/initialize
     if (tile.elevation < SEA_LEVEL) {
       oceanSeedTiles.add(tile.id);
@@ -485,11 +483,11 @@ export function generatePlates(globe, numPlates = 16) {
   let oceanHead = 0; // Renamed from head
   while(oceanHead < oceanQueue.length) {
     const currentTileId = oceanQueue[oceanHead++]; // Use renamed variables
-    const currentTile = globe.getTile(currentTileId);
+    const currentTile = planet.getTile(currentTileId);
     if (currentTile) { 
         currentTile.isOceanConnected = true;
         currentTile.neighbors.forEach(neighborId => {
-            const neighborTile = globe.getTile(neighborId);
+            const neighborTile = planet.getTile(neighborId);
             if (neighborTile && neighborTile.elevation < SEA_LEVEL && !neighborTile.isOceanConnected && !oceanQueue.includes(neighborId)) {
                 if (!oceanSeedTiles.has(neighborId)) { 
                     oceanQueue.push(neighborId);

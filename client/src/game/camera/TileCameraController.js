@@ -5,23 +5,23 @@ import { CAMERA_VIEWS } from '@/config/cameraConfig.js';
 const TILE_CONFIG = CAMERA_VIEWS.tile;
 
 /**
- * Controls the camera when focusing on a specific tile (area) on the globe.
+ * Controls the camera when focusing on a specific tile (area) on the planet.
  * Inherits common camera logic from BaseCameraController.
  */
 export class TileCameraController extends BaseCameraController {
   /**
    * Create a controller for tile view.
    * @param {THREE.Camera} threeJsCamera - The camera object from Three.js.
-   * @param {number} globeRadius - The radius of the globe.
+   * @param {number} planetRadius - The radius of the planet.
    */
-  constructor(threeJsCamera, globeRadius) {
-    // Call the parent class constructor to set up the camera and globe radius
-    super(threeJsCamera, globeRadius);
+  constructor(threeJsCamera, planetRadius) {
+    // Call the parent class constructor to set up the camera and planet radius
+    super(threeJsCamera, planetRadius);
   }
 
   /**
-   * Animate the camera to focus on a specific tile (latitude/longitude) on the globe.
-   * The camera will be a fixed distance from the globe center, at a fixed tilt, always looking at the tile.
+   * Animate the camera to focus on a specific tile (latitude/longitude) on the planet.
+   * The camera will be a fixed distance from the planet center, at a fixed tilt, always looking at the tile.
    * @param {{latitude: number, longitude: number}} tile - The tile to focus on.
    * @param {Function} [onComplete] - Optional callback when animation finishes.
    */
@@ -29,7 +29,7 @@ export class TileCameraController extends BaseCameraController {
     // 1. Get the tile's world position (on the surface)
     const tilePos = this.latLonToWorld(tile.latitude, tile.longitude);
 
-    // 2. Get the direction from the globe center to the tile
+    // 2. Get the direction from the planet center to the tile
     const direction = tilePos.clone().normalize();
 
     // 3. Set the camera position to be defaultDistance away from the center, along this direction
@@ -38,7 +38,7 @@ export class TileCameraController extends BaseCameraController {
 
     // Store the camera's current position as the animation start
     const startPos = this.threeJsCamera.position.clone();
-    // The camera should look at the globe center at the end
+    // The camera should look at the planet center at the end
     const endPos = cameraPos.clone();
     const endTarget = new THREE.Vector3(0, 0, 0);
     // The camera's up direction should always be straight up (y-axis)
@@ -57,7 +57,7 @@ export class TileCameraController extends BaseCameraController {
         this.threeJsCamera.position.copy(pos);
         // Update the camera's up direction
         this.threeJsCamera.up.copy(up);
-        // Make the camera look at the target (globe center)
+        // Make the camera look at the target (planet center)
         this.threeJsCamera.lookAt(target);
         // Ensure the camera is not rotated around the y or z axes
         this.threeJsCamera.rotation.z = 0;

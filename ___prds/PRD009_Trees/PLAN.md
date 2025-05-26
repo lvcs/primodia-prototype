@@ -93,10 +93,10 @@ Simple implementation plan for adding basic visual trees to wood/forest tiles. T
    - [x] Verify memory cleanup
 
 **Implementation Notes:**
-- Fixed tree positioning to properly place trees on sphere surface
+- Fixed tree positioning to properly place trees on planet surface
 - Added surface normal orientation so trees grow "up" from surface
-- Improved tree spacing with sphere-aware positioning algorithm  
-- Trees now properly oriented regardless of their position on the globe
+- Improved tree spacing with planet-aware positioning algorithm  
+- Trees now properly oriented regardless of their position on the planet
 - Added proper quaternion-based rotation for surface alignment
 - Random rotation applied after surface orientation for natural variety
 
@@ -163,7 +163,7 @@ Simple implementation plan for adding basic visual trees to wood/forest tiles. T
 ### Tasks:
 1. **Fix Tree Orientation**
    - [x] Replace incorrect lookAt method with proper quaternion rotation
-   - [x] Align tree Y-axis (up direction) with surface normal pointing away from sphere center
+   - [x] Align tree Y-axis (up direction) with surface normal pointing away from planet center
    - [x] Maintain random rotation around surface normal for variety
 
 2. **Polygon-Based Tree Distribution**  
@@ -181,7 +181,7 @@ Simple implementation plan for adding basic visual trees to wood/forest tiles. T
 - **Orientation Fix**: Used `setFromUnitVectors()` to properly align tree's local Y-axis with surface normal
 - **Distribution**: Added support for `polygonVertices` parameter in tile data for shape-based distribution
 - **Fallback**: Maintained circular approximation as fallback when polygon data unavailable
-- **Future**: Point-in-polygon testing on sphere surfaces can be added for perfect distribution within tile shapes
+- **Future**: Point-in-polygon testing on planet surfaces can be added for perfect distribution within tile shapes
 - **Config**: Now purely density-based (0.0003 trees per unit area) with minimum 1 tree per forest tile
 
 **Dependencies**: Phase 6 ✓  
@@ -233,7 +233,7 @@ client/src/
 - [x] Basic visual variety (size, rotation, surface orientation)
 - [x] No performance issues (group-based rendering, instanced geometry)
 - [x] Simple, maintainable code
-- [x] Trees properly oriented on sphere surface
+- [x] Trees properly oriented on planet surface
 - [x] Trees positioned within tile boundaries (respecting polygon shapes)
 
 ## Total Estimated Time: 9 hours ✓ **COMPLETED**
@@ -252,7 +252,7 @@ client/src/
 2. **Tree Component**: Created `TreeComponent.js` with basic cylinder+cone tree geometry
 3. **World Integration**: Modified `worldGenerator.js` to add trees to forest-type tiles
 4. **Cleanup**: Enhanced `planet.js` disposal logic for proper tree cleanup
-5. **Positioning**: Implemented sphere-aware positioning with surface normal orientation
+5. **Positioning**: Implemented planet-aware positioning with surface normal orientation
 6. **Density System**: Upgraded to area-based tree density with improved distribution
 7. **Polygon Distribution**: Added support for polygon-based tree placement using actual tile shapes
 8. **Boundary Compliance**: Implemented proper spherical point-in-polygon testing to ensure trees stay within tile boundaries
@@ -261,7 +261,7 @@ client/src/
 - Trees appear on FOREST, TAIGA, and JUNGLE terrain types
 - Density-based generation: 0.0003 trees per square unit with minimum 1 tree per tile
 - ±30% size variation for natural variety
-- Surface-oriented trees that properly stand upright from sphere surface
+- Surface-oriented trees that properly stand upright from planet surface
 - Support for polygon-based distribution (ready for Voronoi polygon integration)
 - Proper disposal and cleanup when planet regenerates
 - Minimal performance impact using Three.js groups

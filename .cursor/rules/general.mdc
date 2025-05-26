@@ -108,7 +108,7 @@ Core Services cannot import from anything above them
 
 - uiStore: Representation of UI elements, including opened menus, tabs, modals, dialogs, tooltips, notifications, and animations.
 - cameraStore: Representation of camera location, zoom, lookAt targets
-- worldStore: Representation of globe objects: number of tiles, jitter, techtonic plates, map type, elevation bias, seed
+- worldStore: Representation of planet objects: number of tiles, jitter, techtonic plates, map type, elevation bias, seed
 
 # Configuration
 - Always read files in client/src/config

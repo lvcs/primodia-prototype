@@ -28,7 +28,7 @@ client/src/pages/RegisterPage.jsx
 client/src/stores/authStore.js
 
 # Debug/Development UI (not core features)
-client/src/components/control-panel/GlobeDebugTab.jsx
+client/src/components/control-panel/PlanetDebugTab.jsx
 client/src/components/control-panel/TileDebugTab.jsx
 client/src/components/control-panel/CameraDebugTab.jsx
 client/src/stores/debugStore.js

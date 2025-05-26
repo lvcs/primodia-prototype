@@ -33,8 +33,8 @@ function App() {
     setGameInitialized(false);
   };
 
-  const handleGlobeViewClick = () => {
-    console.log('Globe View icon clicked in App.jsx. TODO: Implement camera animation.');
+  const handlePlanetViewClick = () => {
+    console.log('Planet View icon clicked in App.jsx. TODO: Implement camera animation.');
   };
 
   const switchToRegister = () => setShowLogin(false);
@@ -59,7 +59,7 @@ function App() {
       <div id="app-container-react" className="w-screen h-screen bg-gray-900 text-white flex flex-col relative overflow-hidden dark">
         <GamePage
           onSignOut={handleSignOut}
-          onGlobeViewClick={handleGlobeViewClick}
+          onPlanetViewClick={handlePlanetViewClick}
         />
       </div>
     );

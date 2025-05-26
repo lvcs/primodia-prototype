@@ -20,7 +20,7 @@ Given the detailed nature of `Requirements.md`, the solution is largely pre-defi
     *   Manages `THREE.PerspectiveCamera` and `THREE.OrbitControls`.
     *   Subscribes to `cameraStore` for Store-to-Game synchronization.
     *   Listens to `OrbitControls` `'change'` event for Game-to-Store synchronization (throttled).
-    *   Provides methods for programmatic animations (e.g., `flyToTile`, `animateToGlobeView`), which update `OrbitControls` and rely on the `'change'` listener to update the store.
+    *   Provides methods for programmatic animations (e.g., `flyToTile`, `animateToPlanetView`), which update `OrbitControls` and rely on the `'change'` listener to update the store.
 *   **UI Layer (React Components):**
     *   Subscribes to `cameraStore` for display.
     *   Calls `cameraStore` actions for updates.
@@ -42,7 +42,7 @@ The decision is to proceed with the implementation of the architecture outlined 
 ### Phase 1: Core `cameraStore` and `GameCameraController` Setup
 
 -   [ ] **Create `cameraStore.js`:**
-    -   [ ] Define initial state: `zoom`, `target` (default `THREE.Vector3(0,0,0)`), `phi` (default `Math.PI / 2`), `theta` (default `0`), `viewMode` (default `'globe'`), `isAnimating` (default `false`).
+    -   [ ] Define initial state: `zoom`, `target` (default `THREE.Vector3(0,0,0)`), `phi` (default `Math.PI / 2`), `theta` (default `0`), `viewMode` (default `'planet'`), `isAnimating` (default `false`).
     -   [ ] Implement actions: `setZoom(zoom)`, `setTarget(target)`, `setPhi(phi)`, `setTheta(theta)`, `setRotation({ phi, theta })`, `setViewMode(mode)`, `setIsAnimating(isAnimating)`.
 -   [ ] **Create `GameCameraController.js` (initial structure):**
     -   [ ] Constructor:
@@ -100,8 +100,8 @@ The decision is to proceed with the implementation of the architecture outlined 
     -   [ ] `flyToTile(tileCoordinates, duration)` (example):
         -   [ ] Calculate target position, zoom, orientation for the tile.
         -   [ ] Call `flyToTarget()`.
-    -   [ ] `animateToGlobeView(duration)` (example):
-        -   [ ] Define globe view parameters (target, zoom, orientation).
+    -   [ ] `animateToPlanetView(duration)` (example):
+        -   [ ] Define planet view parameters (target, zoom, orientation).
         -   [ ] Call `flyToTarget()`.
 
 ### Phase 5: UI Layer Integration (REQ-CAM-R-009, REQ-CAM-R-010)
@@ -116,7 +116,7 @@ The decision is to proceed with the implementation of the architecture outlined 
 -   [ ] **Identify all existing camera control code:**
     -   [ ] `client/src/game/camera/Camera.js`
     -   [ ] `client/src/game/controls/CameraOrbitController.js` (if this is related to eventHandlers.js)
-    -   [ ] `client/src/game/camera/GlobeCameraController.js`
+    -   [ ] `client/src/game/camera/PlanetCameraController.js`
     -   [ ] `client/src/game/camera/TileCameraController.js`
     -   [ ] Any camera logic within `eventHandlers.js` or other scattered places.
 -   [ ] **Refactor/Remove Old Code:**

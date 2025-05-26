@@ -36,7 +36,7 @@ We will proceed with the **Parent-Child Camera Hierarchy** approach for its easi
 ## Implementation TODO
 - [ ] Create a parent `Object3D` called `CameraRig` to isolate orientation transforms and attach the camera as its child (camera fixed at rig origin).
 - [ ] Extend debug panel UI to include sliders for:
-  - `lookAt` target coordinates (X, Y, Z) (default to 0, 0, 0 for globe view).
+  - `lookAt` target coordinates (X, Y, Z) (default to 0, 0, 0 for planet view).
   - local camera rotations around X, Y, and Z axes (pitch, yaw, roll).
   - zoom distance: specify the distance of `CameraRig` from the lookAt target.
 - [ ] On slider changes, update:
@@ -57,7 +57,7 @@ We will proceed with the **Parent-Child Camera Hierarchy** approach for its easi
 - [ ] Document any debugging insights or technical constraints encountered during implementation.
 
 ## Notes
-- The `CameraRig` locked to the target point simplifies globe view tuning, while dynamic targeting supports tile view and other pivots.
+- The `CameraRig` locked to the target point simplifies planet view tuning, while dynamic targeting supports tile view and other pivots.
 - Camera child remains fixed at the rig origin and cannot translate; it only rotates based on slider values.
 - Zoom is now refactored to move the `CameraRig` closer to or farther from the target point, preserving existing zoom UX.
 - Record any debugging insights or challenges encountered during development.

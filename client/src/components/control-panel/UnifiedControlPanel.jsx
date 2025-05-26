@@ -1,23 +1,23 @@
 import PropTypes from 'prop-types';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@components/ui/Tabs';
-import GlobeTab from './GlobeTab'; // Import the GlobeTab component
+import PlanetTab from './PlanetTab'; // Import the PlanetTab component
 import CameraTab from './CameraTab'; // Import CameraTab
 import TileDebugTab from './TileDebugTab'; // Import TileDebugTab
 import CameraDebugTab from './CameraDebugTab'; // Import CameraDebugTab
-import GlobeDebugTab from './GlobeDebugTab'; // Import GlobeDebugTab
+import PlanetDebugTab from './PlanetDebugTab'; // Import PlanetDebugTab
 
 function UnifiedControlPanel({ className }) {
   const tabs = [
     { id: 'camera', label: 'Camera', Component: CameraTab },
-    { id: 'globe', label: 'Globe', Component: GlobeTab },  
+    { id: 'planet', label: 'Planet', Component: PlanetTab },  
     { id: 'tile-debug', label: 'Tile (debug)', Component: TileDebugTab },
     { id: 'camera-debug', label: 'Camera (debug)', Component: CameraDebugTab },
-    { id: 'globe-debug', label: 'Globe (debug)', Component: GlobeDebugTab },
+    { id: 'planet-debug', label: 'Planet (debug)', Component: PlanetDebugTab },
   ];
 
   return (
     <div className={`p-4 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-lg ${className || ''}`}>
-      <Tabs defaultValue={tabs[0]?.id || 'globe'} className="w-full">
+      <Tabs defaultValue={tabs[0]?.id || 'planet'} className="w-full">
         <TabsList aria-label="Manage your game controls">
           {tabs.map(tab => (
             <TabsTrigger key={tab.id} value={tab.id}>

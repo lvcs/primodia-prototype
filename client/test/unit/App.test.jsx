@@ -32,10 +32,10 @@ vi.mock('@/pages/LoadingPage', () => ({
 }))
 
 vi.mock('@/pages/GamePage', () => ({
-  default: ({ onSignOut, onGlobeViewClick }) => (
+  default: ({ onSignOut, onPlanetViewClick }) => (
     <div data-testid="game-page">
       <button onClick={onSignOut}>Sign Out</button>
-      <button onClick={onGlobeViewClick}>Globe View</button>
+      <button onClick={onPlanetViewClick}>Planet View</button>
     </div>
   ),
 }))

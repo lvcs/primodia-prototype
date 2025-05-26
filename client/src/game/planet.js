@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { debug, error } from './utils/debug.js';
 import * as Const from '@config/gameConfig.js'; // Adjusted path
-import { sphereSettings } from './world/planetSphereVoronoi.js'; 
+import { planetSettings } from './world/planetVoronoi.js'; 
 import { generateWorld } from './world/worldGenerator.js';
 import { Terrains, getColorForTerrain } from './world/registries/TerrainRegistry.js';
 import { getColorForTemperature } from './world/registries/TemperatureRegistry.js';
@@ -57,16 +57,16 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
         if(oldGlowMesh.material) oldGlowMesh.material.dispose();
     }
 
-    // Update worldConfig with current sphereSettings - this is critical!
-    currentWorldConfig.sphereSettings = { ...sphereSettings };
+    // Update worldConfig with current planetSettings - this is critical!
+    currentWorldConfig.planetSettings = { ...planetSettings };
     
     // Set the seed in config to ensure it's used consistently
     if (seed !== undefined) {
       console.log(`Setting explicit seed "${seed}" in worldConfig for generateWorld`);
       currentWorldConfig.seed = seed;
-    } else if (sphereSettings.currentSeed) {
-      // console.log(`Using sphereSettings.currentSeed "${sphereSettings.currentSeed}" in worldConfig`);
-      currentWorldConfig.seed = sphereSettings.currentSeed;
+    } else if (planetSettings.currentSeed) {
+      // console.log(`Using planetSettings.currentSeed "${planetSettings.currentSeed}" in worldConfig`);
+      currentWorldConfig.seed = planetSettings.currentSeed;
     }
     
     
@@ -122,8 +122,8 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     updatePlanetColors(); 
 
     // Return the actual seed that was used along with other data
-    const actualSeed = worldData?.actualSeed || seed || (sphereSettings.currentSeed ? String(sphereSettings.currentSeed) : String(Date.now()));
-    return { planetGroup, globe: worldData?.globe, actualSeed };
+    const actualSeed = worldData?.actualSeed || seed || (planetSettings.currentSeed ? String(planetSettings.currentSeed) : String(Date.now()));
+    return { planetGroup, planet: worldData?.planet, actualSeed };
 
   } catch (err) {
     console.error('Caught error in generateAndDisplayPlanet. Original error object:', err);
@@ -158,7 +158,7 @@ export function updatePlanetColors() {
   if(!colorsAttr || !tileIds) return;
 
   if (planetGroup && planetGroup.userData && planetGroup.userData.outlineLines) {
-    planetGroup.userData.outlineLines.visible = sphereSettings.outlineVisible;
+    planetGroup.userData.outlineLines.visible = planetSettings.outlineVisible;
   }
 
   const tileTerrain = mainMesh.userData.tileTerrain || {};
@@ -173,7 +173,7 @@ export function updatePlanetColors() {
   // Object.values(Terrains).forEach(t=>{ terrainColorCache[t.id] = [ ((t.color>>16)&255)/255, ((t.color>>8)&255)/255, (t.color&255)/255 ]; });
 
   function elevationRGB(val){
-    const elev = val + sphereSettings.elevationBias;
+    const elev = val + planetSettings.elevationBias;
     const oceanHex = [
       0x0a0033, 0x0b003a, 0x0c0040, 0x0d0047, 0x0e004d, 0x0f0054, 0x10005a, 0x110061, 0x120067, 0x13006e,
       0x140074, 0x15007b, 0x160081, 0x170088, 0x18008e, 0x190095, 0x1a009b, 0x1b00a2, 0x1c00a8, 0x1d00af
@@ -198,20 +198,20 @@ export function updatePlanetColors() {
   for(let i=0;i<tileIds.count;i++){
     const tId = tileIds.array[i];
     let rgb;
-    if(sphereSettings.viewMode==='plates'){
+    if(planetSettings.viewMode==='plates'){
        const pid = tilePlate[tId];
        const hex = plateColors[pid] || 0xffffff;
        rgb = hexToRgbArr(hex);
-    } else if(sphereSettings.viewMode==='elevation'){
+    } else if(planetSettings.viewMode==='elevation'){
        const elev = mainMesh.userData.tileElevation ? mainMesh.userData.tileElevation[tId] : 0;
        rgb = elevationRGB(elev);
-    } else if(sphereSettings.viewMode==='moisture'){
+    } else if(planetSettings.viewMode==='moisture'){
        const moist = mainMesh.userData.tileMoisture ? mainMesh.userData.tileMoisture[tId] : 0;
        tempColor.setHex(getColorForMoisture(moist));
        rgb = [tempColor.r, tempColor.g, tempColor.b];
-    } else if (sphereSettings.viewMode === 'temperature') {
-        // Assuming worldData and worldData.globe are accessible here, or tile data is on mainMesh.userData
-        const tileData = worldData?.globe?.getTile(tId); // Example: find cell by ID
+    } else if (planetSettings.viewMode === 'temperature') {
+        // Assuming worldData and worldData.planet are accessible here, or tile data is on mainMesh.userData
+        const tileData = worldData?.planet?.getTile(tId); // Example: find cell by ID
         if (tileData && tileData.temperature !== undefined) { // Adjust based on actual data structure
             tempColor.setHex(getColorForTemperature(tileData.temperature));
             rgb = [tempColor.r, tempColor.g, tempColor.b];

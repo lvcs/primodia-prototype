@@ -42,7 +42,7 @@ export function generateWorld(config, seed) {
     console.log('- switchTreeSystem("minimal", scene, cameraPosition)');
   }
 
-  return { meshGroup, globe, config, actualSeed: effectiveSeed };
+  return { meshGroup, planet, config, actualSeed: effectiveSeed };
 }
 ```
 
@@ -150,12 +150,12 @@ import {
 const treeData = generateMinimalTreeData(tilesForTrees);
 
 // Render trees
-const sphereRadius = config.radius; // Your sphere radius
-const { meshes, stats } = renderMinimalTrees(treeData, scene, cameraPosition, sphereRadius);
+const planetRadius = config.radius; // Your planet radius
+const { meshes, stats } = renderMinimalTrees(treeData, scene, cameraPosition, planetRadius);
 
 // Update when camera moves
 clearMinimalTrees(scene, meshes);
-const newResult = renderMinimalTrees(treeData, scene, newCameraPosition, sphereRadius);
+const newResult = renderMinimalTrees(treeData, scene, newCameraPosition, planetRadius);
 ```
 
 ## Testing Checklist
@@ -197,7 +197,7 @@ const newResult = renderMinimalTrees(treeData, scene, newCameraPosition, sphereR
 - Use browser dev tools to check actual memory usage
 
 **Minimal system positioning issues**
-- Make sure `sphereRadius` parameter matches your world radius
+- Make sure `planetRadius` parameter matches your world radius
 - Check that tile centers are in world coordinates
 
 ### Performance Tips

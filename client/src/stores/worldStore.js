@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import {
-  DEFAULT_NUMBER_OF_GLOBE_TILES,
+  DEFAULT_NUMBER_OF_PLANET_TILES,
   DEFAULT_JITTER,
   DEFAULT_TECHTONIC_PLATES,
   DEFAULT_ELEVATION_BIAS,
@@ -20,13 +20,13 @@ const generateDefaultSeed = () => String(Date.now());
 
 const initialWorldSettings = {
   drawMode: DrawMode.VORONOI,
-  algorithm: 1, // Default from old sphereSettings
-  numPoints: DEFAULT_NUMBER_OF_GLOBE_TILES,
+  algorithm: 1, // Default from old planetSettings
+  numPoints: DEFAULT_NUMBER_OF_PLANET_TILES,
   jitter: DEFAULT_JITTER,
   mapType: defaultMapType,
-  outlineVisible: true, // Default from old sphereSettings
+  outlineVisible: true, // Default from old planetSettings
   numPlates: DEFAULT_TECHTONIC_PLATES,
-  viewMode: DEFAULT_VIEW_MODE, // Default from old sphereSettings
+  viewMode: DEFAULT_VIEW_MODE, // Default from old planetSettings
   elevationBias: DEFAULT_ELEVATION_BIAS,
   currentSeed: generateDefaultSeed(), // Use a timestamp-based seed by default
 };

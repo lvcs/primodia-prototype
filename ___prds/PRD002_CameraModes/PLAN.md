@@ -49,7 +49,7 @@
 - [x] Create a centralized camera views config file (e.g., cameraViewsConfig.js)
 - [x] Implement a UI store for camera state (mode, position, zoom, etc.)
 - [x] Refactor camera controllers to use config and UI store
-- [x] Move and style globe icon next to username in UI
+- [x] Move and style planet icon next to username in UI
 - [ ] Document steps, issues, and solutions in PLAN.md as implementation progresses
 
 ---
@@ -57,8 +57,8 @@
 ### Progress & Notes
 - Centralized config file created and used for all camera view parameters (zoom, tilt, animation, etc.).
 - Zustand UI store implemented for ephemeral camera state (mode, position, zoom, tilt, target).
-- Camera, GlobeCameraController, and TileCameraController refactored to use config and UI store.
-- Globe icon button is now rendered next to the username in the UI and triggers globe view on click.
+- Camera, PlanetCameraController, and TileCameraController refactored to use config and UI store.
+- Planet icon button is now rendered next to the username in the UI and triggers planet view on click.
 - Implementation is now fully compliant with the requirements in Requirements.md.
 - No major issues encountered; architecture is extensible for future camera modes and UI improvements.
 - Next: Continue documenting progress. 

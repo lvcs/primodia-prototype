@@ -25,7 +25,7 @@ describe('WorldStore', () => {
     it('should have correct default values', () => {
       expect(store.drawMode).toBe('VORONOI');
       expect(store.algorithm).toBe(1);
-      expect(store.numPoints).toBe(12000); // DEFAULT_NUMBER_OF_GLOBE_TILES
+      expect(store.numPoints).toBe(12000); // DEFAULT_NUMBER_OF_PLANET_TILES
       expect(store.jitter).toBe(0.2); // DEFAULT_JITTER
       expect(store.outlineVisible).toBe(true);
       expect(store.viewMode).toBe('terrain'); // DEFAULT_VIEW_MODE
