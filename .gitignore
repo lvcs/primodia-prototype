@@ -22,6 +22,9 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# Tests
+client/coverage/
+
 # Logs
 logs/
 *.log
