@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { Button } from '@components/ui/Button';
 import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
@@ -12,24 +11,18 @@ import { useWorldStore } from '@stores';
 import {
   MIN_NUMBER_OF_GLOBE_TILES,
   MAX_NUMBER_OF_GLOBE_TILES,
-  DEFAULT_NUMBER_OF_GLOBE_TILES,
   STEP_NUMBER_OF_GLOBE_TILES,
   MIN_JITTER,
   MAX_JITTER,
-  DEFAULT_JITTER,
   STEP_JITTER,
   MIN_TECHTONIC_PLATES,
   MAX_TECHTONIC_PLATES,
-  DEFAULT_TECHTONIC_PLATES,
   STEP_TECHTONIC_PLATES,
   MIN_ELEVATION_BIAS,
   MAX_ELEVATION_BIAS,
-  DEFAULT_ELEVATION_BIAS,
   STEP_ELEVATION_BIAS,
   DrawMode,
   mockMapTypes,
-  defaultMapType,
-  DEFAULT_VIEW_MODE,
   globeViewOptions,
   algorithms
 } from '@config/gameConfig';
@@ -37,12 +30,6 @@ import {
 // TODO: Integrate MapRegistry for live data
 
 // --- Mock/Placeholder Game Logic Imports ---
-
-// Mock RandomService - might be needed for other parts of GlobeTab
-const RandomService = {
-  getCurrentSeed: () => String(Date.now()).slice(-5),
-  nextFloat: Math.random // Simplistic mock
-};
 
 // We don't need the mock sphereSettings and functions anymore as we're using the store
 // and real functions from game.js
@@ -244,7 +231,5 @@ function GlobeTab() {
     </div>
   );
 }
-
-GlobeTab.propTypes = {};
 
 export default GlobeTab; 

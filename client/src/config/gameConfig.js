@@ -22,10 +22,6 @@ export const STEP_JITTER = 0.01;
 
 // Globe Radius / Size
 export const GLOBE_RADIUS = 6400; // Fixed radius for the globe, in kilometers
-export const MIN_GLOBE_RADIUS = 6400; // Minimum radius (fixed for Earth scale)
-export const MAX_GLOBE_RADIUS = 6400; // Maximum radius (fixed for Earth scale)
-export const DEFAULT_GLOBE_RADIUS = 6400; // Default radius (fixed for Earth scale)
-export const STEP_GLOBE_RADIUS = 1; // Kept for reference
 
 // Elevation Bias
 export const MIN_ELEVATION_BIAS = -0.5;

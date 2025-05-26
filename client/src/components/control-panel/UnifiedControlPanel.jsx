@@ -1,4 +1,3 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@components/ui/Tabs';
 import GlobeTab from './GlobeTab'; // Import the GlobeTab component
