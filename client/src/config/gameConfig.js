@@ -41,9 +41,6 @@ export const CAMERA_MAX_DISTANCE_FACTOR = 5;   // Max zoom distance as a factor 
 
 export const CAMERA_ZOOM_DISTANCE_DEFAULT = 16000;
 
-// Scene (from game.js)
-export const SCENE_BACKGROUND_COLOR = 0x0a0a2a;
-
 // Planetary Glow (from game.js)
 export const PLANETARY_GLOW_RADIUS_FACTOR = 1.15; // Multiplies worldConfig.radius
 export const PLANETARY_GLOW_OPACITY = 0.15;

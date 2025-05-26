@@ -17,7 +17,6 @@ yarn.lock
 client/.eslintrc.cjs
 client/tailwind.config.js
 client/postcss.config.js
-client/vite.config.js
 client/vitest.config.js
 client/playwright.config.js
 client/test-setup-verification.js

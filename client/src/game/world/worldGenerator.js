@@ -300,12 +300,7 @@ export function generateWorld(config, seed){
     }
   });
 
-  console.log(`[Trees] Found ${tilesForTrees.length} tiles with tree terrain types`);
-  if (Object.keys(tilePolygonVertices).length > 0) {
-    console.log(`[Trees] Using polygon-based distribution for ${Object.keys(tilePolygonVertices).length} tiles`);
-  } else {
-    console.log(`[Trees] Using circular distribution (no polygon data available)`);
-  }
+
 
   // Add optimized trees to the scene
   if (tilesForTrees.length > 0) {

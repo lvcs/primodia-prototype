@@ -24,6 +24,8 @@ export const initializeCam = ({aspectRatio}) => {
   useCameraStore.getState().setCamera(camera);
   console.log(useCameraStore.getState().camera);
   window.camera = useCameraStore.getState();
+
+  return useCameraStore.getState().camera;
 }
 
 

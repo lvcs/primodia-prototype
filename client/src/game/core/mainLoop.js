@@ -4,7 +4,7 @@ import { handleKeyboardInput } from '@game/controls/keyboardControls.js';
 // Adjust path for planet.js
 import { getPlanetGroup, getWorldData } from '@game/planet.js'; 
 // updateComponentUIDisplay from old CameraControlsSection is obsolete with React UI
-import { getRenderer, getScene, getControls } from './setup.js'; 
+import { getRenderer, getScene } from './setup.js'; 
 import { useCameraStore } from '@stores';
 
 // Import the new debug store for updating debug info from the main loop
@@ -20,7 +20,7 @@ function animate() {
     const camera = useCameraStore.getState().camera;
     const renderer = getRenderer();
     const scene = getScene();
-    const controls = getControls();
+    const controls = useCameraStore.getState().orbitControls;
     const planetGroup = getPlanetGroup();
 
     if (!camera || !renderer || !scene || !controls || !planetGroup) {

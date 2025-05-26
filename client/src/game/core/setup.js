@@ -1,28 +1,21 @@
-// Three.js scene, camera, renderer, lighting, and initial controls setup 
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-// Adjust path for Const if it moves to client/src/config
-import * as ConstFromGameConfig from '../../config/gameConfig.js'; // Renamed to avoid conflict
-import { PLANET_VIEW_CAMERA_DISTANCE } from '../../config/cameraConfig.js'; // Import specific constant
-// Adjust path for debug if it moves
-import { debug } from '../utils/debug.js'; 
+import * as ConstFromGameConfig from '@config/gameConfig.js';
+import { setupCosmos } from '@game/cosmos/cosmos.js';
 import { initializeCam } from '@game/camera/cam.js';
 import { useCameraStore } from '@stores';
 
-let scene, camera, renderer, controls;
+let cosmos, camera, renderer;
 let worldConfig;
 
 export function setupThreeJS(canvasElement) {
   if (!canvasElement) {
     throw new Error("setupThreeJS requires a canvasElement argument.");
   }
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(ConstFromGameConfig.SCENE_BACKGROUND_COLOR);
+  cosmos = setupCosmos();
   
   // Use canvas dimensions for aspect ratio initially, but it should adapt on resize
   const aspectRatio = canvasElement.clientWidth / canvasElement.clientHeight;
-  initializeCam({aspectRatio: aspectRatio});
-  camera = useCameraStore.getState().camera;
+  camera = initializeCam({aspectRatio: aspectRatio});
   
   renderer = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true, alpha: true });
   renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight); // Use canvas size
@@ -31,7 +24,7 @@ export function setupThreeJS(canvasElement) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   // Resizing should be handled by an event listener in the game setup or main loop,
   // updating camera aspect and renderer size.
-  return { scene, camera, renderer };
+  return { cosmos, camera, renderer };
 }
 
 export function setupInitialWorldConfig() {
@@ -57,7 +50,7 @@ export function setupLighting(_scene) {
 }
 
 
-export const getScene = () => scene;
+export const getScene = () => cosmos;
 export const getRenderer = () => renderer;
 export const getControls = () => useCameraStore.getState().orbitControls;
 export const getWorldConfig = () => worldConfig; 

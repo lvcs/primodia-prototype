@@ -33,7 +33,7 @@ export function initGame(canvasElement) {
       throw new Error("Canvas element not provided to initGame.");
     }
     const threeContext = setupThreeJS(canvasElement); 
-    scene = threeContext.scene; 
+    scene = threeContext.cosmos; 
     camera = useCameraStore.getState().camera;
     renderer = threeContext.renderer;
     
@@ -50,7 +50,6 @@ export function initGame(canvasElement) {
     // console.log(controls);
     
     controls = newsetupOrbitControls(renderer);
-    console.log(controls);
     startAnimationLoop(); // Starts the game loop
     
   
