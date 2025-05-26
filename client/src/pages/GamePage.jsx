@@ -7,7 +7,7 @@ import MiniMap from '@components/layout/MiniMap';
 import { initGame } from '@game/game';
 import { useAuthStore } from '@stores';
 
-function GamePage({ onSignOut, onGlobeViewClick }) {
+function GamePage({ onSignOut, onPlanetViewClick }) {
   const canvasRef = useRef(null);
   const currentUser = useAuthStore(state => state.currentUser); // Added to ensure it's available for UserInfo
 
@@ -27,7 +27,7 @@ function GamePage({ onSignOut, onGlobeViewClick }) {
         <UserInfo
           username={currentUser.username}
           onSignOut={onSignOut}
-          onGlobeViewClick={onGlobeViewClick}
+          onPlanetViewClick={onPlanetViewClick}
         />
       )}
       <div id="game-container-react" className="w-full h-full absolute inset-0" style={{ display: 'block' }}>
@@ -44,7 +44,7 @@ function GamePage({ onSignOut, onGlobeViewClick }) {
 
 GamePage.propTypes = {
   onSignOut: PropTypes.func.isRequired,
-  onGlobeViewClick: PropTypes.func.isRequired,
+  onPlanetViewClick: PropTypes.func.isRequired,
 };
 
 export default GamePage; 

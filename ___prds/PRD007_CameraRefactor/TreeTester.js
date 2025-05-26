@@ -186,10 +186,10 @@ function renderMinimalSystem(scene, cameraPosition) {
     return null;
   }
   
-  // Need sphere radius for minimal system
-  const sphereRadius = 1000; // You'll need to pass this from your world generator
+  // Need planet radius for minimal system
+  const planetRadius = 1000; // You'll need to pass this from your world generator
   
-  const result = renderMinimalTrees(testData.minimal, scene, cameraPosition, sphereRadius);
+  const result = renderMinimalTrees(testData.minimal, scene, cameraPosition, planetRadius);
   activeMeshes = result.meshes;
   
   return {

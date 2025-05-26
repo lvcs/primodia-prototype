@@ -98,15 +98,15 @@ class TreeSystem {
     }
 
     const treeCount = this.calculateTreeCount(tileData.area);
-    const sphereRadius = Math.sqrt(
+    const planetRadius = Math.sqrt(
       tileData.center.x ** 2 + tileData.center.y ** 2 + tileData.center.z ** 2
     );
 
     console.log(`[TreeSystem] Adding ${treeCount} trees for tile ${tileData.id}`);
 
     for (let i = 0; i < treeCount; i++) {
-      const treePos = this.generateTreePosition(tileData, sphereRadius);
-      this.addTreeInstance(treePos, sphereRadius);
+      const treePos = this.generateTreePosition(tileData, planetRadius);
+      this.addTreeInstance(treePos, planetRadius);
     }
   }
 
@@ -121,18 +121,18 @@ class TreeSystem {
   /**
    * Generate tree position with simplified algorithms
    */
-  generateTreePosition(tileData, sphereRadius) {
+  generateTreePosition(tileData, planetRadius) {
     if (tileData.polygonVertices && tileData.polygonVertices.length >= 3) {
-      return this.generatePointInPolygon(tileData.polygonVertices, tileData.center, sphereRadius);
+      return this.generatePointInPolygon(tileData.polygonVertices, tileData.center, planetRadius);
     } else {
-      return this.generatePointInCircle(tileData.center, tileData.area, sphereRadius);
+      return this.generatePointInCircle(tileData.center, tileData.area, planetRadius);
     }
   }
 
   /**
    * Generate point in polygon using bounding box and simplified testing
    */
-  generatePointInPolygon(polygonVertices, tileCenter, sphereRadius) {
+  generatePointInPolygon(polygonVertices, tileCenter, planetRadius) {
     // Calculate bounding box for faster rejection
     let minX = Infinity, maxX = -Infinity;
     let minY = Infinity, maxY = -Infinity;
@@ -156,11 +156,11 @@ class TreeSystem {
         z: minZ + Math.random() * (maxZ - minZ)
       };
 
-      // Project to sphere surface
+      // Project to planet surface
       const length = Math.sqrt(testPos.x ** 2 + testPos.y ** 2 + testPos.z ** 2);
-      testPos.x = (testPos.x / length) * sphereRadius;
-      testPos.y = (testPos.y / length) * sphereRadius;
-      testPos.z = (testPos.z / length) * sphereRadius;
+      testPos.x = (testPos.x / length) * planetRadius;
+      testPos.y = (testPos.y / length) * planetRadius;
+      testPos.z = (testPos.z / length) * planetRadius;
 
       // Simplified point-in-polygon test using 2D projection
       if (this.pointInPolygon2D(testPos, polygonVertices, tileCenter)) {
@@ -218,16 +218,16 @@ class TreeSystem {
   /**
    * Generate point in circular distribution
    */
-  generatePointInCircle(tileCenter, tileArea, sphereRadius) {
+  generatePointInCircle(tileCenter, tileArea, planetRadius) {
     const maxOffsetRadius = Math.sqrt(tileArea / Math.PI) * 0.8;
     
     const angle = Math.random() * Math.PI * 2;
     const radius = Math.random() * maxOffsetRadius;
     
     const centerNormal = new THREE.Vector3(
-      tileCenter.x / sphereRadius,
-      tileCenter.y / sphereRadius,
-      tileCenter.z / sphereRadius
+      tileCenter.x / planetRadius,
+      tileCenter.y / planetRadius,
+      tileCenter.z / planetRadius
     );
     
     // Simplified tangent calculation
@@ -245,10 +245,10 @@ class TreeSystem {
     const offsetX = Math.cos(angle) * radius;
     const offsetY = Math.sin(angle) * radius;
     
-    const offset = tangent1.clone().multiplyScalar(offsetX / sphereRadius)
-      .add(tangent2.clone().multiplyScalar(offsetY / sphereRadius));
+    const offset = tangent1.clone().multiplyScalar(offsetX / planetRadius)
+      .add(tangent2.clone().multiplyScalar(offsetY / planetRadius));
     
-    const treePos = centerNormal.clone().add(offset).normalize().multiplyScalar(sphereRadius);
+    const treePos = centerNormal.clone().add(offset).normalize().multiplyScalar(planetRadius);
     
     return { x: treePos.x, y: treePos.y, z: treePos.z };
   }
@@ -256,14 +256,14 @@ class TreeSystem {
   /**
    * Add a single tree instance with variation
    */
-  addTreeInstance(position, sphereRadius) {
+  addTreeInstance(position, planetRadius) {
     const instanceIndex = this.trunkInstancedMesh.count;
     
     // Apply size variation
     const sizeVariation = 1 + (Math.random() - 0.5) * 2 * TREES_SIZE_VARIATION;
     const treeHeight = TREES_BASE_HEIGHT * sizeVariation;
     
-    // Calculate orientation (point away from sphere center)
+    // Calculate orientation (point away from planet center)
     const treePosition = new THREE.Vector3(position.x, position.y, position.z);
     const surfaceNormal = treePosition.clone().normalize();
     
@@ -277,7 +277,7 @@ class TreeSystem {
     const canopyMatrix = new THREE.Matrix4();
     
     // Trunk position (at base of tree)
-    const trunkPos = surfaceNormal.clone().multiplyScalar(sphereRadius + treeHeight * 0.2);
+    const trunkPos = surfaceNormal.clone().multiplyScalar(planetRadius + treeHeight * 0.2);
     trunkMatrix.compose(trunkPos, quaternion, new THREE.Vector3(sizeVariation, sizeVariation, sizeVariation));
     
     // Add random rotation around the tree's Y-axis (now pointing radially outward)
@@ -286,7 +286,7 @@ class TreeSystem {
     trunkMatrix.multiply(rotationMatrix);
     
     // Canopy position (above trunk) - apply same transformations
-    const canopyPos = surfaceNormal.clone().multiplyScalar(sphereRadius + treeHeight * 0.7);
+    const canopyPos = surfaceNormal.clone().multiplyScalar(planetRadius + treeHeight * 0.7);
     canopyMatrix.compose(canopyPos, quaternion, new THREE.Vector3(sizeVariation, sizeVariation, sizeVariation));
     canopyMatrix.multiply(rotationMatrix);
     

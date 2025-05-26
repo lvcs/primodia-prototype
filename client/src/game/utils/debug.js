@@ -22,7 +22,7 @@ export function updateTileDebugInfo(htmlContent) {
 export function updateCameraDebugInfo(camera, controls) {
 }
 
-export function updateGlobeDebugInfo(planetGroupInstance, globeStaticData) {
+export function updatePlanetDebugInfo(planetGroupInstance, planetStaticData) {
 }
 
 export function logWorldStructure(world) {

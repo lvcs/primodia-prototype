@@ -3,16 +3,16 @@
 ## I. Game Features & Systems (Derived from GAME.MD)
 
 ### Core World & Map
-- [x] Implement Procedurally Generated 3D Globe (Base structure and Voronoi generation)
+- [x] Implement Procedurally Generated 3D Planet (Base structure and Voronoi generation)
 - [x] Implement Diverse Terrains, Climates, Elevation (Mountains, Cliffs) (Initial elevation and plate generation logic, FBM noise issue addressed)
 - [ ] Implement Rivers & Water Bodies
 - [ ] Implement Strategic Resources System
 - [ ] Implement Natural Wonders System
 - [ ] Implement World Events & Disasters (incl. Moon-phase Flooding)
-- [ ] Randomize number of tectonic plates based on globe points.
+- [ ] Randomize number of tectonic plates based on planet points.
 
 ### UI/UX & Core Systems
-- [x] Implement 3D Globe Rendering & Interaction (Base rendering and event handling)
+- [x] Implement 3D Planet Rendering & Interaction (Base rendering and event handling)
 - [ ] Implement Manual Save & Load (Multiple Slots)
 - [ ] Implement Autosave per Turn
 - [ ] Implement Tile Highlighting & Context Menus
@@ -173,5 +173,5 @@
 - [ ] Architect Engine for Extensibility & Moddability (Plugin System Consideration)
 
 ## VIII. Additional TODOs
-- [ ] Get mouse inertia right (globe drag momentum)
+- [ ] Get mouse inertia right (planet drag momentum)
 - [ ] Implement performance improvements for quicker load

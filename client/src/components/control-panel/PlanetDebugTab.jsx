@@ -4,12 +4,12 @@ import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
 import { Slider } from '@components/ui/Slider';
 import { useDebugStore } from '@stores';
 
-// TODO: If these sliders are to control the globe, the game logic needs to subscribe to these store values.
+// TODO: If these sliders are to control the planet, the game logic needs to subscribe to these store values.
 // And the initial values should also be set by the game logic via the store.
 
-function GlobeDebugTab() {
-  const globeDebugInfo = useDebugStore((state) => state.globeDebugInfo);
-  const setGlobeDebugInfo = useDebugStore((state) => state.setGlobeDebugInfo);
+function PlanetDebugTab() {
+  const planetDebugInfo = useDebugStore((state) => state.planetDebugInfo);
+  const setPlanetDebugInfo = useDebugStore((state) => state.setPlanetDebugInfo);
 
   // For now, sliders will manage their own state and update the store.
   // Ideally, the store would be the single source of truth, initialized by game state.
@@ -17,9 +17,9 @@ function GlobeDebugTab() {
   // We might want to add rotationX, rotationY, rotationZ to the store if sliders directly control it.
 
   // Placeholder values if not in store, or for local slider state if preferred
-  const [currentRotationX, setCurrentRotationX] = React.useState(globeDebugInfo.rotationX || 0);
-  const [currentRotationY, setCurrentRotationY] = React.useState(globeDebugInfo.rotationY || 0);
-  const [currentRotationZ, setCurrentRotationZ] = React.useState(globeDebugInfo.rotationZ || 0);
+  const [currentRotationX, setCurrentRotationX] = React.useState(planetDebugInfo.rotationX || 0);
+  const [currentRotationY, setCurrentRotationY] = React.useState(planetDebugInfo.rotationY || 0);
+  const [currentRotationZ, setCurrentRotationZ] = React.useState(planetDebugInfo.rotationZ || 0);
 
   // This is just an example of how sliders could update the store if we add specific fields for them.
   // For now, they are local, and only the text info is from the store's `rotation` field.
@@ -38,15 +38,15 @@ function GlobeDebugTab() {
       setCurrentRotationZ(numericValue);
       newInfo = { rotationZ: numericValue };
     }
-    // console.log(`GlobeDebugTab: Setting rotation ${axis} to ${numericValue}`);
+    // console.log(`PlanetDebugTab: Setting rotation ${axis} to ${numericValue}`);
     // This would update the store if we had specific actions/state for individual axes.
-    // For example: useDebugStore.getState().setGlobeRotationAxis(axis, numericValue);
-    // For now, we are mainly focusing on the text display from `globeDebugInfo.rotation`.
+    // For example: useDebugStore.getState().setPlanetRotationAxis(axis, numericValue);
+    // For now, we are mainly focusing on the text display from `planetDebugInfo.rotation`.
   };
 
   return (
     <div>
-      <h3 className="text-lg font-medium mb-2">Globe Debug Information</h3>
+      <h3 className="text-lg font-medium mb-2">Planet Debug Information</h3>
 
       <ControlSectionWrapper label={`Rotation X: ${currentRotationX.toFixed(2)} rad`}>
         <Slider
@@ -78,11 +78,11 @@ function GlobeDebugTab() {
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label="Globe Dynamics Info (from Store)">
+      <ControlSectionWrapper label="Planet Dynamics Info (from Store)">
         <div className="text-xs space-y-1 bg-gray-50 dark:bg-gray-700 p-2 rounded min-h-[3em]">
-          {globeDebugInfo.rotation ? 
-            (<p dangerouslySetInnerHTML={{ __html: globeDebugInfo.rotation.replace(/<br>/g, '<br />') }} />) :
-            (<p>Globe dynamics info not yet available. Waiting for game state update...</p>)
+          {planetDebugInfo.rotation ? 
+            (<p dangerouslySetInnerHTML={{ __html: planetDebugInfo.rotation.replace(/<br>/g, '<br />') }} />) :
+            (<p>Planet dynamics info not yet available. Waiting for game state update...</p>)
           }
         </div>
       </ControlSectionWrapper>
@@ -93,6 +93,6 @@ function GlobeDebugTab() {
   );
 }
 
-GlobeDebugTab.propTypes = {};
+PlanetDebugTab.propTypes = {};
 
-export default GlobeDebugTab; 
+export default PlanetDebugTab; 

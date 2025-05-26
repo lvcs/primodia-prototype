@@ -61,7 +61,7 @@ const trunkGeometry = new THREE.CylinderGeometry(
 ```javascript
 // Old: Complex spherical algorithm with 50 attempts
 // New: Simplified with bounding box and 10 attempts max
-generatePointInPolygonOptimized(polygonVertices, tileCenter, sphereRadius) {
+generatePointInPolygonOptimized(polygonVertices, tileCenter, planetRadius) {
   // Calculate bounding box for faster rejection
   // Use simplified 2D projection for point-in-polygon test
   // Reduce maximum attempts to 10
@@ -227,7 +227,7 @@ Enable detailed logging:
 
 ### Instance Matrix Management
 Each tree instance stores its transformation in a 4x4 matrix:
-- Position: Based on sphere surface + height offset
+- Position: Based on planet surface + height offset
 - Rotation: Aligned to surface normal + random Y rotation
 - Scale: Size variation applied uniformly
 
@@ -237,8 +237,8 @@ Rough calculation per tree:
 - Instance matrix: 64 bytes (4x4 float32)
 - Total per tree: ~88 bytes + geometry overhead
 
-### Sphere Surface Distribution
-Trees are positioned on the sphere surface with proper orientation:
+### Planet Surface Distribution
+Trees are positioned on the planet surface with proper orientation:
 1. Calculate surface normal from center
 2. Apply height offset along normal
 3. Add random rotation around normal axis

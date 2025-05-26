@@ -1,43 +1,40 @@
 import * as THREE from 'three';
-import { generatePlanetGeometryGroup, sphereSettings, classifyTerrain, classifyTileTerrainFromProperties, DEFAULT_VIEW_MODE } from './planetSphereVoronoi.js';
-import WorldGlobe from './model/WorldGlobe.js';
+import { generatePlanetGeometryGroup, planetSettings, classifyTerrain, classifyTileTerrainFromProperties, DEFAULT_VIEW_MODE } from './planetVoronoi.js';
+import WorldPlanet from './model/WorldPlanet.js';
 import Tile from './model/Tile.js';
-import { terrainById, Terrains, getColorForTerrain } from './registries/TerrainRegistry.js';
+import { terrainById, getColorForTerrain } from './registries/TerrainRegistry.js';
 import { getColorForTemperature } from './registries/TemperatureRegistry.js';
 import { getColorForMoisture } from './registries/MoistureRegistry.js';
 import { generatePlates } from './platesGenerator.js';
 import RandomService from '@game/core/RandomService';
-import * as Const from '@config/gameConfig';
+
 import { 
   shouldHaveTrees,
   addTreesToScene,
-  clearTrees
 } from './Tree.js';
 
-// All radius values are now in kilometers (1 unit = 1 km)
-
 /**
- * Generates globe mesh (legacy) plus OO WorldGlobe description.
- * @param {{radius:number, sphereSettings?:object}} config
- * @returns {{ meshGroup: THREE.Group, globe: WorldGlobe, config: any, actualSeed: string }}
+ * Generates planet mesh (legacy) plus OO WorldPlanet description.
+ * @param {{radius:number, planetSettings?:object}} config
+ * @returns {{ meshGroup: THREE.Group, planet: WorldPlanet, config: any, actualSeed: string }}
  */
 export function generateWorld(config, seed){
-  // If config contains sphereSettings, use it to override the global sphereSettings object
-  if (config.sphereSettings) {
+  // If config contains planetSettings, use it to override the global planetSettings object
+  if (config.planetSettings) {
     
-    // Update the global sphereSettings with the values from config
-    sphereSettings.drawMode = config.sphereSettings.drawMode;
-    sphereSettings.algorithm = config.sphereSettings.algorithm;
-    sphereSettings.numPoints = config.sphereSettings.numPoints;
-    sphereSettings.jitter = config.sphereSettings.jitter;
-    sphereSettings.mapType = config.sphereSettings.mapType;
-    sphereSettings.outlineVisible = config.sphereSettings.outlineVisible;
-    sphereSettings.numPlates = config.sphereSettings.numPlates;
-    sphereSettings.viewMode = config.sphereSettings.viewMode;
-    sphereSettings.elevationBias = config.sphereSettings.elevationBias;
+    // Update the global planetSettings with the values from config
+    planetSettings.drawMode = config.planetSettings.drawMode;
+    planetSettings.algorithm = config.planetSettings.algorithm;
+    planetSettings.numPoints = config.planetSettings.numPoints;
+    planetSettings.jitter = config.planetSettings.jitter;
+    planetSettings.mapType = config.planetSettings.mapType;
+    planetSettings.outlineVisible = config.planetSettings.outlineVisible;
+    planetSettings.numPlates = config.planetSettings.numPlates;
+    planetSettings.viewMode = config.planetSettings.viewMode;
+    planetSettings.elevationBias = config.planetSettings.elevationBias;
     
   } else {
-    console.warn('[generateWorld] No sphereSettings received in config, using existing values');
+    console.warn('[generateWorld] No planetSettings received in config, using existing values');
   }
 
 
@@ -59,19 +56,19 @@ export function generateWorld(config, seed){
   const meshGroup = generatePlanetGeometryGroup(config);
   const mainMesh = meshGroup.children.find(c=>c.userData && c.userData.isMainMesh);
   if(!mainMesh){
-    return { meshGroup, globe:null, config };
+    return { meshGroup, planet:null, config };
   }
   const idsAttr = mainMesh.geometry.getAttribute('tileId');
   const posAttr = mainMesh.geometry.getAttribute('position');
   const tileTerrain = mainMesh.userData.tileTerrain || {};
   const tileSphericalExcesses = mainMesh.userData.tileSphericalExcesses || {}; // Get excesses
-  const sphereRadius = config.radius; // Actual radius of the sphere
+  const planetRadius = config.radius; // Actual radius of the planet
 
-  const globe = new WorldGlobe({
-    drawMode: sphereSettings.drawMode,
-    algorithm: sphereSettings.algorithm,
-    numTiles: sphereSettings.numPoints,
-    jitter: sphereSettings.jitter,
+  const planet = new WorldPlanet({
+    drawMode: planetSettings.drawMode,
+    algorithm: planetSettings.algorithm,
+    numTiles: planetSettings.numPoints,
+    jitter: planetSettings.jitter,
     size: config.radius
   });
 
@@ -94,10 +91,10 @@ export function generateWorld(config, seed){
     
     // Calculate actual area
     const sphericalExcess = tileSphericalExcesses[id] !== undefined ? tileSphericalExcesses[id] : 0.0;
-    const area = sphericalExcess * sphereRadius * sphereRadius;
+    const area = sphericalExcess * planetRadius * planetRadius;
     
     const tile = new Tile({ id, terrain, center, neighbors: [], area });
-    // Initial terrain classification based on simple geometry (e.g., from planetSphereVoronoi)
+    // Initial terrain classification based on simple geometry (e.g., from planetPlanetVoronoi)
     // This initialTerrain might come from mainMesh.userData.tileTerrain[tileId] if set during geometry generation
     const initialTerrainIdFromGeometry = mainMesh.userData.tileTerrain ? mainMesh.userData.tileTerrain[id] : undefined;
     tile.terrain = initialTerrainIdFromGeometry || classifyTileTerrainFromProperties(tile); // Fallback if needed, though tile lacks elevation etc. here
@@ -105,22 +102,22 @@ export function generateWorld(config, seed){
     // Set a very basic color or leave for later; full classification needs elevation/moisture
     // tile.color = Terrains[tile.terrain] ? (typeof Terrains[tile.terrain].color === 'number' ? Terrains[tile.terrain].color : Terrains[tile.terrain].color.default) : 0xffffff;
     
-    globe.addTile(tile);
+    planet.addTile(tile);
   });
 
   // Use neighbor map from mesh if provided
   if(mainMesh && mainMesh.userData.tileNeighbors){
     const neighborObj = mainMesh.userData.tileNeighbors;
     Object.keys(neighborObj).forEach(idStr=>{
-      const tile = globe.getTile(parseInt(idStr,10));
+      const tile = planet.getTile(parseInt(idStr,10));
       if(tile){ tile.neighbors = neighborObj[idStr].map(n=>parseInt(n,10)); }
     });
   }
 
   // Generate tectonic plates and elevations using the now-initialized RandomService.
-  // Calculate numPlates based on numPoints (sphereSettings.numPoints)
+  // Calculate numPlates based on numPoints (planetSettings.numPoints)
   // Linear relationship: (480 points, 4 plates), (128000 points, 32 plates)
-  // const N = sphereSettings.numPoints;
+  // const N = planetSettings.numPoints;
   // const m = (32 - 4) / (128000 - 480); // slope
   // const c_intercept = 4 - m * 480; // y-intercept
   // let calculatedNumPlates = m * N + c_intercept;
@@ -131,17 +128,17 @@ export function generateWorld(config, seed){
   // For example, add a small random +/- variation to calculatedNumPlates, ensuring it stays within reasonable min/max bounds.
 
   // const numPlatesToUse = calculatedNumPlates; // Old way: calculated from numPoints
-  // Use the value directly from sphereSettings, which is controlled by the UI slider
-  let numPlatesToUse = sphereSettings.numPlates;
+  // Use the value directly from planetSettings, which is controlled by the UI slider
+  let numPlatesToUse = planetSettings.numPlates;
   // Ensure it's within a reasonable range if not already clamped by UI/constants
   // (Assuming MIN_TECHTONIC_PLATES and MAX_TECHTONIC_PLATES are defined and used by the slider)
   // For safety, we can re-apply a clamp here if needed, though ideally the constants are the source of truth.
   // numPlatesToUse = Math.max(Const.MIN_TECHTONIC_PLATES || 2, Math.min(numPlatesToUse, Const.MAX_TECHTONIC_PLATES || 50));
   // The SliderControl in ui/index.js already uses MIN_TECHTONIC_PLATES and MAX_TECHTONIC_PLATES from Const,
-  // so sphereSettings.numPlates should already be within this valid range.
+  // so planetSettings.numPlates should already be within this valid range.
 
   // generatePlates will internally use RandomService for its random choices.
-  const { plates, tilePlate } = generatePlates(globe, numPlatesToUse);
+  const { plates, tilePlate } = generatePlates(planet, numPlatesToUse);
 
   // Store tilePlate mapping in mainMesh for coloring later
   if(mainMesh){
@@ -162,8 +159,8 @@ export function generateWorld(config, seed){
     const idsAttribute = mainMesh.geometry.getAttribute('tileId'); 
     const newTileTerrain = {}; 
 
-    // First, update terrain type for each tile in the globe object
-    globe.tiles.forEach(tile => {
+    // First, update terrain type for each tile in the planet object
+    planet.tiles.forEach(tile => {
       // Use the new classification function that takes the whole tile object
       const newTerrainId = classifyTileTerrainFromProperties(tile);
       tile.terrain = terrainById(newTerrainId); 
@@ -173,7 +170,7 @@ export function generateWorld(config, seed){
 
     // After all tile properties (elevation, moisture, final terrain ID) are set,
     // calculate and store the definitive color for each tile.
-    globe.tiles.forEach(tile => {
+    planet.tiles.forEach(tile => {
       if (tile.terrain && tile.terrain.id) { // Ensure terrain and its id are set
         // console.log(`Coloring Tile ID: ${tile.id}, Terrain ID: ${tile.terrain.id}, Elevation: ${tile.elevation}`); // DEBUG LINE - Commented out
         // Use getColorForTerrain with the tile's actual elevation
@@ -184,7 +181,7 @@ export function generateWorld(config, seed){
         // console.warn(`Tile ${tile.id} missing terrain or terrain.id for color calculation. Defaulting to grey.`); // DEBUG LINE - Commented out, can be re-enabled if needed
       }
       // Optionally, update mainMesh.userData.tileColors if it's used directly elsewhere.
-      // This might be redundant if rendering always pulls from globe.tiles[tileId].color.
+      // This might be redundant if rendering always pulls from planet.tiles[tileId].color.
       if (mainMesh && mainMesh.userData.tileColors) { // Assuming tileColors is an object {[id]: color}
           mainMesh.userData.tileColors[tile.id] = tile.color;
       }
@@ -193,21 +190,21 @@ export function generateWorld(config, seed){
     // Update vertex colors
     const tempColor = new THREE.Color(); // For color conversion
 
-    if (sphereSettings.viewMode === 'temperature') {
+    if (planetSettings.viewMode === 'temperature') {
       for (let i = 0; i < idsAttribute.count; i++) {
         const tileId = idsAttribute.getX(i);
-        const tile = globe.getTile(tileId);
+        const tile = planet.getTile(tileId);
         if (tile && tile.temperature !== undefined) {
           tempColor.setHex(getColorForTemperature(tile.temperature));
           colorsAttribute.setXYZ(i, tempColor.r, tempColor.g, tempColor.b);
         }
       }
-    } else if (sphereSettings.viewMode === 'elevation') {
+    } else if (planetSettings.viewMode === 'elevation') {
       for (let i = 0; i < idsAttribute.count; i++) {
         const tileId = idsAttribute.getX(i);
-        const tile = globe.getTile(tileId); 
+        const tile = planet.getTile(tileId); 
         const elev = tile ? tile.elevation : (mainMesh.userData.tileElevation ? mainMesh.userData.tileElevation[tileId] : 0);
-        const biasedElev = elev + sphereSettings.elevationBias;
+        const biasedElev = elev + planetSettings.elevationBias;
         if (biasedElev < -0.5) tempColor.setHex(0x0000FF); 
         else if (biasedElev < 0) tempColor.setHex(0x00BFFF); 
         else if (biasedElev < 0.3) tempColor.setHex(0x90EE90); 
@@ -215,10 +212,10 @@ export function generateWorld(config, seed){
         else tempColor.setHex(0x8B4513); 
         colorsAttribute.setXYZ(i, tempColor.r, tempColor.g, tempColor.b);
       }
-    } else if (sphereSettings.viewMode === 'moisture') {
+    } else if (planetSettings.viewMode === 'moisture') {
       for (let i = 0; i < idsAttribute.count; i++) {
         const tileId = idsAttribute.getX(i);
-        const tile = globe.getTile(tileId);
+        const tile = planet.getTile(tileId);
         if (tile && tile.moisture !== undefined) {
             tempColor.setHex(getColorForMoisture(tile.moisture));
             colorsAttribute.setXYZ(i, tempColor.r, tempColor.g, tempColor.b);
@@ -226,7 +223,7 @@ export function generateWorld(config, seed){
             colorsAttribute.setXYZ(i, 0.5, 0.5, 0.5); 
         }
       }
-    } else if (sphereSettings.viewMode === 'plates') {
+    } else if (planetSettings.viewMode === 'plates') {
       for (let i = 0; i < idsAttribute.count; i++) {
         const tileId = idsAttribute.getX(i); 
         const plateId = mainMesh.userData.tilePlate ? mainMesh.userData.tilePlate[tileId] : null;
@@ -240,7 +237,7 @@ export function generateWorld(config, seed){
     } else { // Default to terrain view
       for (let i = 0; i < idsAttribute.count; i++) {
         const tileId = idsAttribute.getX(i);
-        const tile = globe.getTile(tileId); // Get the tile object
+        const tile = planet.getTile(tileId); // Get the tile object
         if (tile && tile.color !== undefined) { // Check if the tile and its pre-calculated color exist
             tempColor.setHex(tile.color); // Use the stored tile.color
             colorsAttribute.setXYZ(i, tempColor.r, tempColor.g, tempColor.b);
@@ -256,7 +253,7 @@ export function generateWorld(config, seed){
   if(mainMesh){
     const tileElevation = {};
     const tileMoisture = {};
-    globe.tiles.forEach(tile=>{
+    planet.tiles.forEach(tile=>{
       tileElevation[tile.id] = tile.elevation;
       tileMoisture[tile.id] = tile.moisture;
     });
@@ -264,7 +261,7 @@ export function generateWorld(config, seed){
     mainMesh.userData.tileMoisture = tileMoisture;
   }
 
-  meshGroup.userData.globe = globe;
+  meshGroup.userData.planet = planet;
   meshGroup.userData.actualSeed = effectiveSeed; // Store seed in userData for easy access
 
   // Add trees to qualifying tiles using optimized system
@@ -274,7 +271,7 @@ export function generateWorld(config, seed){
   
   // Create an array of tile data for tree generation
   const tilesForTrees = [];
-  globe.tiles.forEach(tile => {
+  planet.tiles.forEach(tile => {
     if (shouldHaveTrees(tile.terrain.id)) {
       // Convert tile center from normalized coordinates to world coordinates
       const worldCenter = {
@@ -324,5 +321,5 @@ export function generateWorld(config, seed){
     console.log(`[Trees] No forest tiles found - no trees generated`);
   }
 
-  return { meshGroup, globe, config, actualSeed: effectiveSeed };
+  return { meshGroup, planet, config, actualSeed: effectiveSeed };
 } 

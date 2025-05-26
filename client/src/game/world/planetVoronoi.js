@@ -3,7 +3,7 @@ import Delaunator from 'delaunator';
 import { MapTypes, defaultMapType, generateMapTerrain } from './registries/MapTypeRegistry.js';
 import { debug } from '@game/utils/debug';
 import { terrainById, Terrains } from './registries/TerrainRegistry.js';
-import WorldGlobe from './model/WorldGlobe.js';
+import WorldPlanet from './model/WorldPlanet.js';
 import Tile from './model/Tile.js';
 import * as Const from '@config/gameConfig'; // Import constants
 import { DrawMode } from '../../config/gameConfig.js'; // CORRECTED PATH
@@ -18,7 +18,7 @@ const _randomLon = [];
 const TerrainTypeIds = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
 const terrainColors = Object.fromEntries(Object.values(Terrains).map(t=>[t.id,t.color]));
 
-function generateFibonacciSphere1(N, jitter, randomFloat) {
+function generateFibonacciPlanet1(N, jitter, randomFloat) {
     const points = [];
     const phi = Math.PI * (Math.sqrt(5) - 1); // golden ratio
     
@@ -56,8 +56,8 @@ function generateFibonacciSphere1(N, jitter, randomFloat) {
     return points;
 }
 
-function generateFibonacciSphere2(N, jitter, randomFloat) {
-    console.log(`[generateFibonacciSphere2] Called with N=${N}, jitter=${jitter}`);
+function generateFibonacciPlanet2(N, jitter, randomFloat) {
+    console.log(`[generateFibonacciPlanet2] Called with N=${N}, jitter=${jitter}`);
     const points = [];
     const dlong = Math.PI * (3-Math.sqrt(5)); // ~2.39996323
     
@@ -92,7 +92,7 @@ function generateFibonacciSphere2(N, jitter, randomFloat) {
     // Add south pole point
     points.push(0, -1, 0);
     
-    console.log(`[generateFibonacciSphere2] Generated ${points.length/3} points (expected ${N})`);
+    console.log(`[generateFibonacciPlanet2] Generated ${points.length/3} points (expected ${N})`);
     return points;
 }
 
@@ -189,7 +189,7 @@ function determineTerrainType(position, randomFloat) {
 
     // Call the map-specific terrain generation function
     // Pass the full 'position' vector and ensure 'randomFloat' is the third argument.
-    const mapBasedTerrain = generateMapTerrain(sphereSettings.mapType, position, randomFloat);
+    const mapBasedTerrain = generateMapTerrain(planetSettings.mapType, position, randomFloat);
     
     if (mapBasedTerrain) {
         return mapBasedTerrain;
@@ -303,7 +303,7 @@ function getTerrainColorRGB(terrainType) {
     ];
 }
 
-// Helper function to calculate spherical excess (area on unit sphere) of a spherical triangle
+// Helper function to calculate spherical excess (area on unit planet) of a spherical triangle
 // vertices v1, v2, v3 are THREE.Vector3 unit vectors
 function calculateSphericalTriangleExcess(v1, v2, v3) {
     // Using the formula: E = 2 * atan2( |det(v1,v2,v3)|, 1 + v1·v2 + v2·v3 + v3·v1 )
@@ -372,7 +372,7 @@ function generateVoronoiGeometry(points, delaunay) {
     const tileSphericalExcesses = {}; // Added for area calculation
     const tilePolygonVertices = {}; // NEW: Store polygon vertices for each tile
 
-    // 1. Pre-compute triangle centers (simple centroid projected to sphere)
+    // 1. Pre-compute triangle centers (simple centroid projected to planet)
     const centers = [];
     for (let t = 0; t < triangles.length / 3; t++) {
         const a = triangles[3 * t];
@@ -437,7 +437,7 @@ function generateVoronoiGeometry(points, delaunay) {
         let currentTileSphericalExcess = 0.0;
         const polygonVertices = centersWithAngle.map(cwa => cwa.vertex);
 
-        // NEW: Store polygon vertices for this tile (on unit sphere)
+        // NEW: Store polygon vertices for this tile (on unit planet)
         tilePolygonVertices[v] = polygonVertices.map(vertex => ({
             x: vertex.x,
             y: vertex.y, 
@@ -480,11 +480,11 @@ function debugAndFixNumPoints() {
   
 }
 
-// Settings object to store sphere generation parameters
-export const sphereSettings = {
+// Settings object to store planet generation parameters
+export const planetSettings = {
   drawMode: DrawMode.VORONOI,
   algorithm: 1,
-  numPoints: Const.DEFAULT_NUMBER_OF_GLOBE_TILES,
+  numPoints: Const.DEFAULT_NUMBER_OF_PLANET_TILES,
   jitter: Const.DEFAULT_JITTER,
   mapType: defaultMapType,
   outlineVisible: true,
@@ -497,25 +497,25 @@ export const sphereSettings = {
 export function generatePlanetGeometryGroup(config) {
     // Check RandomService state
     
-    // Use the latest sphereSettings values
-    const { radius = Const.GLOBE_RADIUS } = config; // Default to the global constant if not provided
+    // Use the latest planetSettings values
+    const { radius = Const.PLANET_RADIUS } = config; // Default to the global constant if not provided
     
     // Perform sanity check on numPoints
     debugAndFixNumPoints();
     
-    const N = sphereSettings.numPoints;
-    const jitter = sphereSettings.jitter;
-    const algorithm = sphereSettings.algorithm;
-    const drawMode = sphereSettings.drawMode;
+    const N = planetSettings.numPoints;
+    const jitter = planetSettings.jitter;
+    const algorithm = planetSettings.algorithm;
+    const drawMode = planetSettings.drawMode;
     
     let points;
     // Bind RandomService.nextFloat for convenience
     const randomFloat = RandomService.nextFloat.bind(RandomService);
 
     if(algorithm === 1){
-        points = generateFibonacciSphere1(N, jitter, randomFloat);
+        points = generateFibonacciPlanet1(N, jitter, randomFloat);
     } else {
-        points = generateFibonacciSphere2(N, jitter, randomFloat);
+        points = generateFibonacciPlanet2(N, jitter, randomFloat);
     }
     
     // Project points for triangulation
@@ -551,7 +551,7 @@ export function generatePlanetGeometryGroup(config) {
     }
     
     // This object now holds the complete triangulation with original point indices.
-    const sphereTriangulation = { triangles: completeTriangles };
+    const planetTriangulation = { triangles: completeTriangles };
 
     // Create base group
     const group = new THREE.Group();
@@ -559,9 +559,9 @@ export function generatePlanetGeometryGroup(config) {
     // Generate geometry based on draw mode
     let geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices;
     if (drawMode === DrawMode.VORONOI) {
-        ({geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices} = generateVoronoiGeometry(points, sphereTriangulation));
+        ({geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices} = generateVoronoiGeometry(points, planetTriangulation));
     } else if (drawMode === DrawMode.DELAUNAY) {
-        ({geometry, colors, ids, tileTerrain, tileSphericalExcesses} = generateDelaunayGeometry(points, sphereTriangulation));
+        ({geometry, colors, ids, tileTerrain, tileSphericalExcesses} = generateDelaunayGeometry(points, planetTriangulation));
     }
     
     if (geometry && colors) {
@@ -662,7 +662,7 @@ export function generatePlanetGeometryGroup(config) {
             });
             const outlineLines = new THREE.LineSegments(outlineGeo, lineMat);
             outlineLines.userData.isOutline = true;
-            outlineLines.visible = sphereSettings.outlineVisible;
+            outlineLines.visible = planetSettings.outlineVisible;
             group.add(outlineLines);
             group.userData.outlineLines = outlineLines;
         }

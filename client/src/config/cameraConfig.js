@@ -1,5 +1,5 @@
 // Camera Distance Constants
-export const GLOBE_VIEW_CAMERA_DISTANCE = 16000;
+export const PLANET_VIEW_CAMERA_DISTANCE = 16000;
 export const TILE_VIEW_CAMERA_DISTANCE = 9600;
 
 // Easing functions
@@ -14,15 +14,15 @@ export const DEFAULT_EASING_CURVE = CAMERA_EASINGS.easeInOutCubic;
 
 // Specific camera view configurations
 export const CAMERA_VIEWS = {
-  globe: {
-    label: 'Globe',
-    defaultPosition: { x: 0, y: GLOBE_VIEW_CAMERA_DISTANCE, z: 0 }, // Use the constant
+  planet: {
+    label: 'Planet',
+    defaultPosition: { x: 0, y: PLANET_VIEW_CAMERA_DISTANCE, z: 0 }, // Use the constant
     defaultTilt: 30, // Degrees
     animation: {
       durationMs: 1500, // Can override DEFAULT_ANIMATION_DURATION_MS
       easing: CAMERA_EASINGS.easeInOutCubic, // Reference the unified easing function
     },
-    icon: 'globe', // For UI icon reference
+    icon: 'planet', // For UI icon reference
   },
   tile: {
     label: 'Tile',

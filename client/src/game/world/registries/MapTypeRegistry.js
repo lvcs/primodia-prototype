@@ -137,7 +137,7 @@ export const defaultMapType = MapTypes.CONTINENTS;
 /**
  * Generate map terrain based on map type and position
  * @param {string} mapType - The map type ID from MapTypes
- * @param {THREE.Vector3} position - Normalized position vector on the sphere
+ * @param {THREE.Vector3} position - Normalized position vector on the planet
  * @param {function(): number} randomFloat - A function that returns a random float [0,1) for seeded randomness.
  * @returns {string|null} - Terrain type ID or null for default handling
  */

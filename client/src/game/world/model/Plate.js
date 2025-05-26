@@ -3,7 +3,7 @@ export default class Plate {
    * @param {Object} opts
    * @param {number} opts.id plate id
    * @param {number} opts.seedTileId id of tile chosen as seed
-   * @param {number[]} opts.center unit-sphere center [x,y,z]
+   * @param {number[]} opts.center unit-planet center [x,y,z]
    * @param {number[]} opts.motion unit vector motion direction [x,y,z]
    * @param {boolean} opts.isOceanic whether the plate is primarily oceanic
    * @param {number} opts.baseElevation the base elevation of the plate

@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-// Placeholder for a globe icon, e.g., using an SVG or an icon library
-const GlobeIcon = () => (
+// Placeholder for a planet icon, e.g., using an SVG or an icon library
+const PlanetIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
     <circle cx="12" cy="12" r="10"/>
     <path d="M2 12h20"/>
@@ -22,7 +22,7 @@ const UserAvatar = ({ username }) => {
   );
 };
 
-function UserInfo({ username, onSignOut, onGlobeViewClick }) {
+function UserInfo({ username, onSignOut, onPlanetViewClick }) {
   if (!username) {
     return null; // Or some other UI indicating no user is logged in
   }
@@ -34,13 +34,13 @@ function UserInfo({ username, onSignOut, onGlobeViewClick }) {
     >
       <UserAvatar username={username} />
       <span className="text-gray-200 font-medium">{username}</span>
-      {onGlobeViewClick && (
+      {onPlanetViewClick && (
         <button 
-          onClick={onGlobeViewClick}
-          title="Switch to Globe View"
+          onClick={onPlanetViewClick}
+          title="Switch to Planet View"
           className="p-1.5 hover:bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-150"
         >
-          <GlobeIcon />
+          <PlanetIcon />
         </button>
       )}
       <button 
@@ -56,7 +56,7 @@ function UserInfo({ username, onSignOut, onGlobeViewClick }) {
 UserInfo.propTypes = {
   username: PropTypes.string,
   onSignOut: PropTypes.func.isRequired,
-  onGlobeViewClick: PropTypes.func,
+  onPlanetViewClick: PropTypes.func,
 };
 
 UserAvatar.propTypes = {

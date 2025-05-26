@@ -11,19 +11,19 @@ const useDebugStore = create((set) => ({
     // Placeholder for camera sliders data if needed
     // exampleSlider: 0,
   },
-  globeDebugInfo: {
-    // Placeholder for globe debug text or structured data
+  planetDebugInfo: {
+    // Placeholder for planet debug text or structured data
     rotation: '',
-    // Placeholder for globe sliders data if needed
+    // Placeholder for planet sliders data if needed
     // exampleSlider: 0,
   },
   setTileDebugHTML: (html) => set({ tileDebugHTML: html }),
   setCameraDebugInfo: (info) => set((state) => ({ cameraDebugInfo: { ...state.cameraDebugInfo, ...info } })),
   // action to update specific camera debug slider:
   // setCameraDebugSlider: (sliderName, value) => set(state => ({ cameraDebugInfo: { ...state.cameraDebugInfo, [sliderName]: value }})),
-  setGlobeDebugInfo: (info) => set((state) => ({ globeDebugInfo: { ...state.globeDebugInfo, ...info } })),
-  // action to update specific globe debug slider:
-  // setGlobeDebugSlider: (sliderName, value) => set(state => ({ globeDebugInfo: { ...state.globeDebugInfo, [sliderName]: value }})),
+  setPlanetDebugInfo: (info) => set((state) => ({ planetDebugInfo: { ...state.planetDebugInfo, ...info } })),
+  // action to update specific planet debug slider:
+  // setPlanetDebugSlider: (sliderName, value) => set(state => ({ planetDebugInfo: { ...state.planetDebugInfo, [sliderName]: value }})),
 }));
 
 export { useDebugStore }; 

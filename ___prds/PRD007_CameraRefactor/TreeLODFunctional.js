@@ -291,12 +291,12 @@ export function generateTreesFromTiles(tiles) {
   
   tiles.forEach(tile => {
     const treeCount = Math.floor(tile.area * 1000); // Density
-    const sphereRadius = Math.sqrt(
+    const planetRadius = Math.sqrt(
       tile.center.x ** 2 + tile.center.y ** 2 + tile.center.z ** 2
     );
     
     for (let i = 0; i < treeCount; i++) {
-      const position = generateTreePosition(tile, sphereRadius);
+      const position = generateTreePosition(tile, planetRadius);
       trees.push({
         position,
         scale: 0.8 + Math.random() * 0.4,
@@ -311,14 +311,14 @@ export function generateTreesFromTiles(tiles) {
 /**
  * Simple tree position generation
  */
-function generateTreePosition(tile, sphereRadius) {
+function generateTreePosition(tile, planetRadius) {
   const angle = Math.random() * Math.PI * 2;
   const radius = Math.random() * Math.sqrt(tile.area / Math.PI) * 0.8;
   
   const centerNormal = new THREE.Vector3(
-    tile.center.x / sphereRadius,
-    tile.center.y / sphereRadius,
-    tile.center.z / sphereRadius
+    tile.center.x / planetRadius,
+    tile.center.y / planetRadius,
+    tile.center.z / planetRadius
   );
   
   const tangent = new THREE.Vector3(1, 0, 0).cross(centerNormal).normalize();
@@ -327,8 +327,8 @@ function generateTreePosition(tile, sphereRadius) {
   const offset = tangent.clone().multiplyScalar(Math.cos(angle) * radius)
     .add(bitangent.clone().multiplyScalar(Math.sin(angle) * radius));
   
-  const finalPos = centerNormal.add(offset.multiplyScalar(1 / sphereRadius))
-    .normalize().multiplyScalar(sphereRadius);
+  const finalPos = centerNormal.add(offset.multiplyScalar(1 / planetRadius))
+    .normalize().multiplyScalar(planetRadius);
   
   return { x: finalPos.x, y: finalPos.y, z: finalPos.z };
 } 

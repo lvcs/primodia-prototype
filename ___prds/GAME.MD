@@ -2,7 +2,7 @@
 
 ## 💡 1. Overview & Concept
 
-Project Primodia is a 4X (Explore, Expand, Exploit, Exterminate) grand strategy game set on a procedurally generated 3D hexagonal globe, playable in a web browser. It combines the epic scale and strategic depth of the *Civilization* series, particularly *Civilization VI*, with intricate city-level economic management and development inspired by city-builder classics like *Caesar*, *Pharaoh*, and *Zeus*, and a touch of the societal/political management found in games like *Tropico*.
+Project Primodia is a 4X (Explore, Expand, Exploit, Exterminate) grand strategy game set on a procedurally generated 3D hexagonal planet, playable in a web browser. It combines the epic scale and strategic depth of the *Civilization* series, particularly *Civilization VI*, with intricate city-level economic management and development inspired by city-builder classics like *Caesar*, *Pharaoh*, and *Zeus*, and a touch of the societal/political management found in games like *Tropico*.
 
 Players will lead a fledgling civilization from its earliest days, guiding its growth, managing its economy, advancing its technology and culture, engaging in diplomacy and warfare, and ultimately striving to achieve one of several distinct victory conditions.
 
@@ -21,11 +21,11 @@ Players will engage in a turn-based cycle of:
 
 ### 🌐 3.1. World & Map
 
-*   **Procedurally Generated Globe:** Each game takes place on a unique, seamless 3D globe composed of hexagonal tiles.
+*   **Procedurally Generated Planet:** Each game takes place on a unique, seamless 3D planet composed of hexagonal tiles.
 *   **Diverse Terrains & Climates:** Varied biomes, landforms (including mountain ranges, plateaus, valleys, and cliffs), elevation changes, and climate zones affecting resource availability, movement, city placement, and agricultural potential.
 *   **Elevation:** Meaningful differences in elevation, creating natural barriers like mountain ranges and cliffs, impacting visibility, combat, resource distribution, and susceptibility to certain environmental effects (e.g., flooding, weather patterns).
 *   🏞️ **Rivers & Water Bodies:** Navigable and non-navigable rivers, lakes, and coastlines that affect movement, trade, city development (freshwater access), and provide resources.
-*   **Strategic Resources:** Essential resources (e.g., iron, horses, oil, uranium, luxury goods) scattered across the globe, crucial for advanced units, buildings, and economic prosperity.
+*   **Strategic Resources:** Essential resources (e.g., iron, horses, oil, uranium, luxury goods) scattered across the planet, crucial for advanced units, buildings, and economic prosperity.
 *   🌟 **Natural Wonders:** Unique and visually striking map features, often tied to specific geographical formations (like towering mountain ranges, vast cliffs, unique geological formations, or lush oases), providing significant local or empire-wide bonuses and potentially inspiring cultural or religious developments.
 *   🌋 **World Events & Disasters:**
     *   Dynamic events such as volcanic eruptions, earthquakes, droughts, storms, and disease outbreaks that can impact tiles, cities, and units.
@@ -107,7 +107,7 @@ Multiple paths to victory, such as:
 
 ## 🖼️ 4. Visuals & Presentation
 
-*   **3D Globe:** A visually appealing and functional 3D hexagonal globe.
+*   **3D Planet:** A visually appealing and functional 3D hexagonal planet.
 *   **Clear UI/UX:** Intuitive interface suitable for complex strategy gameplay within a browser environment, featuring:
     *   **Tile Highlighting:** Clear visual cues on hover or selection to preview movement range, resource yields, city influence, attack zones, line of sight, etc.
     *   **Context Menus:** Right-click (or equivalent interaction) on units, tiles, cities, and UI elements to expose relevant actions (e.g., unit commands like move, attack, fortify; city production choices; tile improvement options).

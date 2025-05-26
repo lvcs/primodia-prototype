@@ -19,8 +19,8 @@ Address issues with camera zoom synchronization with `cameraStore`, initializati
 - **Description:** 
     1.  Game camera zoom changes (e.g., via mouse wheel) directly update `cameraStore.zoom`, but these updates are throttled to prevent performance issues.
     2.  UI interactions or programmatic changes that need to set a specific zoom level will update `cameraStore.zoom`. A listener/effect on `cameraStore.zoom` will then command the game camera to adjust to this new zoom level.
-    3.  Initialize `cameraStore.zoom` on game load using a default constant (e.g., `GLOBE_VIEW_CAMERA_DISTANCE`).
-    4.  Systematically replace hardcoded camera distance values (like `16000`) with defined constants (`GLOBE_VIEW_CAMERA_DISTANCE`, `TILE_VIEW_CAMERA_DISTANCE`).
+    3.  Initialize `cameraStore.zoom` on game load using a default constant (e.g., `PLANET_VIEW_CAMERA_DISTANCE`).
+    4.  Systematically replace hardcoded camera distance values (like `16000`) with defined constants (`PLANET_VIEW_CAMERA_DISTANCE`, `TILE_VIEW_CAMERA_DISTANCE`).
 - **Pros:** Balanced approach. Provides responsiveness for direct camera manipulation while maintaining control for UI-initiated changes. Addresses initialization and constant usage.
 - **Cons:** Slightly more complex to implement than a single-direction update mechanism, but offers better overall behavior and maintainability.
 
@@ -32,20 +32,20 @@ Address issues with camera zoom synchronization with `cameraStore`, initializati
 ### [X] **Phase 1: Constants and Initialization**
 -   [X] **Define/Locate Constants:**
     -   [X] Identify or create a dedicated configuration file for camera settings (`client/src/config/cameraConfig.js`).
-    -   [X] Define `GLOBE_VIEW_CAMERA_DISTANCE` (`16000`) and `TILE_VIEW_CAMERA_DISTANCE` (`6800`).
+    -   [X] Define `PLANET_VIEW_CAMERA_DISTANCE` (`16000`) and `TILE_VIEW_CAMERA_DISTANCE` (`6800`).
 -   [X] **CameraStore Initialization:**
     -   [X] Open `client/src/stores/cameraStore.js`.
-    -   [X] Import `GLOBE_VIEW_CAMERA_DISTANCE` and `TILE_VIEW_CAMERA_DISTANCE`.
+    -   [X] Import `PLANET_VIEW_CAMERA_DISTANCE` and `TILE_VIEW_CAMERA_DISTANCE`.
     -   [X] Set the initial `zoom` state appropriately based on view mode.
 
 ### [ ] **Phase 2: Synchronization Logic**
 -   [X] **Identify Core Camera Control:** 
     -   [X] Initially assumed `CameraOrbitController.js` was the primary controller.
-    -   [X] **Correction:** Discovered `client/src/game/camera/Camera.js` is the main manager, delegating to `GlobeCameraController.js` and `TileCameraController.js`. It interacts with `THREE.OrbitControls` but doesn't solely rely on a separate `CameraOrbitController` for all state management and store updates.
+    -   [X] **Correction:** Discovered `client/src/game/camera/Camera.js` is the main manager, delegating to `PlanetCameraController.js` and `TileCameraController.js`. It interacts with `THREE.OrbitControls` but doesn't solely rely on a separate `CameraOrbitController` for all state management and store updates.
 -   [ ] **Game Camera to CameraStore Sync:**
     -   [X] `Camera.js` has an `_updateCameraStoreState` method.
     -   [X] **FIXED:** Modified `_updateCameraStoreState` to correctly calculate camera distance from target (using `orbitControls.getDistance()` or `position.distanceTo(target)`) instead of using `PerspectiveCamera.zoom` property for the store's zoom value.
-    -   [X] **FIXED:** Ensured that `animateToGlobe` and `animateToTile` in `Camera.js` pass the correct target distances (`GLOBE_VIEW_CAMERA_DISTANCE`, `TILE_VIEW_CAMERA_DISTANCE`) to `_updateCameraStoreState` instead of `1.0`.
+    -   [X] **FIXED:** Ensured that `animateToPlanet` and `animateToTile` in `Camera.js` pass the correct target distances (`PLANET_VIEW_CAMERA_DISTANCE`, `TILE_VIEW_CAMERA_DISTANCE`) to `_updateCameraStoreState` instead of `1.0`.
     -   [ ] **TODO:** Need to verify that general mouse wheel zooming (if handled by `THREE.OrbitControls` directly) and other camera manipulations correctly trigger an update to the `cameraStore` via `_updateCameraStoreState` or a similar mechanism. This might involve ensuring `Camera.js` or its sub-controllers are notified of `OrbitControls` changes to then update the store.
 -   [ ] **CameraStore to Game Camera Sync:**
     -   [X] `client/src/game/core/eventHandlers.js` subscribes to `cameraStore.zoom` changes.
@@ -56,14 +56,14 @@ Address issues with camera zoom synchronization with `cameraStore`, initializati
 ### [X] **Phase 3: Refactor Hardcoded Values & Mocks**
 -   [X] **Search and Replace Constants:** (Mostly done, verified)
     -   [X] Performed a global search for `16000`.
-    -   [X] Replaced instances in `client/src/components/control-panel/CameraTab.jsx` (mock state) and `client/src/game/core/setup.js` (initial camera position) with `GLOBE_VIEW_CAMERA_DISTANCE`.
+    -   [X] Replaced instances in `client/src/components/control-panel/CameraTab.jsx` (mock state) and `client/src/game/core/setup.js` (initial camera position) with `PLANET_VIEW_CAMERA_DISTANCE`.
     -   [X] Ensured `TILE_VIEW_CAMERA_DISTANCE` is used in `cameraStore.js` for 'tile' view initialization.
-    -   [X] Removed duplicate `GLOBE_VIEW_CAMERA_DISTANCE` and `TILE_VIEW_CAMERA_DISTANCE` from `client/src/config/gameConfig.js` to centralize in `cameraConfig.js`.
+    -   [X] Removed duplicate `PLANET_VIEW_CAMERA_DISTANCE` and `TILE_VIEW_CAMERA_DISTANCE` from `client/src/config/gameConfig.js` to centralize in `cameraConfig.js`.
     -   [X] **Refactor `CameraTab.jsx`:** Removed mock data and integrated with `useCameraStore` for zoom slider. Target/rotation sliders disabled pending further work.
 
 ### [ ] **Phase 4: Testing and Verification (Post-Fixes)**
 -   [ ] **Initialization Test:** 
-    -   [ ] **VERIFY:** On game load, `cameraStore.zoom` is correctly initialized (e.g. `GLOBE_VIEW_CAMERA_DISTANCE`).
+    -   [ ] **VERIFY:** On game load, `cameraStore.zoom` is correctly initialized (e.g. `PLANET_VIEW_CAMERA_DISTANCE`).
     -   [ ] **VERIFY:** Game camera's visual zoom respects `cameraStore.zoom` on initial load (should not be too close).
 -   [ ] **Game-to-Store Sync Test:**
     -   [ ] **VERIFY:** Use game controls (e.g., mouse wheel, if applicable through `OrbitControls`) to zoom in and out. `cameraStore.zoom` should update accordingly.
@@ -72,7 +72,7 @@ Address issues with camera zoom synchronization with `cameraStore`, initializati
     -   [ ] **VERIFY:** Use UI zoom slider in `CameraTab.jsx`. `cameraStore.zoom` should update, and game camera should visually change its zoom level to match.
     -   [ ] **VERIFY:** Programmatic changes to `cameraStore.zoom` (if any test mechanism exists) update the game camera.
 -   Identified that `CameraOrbitController` uses `radius` for zoom. This `radius` is now synced with `cameraStore.zoom`.
-    Identified that `Camera.js` (using `GlobeCameraController` and `TileCameraController`) is the primary camera logic. It was incorrectly using `PerspectiveCamera.zoom` for store updates. This has been fixed to use actual camera distance.
+    Identified that `Camera.js` (using `PlanetCameraController` and `TileCameraController`) is the primary camera logic. It was incorrectly using `PerspectiveCamera.zoom` for store updates. This has been fixed to use actual camera distance.
     The relationship and potential conflict between `Camera.js` (and its use of a passed-in `orbitControls` instance) and the separate `CameraOrbitController` instance created in `eventHandlers.js` (which subscribes to store changes) needs clarification. The `CameraOrbitController` was the one assumed to be doing game-to-store sync via `throttledSetStoreZoom`.
 
 ## 5. Known Issues/Risks
@@ -82,6 +82,6 @@ Address issues with camera zoom synchronization with `cameraStore`, initializati
 
 ## 6. Debugging Notes (To be filled during implementation)
 -   Identified that `CameraOrbitController` uses `radius` for zoom. This `radius` is now synced with `cameraStore.zoom`.
--   Initial camera position in `setup.js` was `camera.position.set(0, 0, 16000)`. Changed to use `GLOBE_VIEW_CAMERA_DISTANCE` for Z. This is an initial setup value, `OrbitControls` later takes over and its positioning is based on factors of world radius or driven by the `cameraStore` via `CameraOrbitController`.
--   Centralized camera distance constants (`GLOBE_VIEW_CAMERA_DISTANCE`, `TILE_VIEW_CAMERA_DISTANCE`) into `client/src/config/cameraConfig.js` and removed duplicates from `gameConfig.js`.
--   The `CameraTab.jsx` component uses mock state; its default zoom is now set using `GLOBE_VIEW_CAMERA_DISTANCE`. For full functionality, it should integrate with `useCameraStore`. 
+-   Initial camera position in `setup.js` was `camera.position.set(0, 0, 16000)`. Changed to use `PLANET_VIEW_CAMERA_DISTANCE` for Z. This is an initial setup value, `OrbitControls` later takes over and its positioning is based on factors of world radius or driven by the `cameraStore` via `CameraOrbitController`.
+-   Centralized camera distance constants (`PLANET_VIEW_CAMERA_DISTANCE`, `TILE_VIEW_CAMERA_DISTANCE`) into `client/src/config/cameraConfig.js` and removed duplicates from `gameConfig.js`.
+-   The `CameraTab.jsx` component uses mock state; its default zoom is now set using `PLANET_VIEW_CAMERA_DISTANCE`. For full functionality, it should integrate with `useCameraStore`. 

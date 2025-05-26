@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import Tile from '@/game/world/model/Tile';
 import TerrainType from '@/game/world/model/TerrainType';
-import WorldGlobe from '@/game/world/model/WorldGlobe';
+import WorldPlanet from '@/game/world/model/WorldPlanet';
 import Plate from '@/game/world/model/Plate';
 import * as THREE from 'three';
 
@@ -151,9 +151,9 @@ describe('World Model Classes', () => {
     });
   });
 
-  describe('WorldGlobe', () => {
-    it('should create a globe with correct properties', () => {
-      const globe = new WorldGlobe({
+  describe('WorldPlanet', () => {
+    it('should create a planet with correct properties', () => {
+      const planet = new WorldPlanet({
         drawMode: 'VORONOI',
         algorithm: 1,
         numTiles: 1000,
@@ -161,18 +161,18 @@ describe('World Model Classes', () => {
         size: 6400,
       });
 
-      expect(globe.drawMode).toBe('VORONOI');
-      expect(globe.algorithm).toBe(1);
-      expect(globe.numTiles).toBe(1000);
-      expect(globe.jitter).toBe(0.2);
-      expect(globe.size).toBe(6400);
-      expect(globe.tiles).toBeInstanceOf(Map);
-      expect(globe.tiles.size).toBe(0);
-      expect(typeof globe.id).toBe('string');
+      expect(planet.drawMode).toBe('VORONOI');
+      expect(planet.algorithm).toBe(1);
+      expect(planet.numTiles).toBe(1000);
+      expect(planet.jitter).toBe(0.2);
+      expect(planet.size).toBe(6400);
+      expect(planet.tiles).toBeInstanceOf(Map);
+      expect(planet.tiles.size).toBe(0);
+      expect(typeof planet.id).toBe('string');
     });
 
     it('should add and retrieve tiles correctly', () => {
-      const globe = new WorldGlobe({
+      const planet = new WorldPlanet({
         drawMode: 'VORONOI',
         algorithm: 1,
         numTiles: 10,
@@ -192,15 +192,15 @@ describe('World Model Classes', () => {
         center: [1, 0, 0],
       });
 
-      globe.addTile(tile);
+      planet.addTile(tile);
       
-      expect(globe.tiles.size).toBe(1);
-      expect(globe.getTile(1)).toBe(tile);
-      expect(globe.getTile(999)).toBeUndefined();
+      expect(planet.tiles.size).toBe(1);
+      expect(planet.getTile(1)).toBe(tile);
+      expect(planet.getTile(999)).toBeUndefined();
     });
 
     it('should calculate terrain statistics correctly', () => {
-      const globe = new WorldGlobe({
+      const planet = new WorldPlanet({
         drawMode: 'VORONOI',
         algorithm: 1,
         numTiles: 10,
@@ -221,11 +221,11 @@ describe('World Model Classes', () => {
       });
 
       // Add multiple tiles
-      globe.addTile(new Tile({ id: 1, terrain: forestTerrain, center: [1, 0, 0] }));
-      globe.addTile(new Tile({ id: 2, terrain: forestTerrain, center: [0, 1, 0] }));
-      globe.addTile(new Tile({ id: 3, terrain: oceanTerrain, center: [0, 0, 1] }));
+      planet.addTile(new Tile({ id: 1, terrain: forestTerrain, center: [1, 0, 0] }));
+      planet.addTile(new Tile({ id: 2, terrain: forestTerrain, center: [0, 1, 0] }));
+      planet.addTile(new Tile({ id: 3, terrain: oceanTerrain, center: [0, 0, 1] }));
 
-      const stats = globe.terrainStats;
+      const stats = planet.terrainStats;
       
       expect(stats.FOREST).toBe(2);
       expect(stats.OCEAN).toBe(1);
@@ -308,8 +308,8 @@ describe('World Model Classes', () => {
         minMoisture: 0.5,
       });
 
-      // Create globe
-      const globe = new WorldGlobe({
+      // Create planet
+      const planet = new WorldPlanet({
         drawMode: 'VORONOI',
         algorithm: 1,
         numTiles: 100,
@@ -346,12 +346,12 @@ describe('World Model Classes', () => {
         baseElevation: -0.5,
       });
 
-      // Add to globe
-      globe.addTile(oceanTile);
-      globe.addTile(forestTile);
+      // Add to planet
+      planet.addTile(oceanTile);
+      planet.addTile(forestTile);
 
       // Test relationships
-      expect(globe.tiles.size).toBe(2);
+      expect(planet.tiles.size).toBe(2);
       expect(forestTile.neighbors).toContain(oceanTile.id);
       expect(oceanTile.terrain.baseType).toBe('WATER');
       expect(forestTile.terrain.baseType).toBe('LAND');
@@ -362,7 +362,7 @@ describe('World Model Classes', () => {
       expect(forestTile.lat).toBeCloseTo(90, 1); // At north pole
 
       // Test terrain stats
-      const stats = globe.terrainStats;
+      const stats = planet.terrainStats;
       expect(stats.OCEAN).toBe(1);
       expect(stats.FOREST).toBe(1);
     });

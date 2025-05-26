@@ -140,15 +140,15 @@ export function packProperties(type, size, colorVariation) {
 /**
  * Unpack position from float
  */
-export function unpackPosition(packed, sphereRadius) {
+export function unpackPosition(packed, planetRadius) {
   const packedInt = Math.floor(packed);
   const theta = ((packedInt >> 12) & 0xFFF) / 1000;
   const phi = (packedInt & 0xFFF) / 1000;
   
   return {
-    x: sphereRadius * Math.sin(phi) * Math.cos(theta),
-    y: sphereRadius * Math.sin(phi) * Math.sin(theta), 
-    z: sphereRadius * Math.cos(phi)
+    x: planetRadius * Math.sin(phi) * Math.cos(theta),
+    y: planetRadius * Math.sin(phi) * Math.sin(theta), 
+    z: planetRadius * Math.cos(phi)
   };
 }
 
@@ -173,12 +173,12 @@ export function generateMinimalTreeData(tiles) {
   
   tiles.forEach(tile => {
     const treeCount = Math.floor(tile.area * 500); // Reduced density
-    const sphereRadius = Math.sqrt(
+    const planetRadius = Math.sqrt(
       tile.center.x ** 2 + tile.center.y ** 2 + tile.center.z ** 2
     );
     
     for (let i = 0; i < treeCount; i++) {
-      const position = generateSimpleTreePosition(tile, sphereRadius);
+      const position = generateSimpleTreePosition(tile, planetRadius);
       
       // Pack all data into just 2 floats per tree
       const packedPosition = packPosition(position);
@@ -204,7 +204,7 @@ export function generateMinimalTreeData(tiles) {
 /**
  * Simple tree position generation
  */
-function generateSimpleTreePosition(tile, sphereRadius) {
+function generateSimpleTreePosition(tile, planetRadius) {
   const angle = Math.random() * Math.PI * 2;
   const radius = Math.random() * Math.sqrt(tile.area / Math.PI) * 0.8;
   
@@ -214,13 +214,13 @@ function generateSimpleTreePosition(tile, sphereRadius) {
     z: 0
   };
   
-  // Project to sphere
+  // Project to planet
   const center = new THREE.Vector3(tile.center.x, tile.center.y, tile.center.z);
   const tangent = new THREE.Vector3(1, 0, 0).cross(center).normalize();
   const bitangent = center.clone().cross(tangent).normalize();
   
   const worldOffset = tangent.multiplyScalar(offset.x).add(bitangent.multiplyScalar(offset.y));
-  const finalPos = center.add(worldOffset).normalize().multiplyScalar(sphereRadius);
+  const finalPos = center.add(worldOffset).normalize().multiplyScalar(planetRadius);
   
   return { x: finalPos.x, y: finalPos.y, z: finalPos.z };
 }
@@ -228,7 +228,7 @@ function generateSimpleTreePosition(tile, sphereRadius) {
 /**
  * Unpack and sort trees into LOD buckets
  */
-export function unpackMinimalTreesToLOD(treeData, sphereRadius, cameraPosition) {
+export function unpackMinimalTreesToLOD(treeData, planetRadius, cameraPosition) {
   const buckets = {
     detailed: [],
     simple: [],
@@ -236,7 +236,7 @@ export function unpackMinimalTreesToLOD(treeData, sphereRadius, cameraPosition) 
   };
   
   for (let i = 0; i < treeData.data.length; i += 2) {
-    const position = unpackPosition(treeData.data[i], sphereRadius);
+    const position = unpackPosition(treeData.data[i], planetRadius);
     const properties = unpackProperties(treeData.data[i + 1]);
     
     const distance = cameraPosition.distanceTo(new THREE.Vector3(position.x, position.y, position.z));
@@ -278,7 +278,7 @@ function createMinimalInstancedMesh(lodLevel, trees, resources) {
     const position = new THREE.Vector3(tree.position.x, tree.position.y, tree.position.z);
     const scale = new THREE.Vector3(tree.scale, tree.scale, tree.scale);
     
-    // Orient tree away from sphere center
+    // Orient tree away from planet center
     const normal = position.clone().normalize();
     const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
     
@@ -293,9 +293,9 @@ function createMinimalInstancedMesh(lodLevel, trees, resources) {
 /**
  * Render minimal trees with LOD
  */
-export function renderMinimalTrees(treeData, scene, cameraPosition, sphereRadius) {
+export function renderMinimalTrees(treeData, scene, cameraPosition, planetRadius) {
   const resources = initializeMinimalResources();
-  const buckets = unpackMinimalTreesToLOD(treeData, sphereRadius, cameraPosition);
+  const buckets = unpackMinimalTreesToLOD(treeData, planetRadius, cameraPosition);
   
   const meshes = [];
   

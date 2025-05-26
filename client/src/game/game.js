@@ -1,4 +1,4 @@
-import { sphereSettings } from './world/planetSphereVoronoi.js';
+import { planetSettings } from '@game/world/planetVoronoi.js';
 import { debug, error, initDebug } from './utils/debug.js';
 import RandomService from './core/RandomService.js'; 
 import { useCameraStore, useWorldStore } from '@stores';
@@ -41,7 +41,7 @@ export function initGame(canvasElement) {
     
     const currentSelectedHighlight = getSelectedHighlight(); // From eventHandlers
     generatePlanet(scene, worldConfig, null , getPlanetGroup() , currentSelectedHighlight);
-    sphereSettings.currentSeed = RandomService.getCurrentSeed();
+    planetSettings.currentSeed = RandomService.getCurrentSeed();
   
 
     setupLighting(scene);
@@ -77,29 +77,29 @@ export function requestPlanetRegeneration(seed, worldSettings) {
   }
   debug(`Requesting planet regeneration with seed: ${seed === undefined ? 'Default/Last' : seed}`);
 
-  // Use settings if provided, otherwise keep existing sphereSettings
+  // Use settings if provided, otherwise keep existing planetSettings
   if (worldSettings) {
-      console.log('Syncing provided settings to sphereSettings before regeneration');
-      console.log('BEFORE UPDATE - sphereSettings.numPoints:', sphereSettings.numPoints);
+      console.log('Syncing provided settings to planetSettings before regeneration');
+      console.log('BEFORE UPDATE - planetSettings.numPoints:', planetSettings.numPoints);
       
-      // IMPORTANT: Update all sphereSettings properties from the provided settings
-      // This ensures that internal logic using sphereSettings directly has access
+      // IMPORTANT: Update all planetSettings properties from the provided settings
+      // This ensures that internal logic using planetSettings directly has access
       // to the latest values before any regeneration steps are performed
-      sphereSettings.drawMode = worldSettings.drawMode;
-      sphereSettings.algorithm = worldSettings.algorithm;
-      sphereSettings.numPoints = worldSettings.numPoints;
-      sphereSettings.jitter = worldSettings.jitter;
-      sphereSettings.mapType = worldSettings.mapType;
-      sphereSettings.outlineVisible = worldSettings.outlineVisible;
-      sphereSettings.numPlates = worldSettings.numPlates;
-      sphereSettings.viewMode = worldSettings.viewMode;
-      sphereSettings.elevationBias = worldSettings.elevationBias;
+      planetSettings.drawMode = worldSettings.drawMode;
+      planetSettings.algorithm = worldSettings.algorithm;
+      planetSettings.numPoints = worldSettings.numPoints;
+      planetSettings.jitter = worldSettings.jitter;
+      planetSettings.mapType = worldSettings.mapType;
+      planetSettings.outlineVisible = worldSettings.outlineVisible;
+      planetSettings.numPlates = worldSettings.numPlates;
+      planetSettings.viewMode = worldSettings.viewMode;
+      planetSettings.elevationBias = worldSettings.elevationBias;
       
-      // Log the updated sphereSettings to verify they were updated correctly
-      console.log('Updated sphereSettings:', sphereSettings);
-      console.log('AFTER UPDATE - sphereSettings.numPoints:', sphereSettings.numPoints);
+      // Log the updated planetSettings to verify they were updated correctly
+      console.log('Updated planetSettings:', planetSettings);
+      console.log('AFTER UPDATE - planetSettings.numPoints:', planetSettings.numPoints);
   } else {
-      console.warn('No settings provided to requestPlanetRegeneration, using existing sphereSettings');
+      console.warn('No settings provided to requestPlanetRegeneration, using existing planetSettings');
   }
   
   // Generate planet with updated settings
@@ -142,23 +142,23 @@ export function triggerPlanetColorUpdate(settings) {
     
     // Use view-related settings if provided
     if (settings) {
-        console.log('Syncing view settings to sphereSettings before color update');
+        console.log('Syncing view settings to planetSettings before color update');
         
         // IMPORTANT: Update view-related properties from the provided settings
-        // This ensures that internal logic using sphereSettings directly has access
+        // This ensures that internal logic using planetSettings directly has access
         // to the latest values before any color update steps are performed
-        sphereSettings.outlineVisible = settings.outlineVisible;
-        sphereSettings.viewMode = settings.viewMode;
-        sphereSettings.elevationBias = settings.elevationBias;
+        planetSettings.outlineVisible = settings.outlineVisible;
+        planetSettings.viewMode = settings.viewMode;
+        planetSettings.elevationBias = settings.elevationBias;
         
         // Log the updated view settings to verify they were updated correctly
-        console.log('Updated view settings in sphereSettings:', {
-            outlineVisible: sphereSettings.outlineVisible,
-            viewMode: sphereSettings.viewMode,
-            elevationBias: sphereSettings.elevationBias
+        console.log('Updated view settings in planetSettings:', {
+            outlineVisible: planetSettings.outlineVisible,
+            viewMode: planetSettings.viewMode,
+            elevationBias: planetSettings.elevationBias
         });
     } else {
-        console.warn('No settings provided to triggerPlanetColorUpdate, using existing sphereSettings');
+        console.warn('No settings provided to triggerPlanetColorUpdate, using existing planetSettings');
     }
     
     // Update planet colors with the updated settings

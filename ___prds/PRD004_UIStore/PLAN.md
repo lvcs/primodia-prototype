@@ -50,8 +50,8 @@ The chosen approach is to follow the specifications in `Requirements.md`, levera
     - [x] Refactor it to use Zustand (already using).
     - [x] Export as `useCameraUIStore`.
     - [x] Update imports where `cameraUIStore` was used (handled by new relative path).
-- [x] Create `client/src/stores/worldSettingsStore.js` for `sphereSettings` management.
-    - [x] Define initial state based on `sphereSettings` from `planetSphereVoronoi.js` and `gameConfig.js`.
+- [x] Create `client/src/stores/worldSettingsStore.js` for `planetSettings` management.
+    - [x] Define initial state based on `planetSettings` from `planetVoronoi.js` and `gameConfig.js`.
     - [x] Implement actions for each setting (e.g., `setNumPoints`, `setJitter`, `setMapType`).
     - [x] Actions should call `requestPlanetRegeneration()` or `triggerPlanetColorUpdate()` as appropriate (mocked for now).
 - [x] Export `useWorldSettingsStore` from `client/src/stores/index.js`.
@@ -73,10 +73,10 @@ The chosen approach is to follow the specifications in `Requirements.md`, levera
     - [ ] (Add more as needed)
 - [x] Create `client/src/components/control-panel/UnifiedControlPanel.jsx`.
     - [x] Implement a container structure.
-    - [x] Implement a tabbed interface using the `Tabs.jsx` component (Tabs: Globe, Camera, Tile Debug, Camera Debug, Globe Debug).
+    - [x] Implement a tabbed interface using the `Tabs.jsx` component (Tabs: Planet, Camera, Tile Debug, Camera Debug, Planet Debug).
     - [x] Identify and list the specific controls within the existing `UnifiedControlPanel` that need to be ported to Radix UI components (Done, see analysis above. Key controls: Buttons, Sliders, Selects, Toggles/Switches, TextInputs).
 - [x] Incrementally refactor existing UI controls from the old `UnifiedControlPanel` into the new `UnifiedControlPanel.jsx` using the new Radix components and functional component patterns.
-    - [x] Globe Tab Controls:
+    - [x] Planet Tab Controls:
         - [x] Draw Mode (Buttons/RadioGroup) - Initial implementation done
         - [x] Algorithm Selection (Buttons/RadioGroup) - Initial implementation done
         - [x] Number of Points (Slider) - Initial implementation done
@@ -86,7 +86,7 @@ The chosen approach is to follow the specifications in `Requirements.md`, levera
         - [x] Number of Plates (Slider) - Initial implementation done
         - [x] Elevation Bias (Slider) - Initial implementation done
         - [x] World Seed (Input + Button) - Initial implementation done
-        - [x] View (Globe View Mode) (Select) - Initial implementation done
+        - [x] View (Planet View Mode) (Select) - Initial implementation done
     - [x] Camera Tab Controls:
         - [x] Target X, Y, Z (Sliders) - Initial implementation done
         - [x] Zoom Distance (Slider) - Initial implementation done
@@ -99,13 +99,13 @@ The chosen approach is to follow the specifications in `Requirements.md`, levera
         - [x] Initial placeholder tab created (`CameraDebugTab.jsx`)
         - [ ] TODO: Refactor `window.updateCameraDebugInfo` to use Zustand store.
         - [ ] TODO: Add relevant sliders if necessary, connected to debug store/logic.
-    - [x] Globe Debug Tab Content (Sliders, Text display)
-        - [x] Initial placeholder tab created (`GlobeDebugTab.jsx`)
-        - [ ] TODO: Refactor `window.updateGlobeDebugInfo` to use Zustand store.
+    - [x] Planet Debug Tab Content (Sliders, Text display)
+        - [x] Initial placeholder tab created (`PlanetDebugTab.jsx`)
+        - [ ] TODO: Refactor `window.updatePlanetDebugInfo` to use Zustand store.
         - [ ] TODO: Add relevant sliders and info display, connected to debug store/logic.
 - [x] Replace imperative DOM manipulation with declarative JSX and hooks.
 - [x] Remove stray `console.log` statements (gated by a development flag or removed entirely for production).
-- [x] Refactor `GlobeTab.jsx` to use `useWorldSettingsStore`.
+- [x] Refactor `PlanetTab.jsx` to use `useWorldSettingsStore`.
 - [ ] **Broader UI Refactor from `client(to_refactor)`:**
     - [ ] Systematically refactor all remaining UI components identified in the audit from `client(to_refactor)/src/ui/` (and other relevant subdirectories like `client(to_refactor)/src/core_modules/`, `client(to_refactor)/src/game_specific_ui/`) into functional React components within `client/src/components/`.
     - [ ] For each component/module from `client(to_refactor)`:
