@@ -491,7 +491,6 @@ export const sphereSettings = {
   numPlates: Const.DEFAULT_TECHTONIC_PLATES,
   viewMode: DEFAULT_VIEW_MODE, // Changed to use the constant
   elevationBias: Const.DEFAULT_ELEVATION_BIAS,
-  // radius: Const.DEFAULT_GLOBE_RADIUS // Radius is now a global constant: Const.GLOBE_RADIUS
 };
 
 // Main function to generate the planet geometry

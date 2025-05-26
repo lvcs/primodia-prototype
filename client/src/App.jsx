@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from './stores';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -68,7 +67,5 @@ function App() {
   
   return <LoadingPage message="Initializing application..." />;
 }
-
-App.propTypes = {};
 
 export default App; 

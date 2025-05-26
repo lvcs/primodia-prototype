@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import * as Const from '@config/gameConfig.js'; 
 
@@ -38,7 +38,6 @@ const CameraTab = () => {
   const [longitude, setLongitude] = useState(0);
   const [latitude, setLatitude] = useState(0);
 
-  const initialTarget = orbitControls?.target || { targetX: 0, targetY: 0, targetZ: 0 };
   const [targetX, setTargetX] = useState(orbitControls?.target?.x ?? 0);
   const [targetY, setTargetY] = useState(orbitControls?.target?.y ?? 0);
   const [targetZ, setTargetZ] = useState(orbitControls?.target?.z ?? 0);

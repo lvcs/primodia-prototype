@@ -43,7 +43,7 @@ export const newsetupOrbitControls = (_renderer) => {
   camera.position.set(
     0,
     0,
-    Const.GLOBE_RADIUS * Const.CAMERA_INITIAL_POS_Z_FACTOR
+    Const.CAMERA_ZOOM_DISTANCE_DEFAULT
   );
   
   orbitControls.update();
