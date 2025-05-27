@@ -1,6 +1,6 @@
-const bcrypt = require('bcrypt');
-const db = require('../db');
-const { generateToken } = require('../utils/jwt');
+import { hash, compare } from 'bcrypt';
+import { query } from '../db';
+import { generateToken } from '../utils/jwt';
 
 /**
  * User registration handler
@@ -18,7 +18,7 @@ async function register(req, res) {
   
   try {
     // Check if username or email already exists
-    const existingUser = await db.query(
+    const existingUser = await query(
       'SELECT * FROM users WHERE username = $1 OR email = $2',
       [username, email]
     );
@@ -32,10 +32,10 @@ async function register(req, res) {
     
     // Hash the password
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await hash(password, saltRounds);
     
     // Insert the new user
-    const result = await db.query(
+    const result = await query(
       'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email',
       [username, email, hashedPassword]
     );
@@ -72,7 +72,7 @@ async function login(req, res) {
   
   try {
     // Find the user by username
-    const result = await db.query(
+    const result = await query(
       'SELECT * FROM users WHERE username = $1',
       [username]
     );
@@ -88,7 +88,7 @@ async function login(req, res) {
     }
     
     // Compare the provided password with the stored hash
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await compare(password, user.password);
     
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -117,7 +117,7 @@ async function login(req, res) {
   }
 }
 
-module.exports = {
+export default {
   register,
   login
 }; 

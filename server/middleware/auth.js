@@ -1,4 +1,4 @@
-const { verifyToken } = require('../utils/jwt');
+import { verifyToken } from '../utils/jwt';
 
 /**
  * Authentication middleware to protect routes
@@ -37,6 +37,6 @@ function authenticate(req, res, next) {
   }
 }
 
-module.exports = {
+export default {
   authenticate
 }; 

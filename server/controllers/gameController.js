@@ -1,4 +1,4 @@
-const db = require('../db');
+import { query } from '../db';
 
 /**
  * Create a new game
@@ -20,7 +20,7 @@ async function createGame(req, res) {
     const worldSeed = Math.random().toString(36).substring(2, 15);
     
     // Insert the new game
-    const result = await db.query(
+    const result = await query(
       `INSERT INTO games 
        (name, created_by, max_players, world_seed, world_config, status) 
        VALUES ($1, $2, $3, $4, $5, $6) 
@@ -44,7 +44,7 @@ async function createGame(req, res) {
       }
     };
     
-    await db.query(
+    await query(
       `INSERT INTO game_players
        (game_id, user_id, player_data)
        VALUES ($1, $2, $3)`,
@@ -69,7 +69,7 @@ async function createGame(req, res) {
  */
 async function getGames(req, res) {
   try {
-    const result = await db.query(
+    const result = await query(
       `SELECT g.*, 
        COUNT(gp.id) as player_count,
        (SELECT username FROM users WHERE id = g.created_by) as creator_name
@@ -100,7 +100,7 @@ async function getGame(req, res) {
   
   try {
     // Get game data
-    const gameResult = await db.query(
+    const gameResult = await query(
       'SELECT * FROM games WHERE id = $1',
       [gameId]
     );
@@ -115,7 +115,7 @@ async function getGame(req, res) {
     const game = gameResult.rows[0];
     
     // Get players in the game
-    const playersResult = await db.query(
+    const playersResult = await query(
       `SELECT gp.*, u.username 
        FROM game_players gp
        JOIN users u ON gp.user_id = u.id
@@ -126,7 +126,7 @@ async function getGame(req, res) {
     // Get current turn data if game is in progress
     let currentTurn = null;
     if (game.status === 'in_progress') {
-      const turnResult = await db.query(
+      const turnResult = await query(
         `SELECT * FROM game_turns 
          WHERE game_id = $1
          ORDER BY turn_number DESC
@@ -162,7 +162,7 @@ async function joinGame(req, res) {
   
   try {
     // Check if game exists and is in lobby status
-    const gameResult = await db.query(
+    const gameResult = await query(
       'SELECT * FROM games WHERE id = $1',
       [gameId]
     );
@@ -184,7 +184,7 @@ async function joinGame(req, res) {
     }
     
     // Check if the player is already in the game
-    const existingPlayerResult = await db.query(
+    const existingPlayerResult = await query(
       'SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2',
       [gameId, userId]
     );
@@ -197,7 +197,7 @@ async function joinGame(req, res) {
     }
     
     // Check if the game is full
-    const playerCountResult = await db.query(
+    const playerCountResult = await query(
       'SELECT COUNT(*) as count FROM game_players WHERE game_id = $1',
       [gameId]
     );
@@ -223,7 +223,7 @@ async function joinGame(req, res) {
       }
     };
     
-    await db.query(
+    await query(
       `INSERT INTO game_players
        (game_id, user_id, player_data)
        VALUES ($1, $2, $3)`,
@@ -252,7 +252,7 @@ async function startGame(req, res) {
   
   try {
     // Check if game exists and is in lobby status
-    const gameResult = await db.query(
+    const gameResult = await query(
       'SELECT * FROM games WHERE id = $1',
       [gameId]
     );
@@ -282,7 +282,7 @@ async function startGame(req, res) {
     }
     
     // Check if there are at least 2 players
-    const playerCountResult = await db.query(
+    const playerCountResult = await query(
       'SELECT COUNT(*) as count FROM game_players WHERE game_id = $1',
       [gameId]
     );
@@ -295,7 +295,7 @@ async function startGame(req, res) {
     }
     
     // Start the game
-    await db.query(
+    await query(
       'UPDATE games SET status = $1 WHERE id = $2',
       ['in_progress', gameId]
     );
@@ -305,7 +305,7 @@ async function startGame(req, res) {
       actions: {}
     };
     
-    await db.query(
+    await query(
       `INSERT INTO game_turns
        (game_id, turn_number, turn_data)
        VALUES ($1, $2, $3)`,
@@ -325,7 +325,7 @@ async function startGame(req, res) {
   }
 }
 
-module.exports = {
+export default {
   createGame,
   getGames,
   getGame,

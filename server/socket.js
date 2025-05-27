@@ -1,4 +1,4 @@
-const db = require('./db');
+import { query } from './db';
 
 // Store active socket connections
 const activeUsers = new Map();
@@ -23,7 +23,7 @@ function setupSocketHandlers(io) {
     socket.on('game:join', async (gameId) => {
       try {
         // Get the game data
-        const gameResult = await db.query('SELECT * FROM games WHERE id = $1', [gameId]);
+        const gameResult = await query('SELECT * FROM games WHERE id = $1', [gameId]);
         
         if (gameResult.rows.length === 0) {
           socket.emit('error', { message: 'Game not found' });
@@ -33,7 +33,7 @@ function setupSocketHandlers(io) {
         const game = gameResult.rows[0];
         
         // Check if player is actually in this game
-        const playerResult = await db.query(
+        const playerResult = await query(
           'SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2',
           [gameId, userId]
         );
@@ -59,7 +59,7 @@ function setupSocketHandlers(io) {
         });
         
         // Send the current game state
-        const playersResult = await db.query(
+        const playersResult = await query(
           `SELECT gp.*, u.username 
            FROM game_players gp
            JOIN users u ON gp.user_id = u.id
@@ -104,7 +104,7 @@ function setupSocketHandlers(io) {
       
       try {
         // Verify the game exists and is in progress
-        const gameResult = await db.query(
+        const gameResult = await query(
           'SELECT * FROM games WHERE id = $1 AND status = $2',
           [gameId, 'in_progress']
         );
@@ -115,7 +115,7 @@ function setupSocketHandlers(io) {
         }
         
         // Verify the player is in this game
-        const playerResult = await db.query(
+        const playerResult = await query(
           'SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2',
           [gameId, userId]
         );
@@ -126,7 +126,7 @@ function setupSocketHandlers(io) {
         }
         
         // Get the current turn
-        const turnResult = await db.query(
+        const turnResult = await query(
           `SELECT * FROM game_turns 
            WHERE game_id = $1
            ORDER BY turn_number DESC
@@ -151,7 +151,7 @@ function setupSocketHandlers(io) {
         turnData.actions[userId] = action;
         
         // Save the updated turn data
-        await db.query(
+        await query(
           'UPDATE game_turns SET turn_data = $1 WHERE id = $2',
           [turnData, currentTurn.id]
         );
@@ -210,6 +210,6 @@ function setupSocketHandlers(io) {
   });
 }
 
-module.exports = {
+export default {
   setupSocketHandlers
 }; 

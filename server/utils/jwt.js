@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+import { sign, verify } from 'jsonwebtoken';
 
 // Secret key used for JWT signing (from environment variables or fallback)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
@@ -19,7 +19,7 @@ function generateToken(user) {
   };
   
   // Generate and return the token
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
 /**
@@ -30,13 +30,13 @@ function generateToken(user) {
  */
 function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return verify(token, JWT_SECRET);
   } catch (error) {
     throw new Error('Invalid token');
   }
 }
 
-module.exports = {
+export default {
   generateToken,
   verifyToken
 }; 
