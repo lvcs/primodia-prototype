@@ -4,6 +4,10 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: 5173,
+    host: true
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -18,12 +22,10 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/utils'),
     },
   },
-  server: {
-    port: 3000, // Different port from the old client
-    open: true,
-    hmr: {
-      overlay: true
-    }
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
   },
   build: {
     outDir: './dist', // Output within the client directory
