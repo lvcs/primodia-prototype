@@ -54,15 +54,7 @@ Run tests with coverage:
 npm run test:coverage
 ```
 
-Run end-to-end tests:
-```bash
-npm run test:e2e
-```
 
-Run e2e tests with UI:
-```bash
-npm run test:e2e:ui
-```
 
 ### Linting
 
@@ -91,5 +83,4 @@ Create a `.env` file in the client directory if needed for environment-specific 
 - **Zustand** - State management
 - **Tailwind CSS** - Styling
 - **Vitest** - Testing framework
-- **Playwright** - E2E testing
 - **Socket.io Client** - Real-time communication with server 

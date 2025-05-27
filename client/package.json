@@ -12,8 +12,6 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
     "test:verify": "node test-setup-verification.js"
   },
   "dependencies": {
@@ -43,7 +41,6 @@
     "zustand": "^5.0.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.41.0",
     "@testing-library/jest-dom": "^6.2.0",
     "@testing-library/react": "^14.2.1",
     "@testing-library/user-event": "^14.5.2",

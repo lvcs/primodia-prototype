@@ -2,7 +2,6 @@
 client/coverage/
 client/dist/
 client/node_modules/
-client/playwright-report/
 client/logs/
 client/test/
 client/test-results/
@@ -18,7 +17,6 @@ yarn.lock
 # client/tailwind.config.js
 # client/postcss.config.js
 # client/vitest.config.js
-# client/playwright.config.js
 # client/test-setup-verification.js
 
 # Authentication/Login system (non-game features)
