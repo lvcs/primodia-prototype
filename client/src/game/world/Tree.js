@@ -93,7 +93,6 @@ class TreeSystem {
    */
   addTreesForTile(tileData) {
     if (!this.isInitialized) {
-      console.warn('[TreeSystem] System not initialized');
       return;
     }
 
@@ -101,8 +100,6 @@ class TreeSystem {
     const planetRadius = Math.sqrt(
       tileData.center.x ** 2 + tileData.center.y ** 2 + tileData.center.z ** 2
     );
-
-    console.log(`[TreeSystem] Adding ${treeCount} trees for tile ${tileData.id}`);
 
     for (let i = 0; i < treeCount; i++) {
       const treePos = this.generateTreePosition(tileData, planetRadius);
@@ -308,7 +305,6 @@ class TreeSystem {
    */
   addToScene(scene) {
     if (!this.isInitialized) {
-      console.warn('[TreeSystem] Cannot add to scene - not initialized');
       return;
     }
     
@@ -441,7 +437,6 @@ export const addTreesToScene = (tiles, scene) => {
   const treeTiles = tiles.filter(tile => shouldHaveTrees(tile.terrainId));
   
   if (treeTiles.length === 0) {
-    console.log('[TreeSystem] No forest tiles found');
     return { treeSystem: null, stats: null };
   }
 
@@ -451,7 +446,6 @@ export const addTreesToScene = (tiles, scene) => {
     return total + treeCount;
   }, 0);
 
-  console.log(`[TreeSystem] Initializing for ${estimatedTreeCount} trees across ${treeTiles.length} tiles`);
 
   // Initialize tree system
   treeSystem.initialize(estimatedTreeCount);

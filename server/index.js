@@ -1,17 +1,17 @@
-import 'dotenv/config';
-import express, { json } from 'express';
-import { createServer } from 'http';
-import cors from 'cors';
-import { Server } from 'socket.io';
-import { connect } from './db';
-import authRoutes from './routes/auth';
-import gameRoutes from './routes/game';
-import { authenticate } from './middleware/auth';
-import { setupSocketHandlers } from './socket';
+require('dotenv').config();
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const { Server } = require('socket.io');
+const db = require('./db');
+const authRoutes = require('./routes/auth');
+const gameRoutes = require('./routes/game');
+const { authenticate } = require('./middleware/auth');
+const { setupSocketHandlers } = require('./socket');
 
 // Create Express app
 const app = express();
-const server = createServer(app);
+const server = http.createServer(app);
 
 // Set up Socket.io with CORS
 const io = new Server(server, {
@@ -23,7 +23,7 @@ const io = new Server(server, {
 
 // Middleware
 app.use(cors());
-app.use(json());
+app.use(express.json());
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -42,7 +42,7 @@ io.use((socket, next) => {
   }
   
   try {
-    const user = require('./utils/jwt').default.verifyToken(token);
+    const user = require('./utils/jwt').verifyToken(token);
     socket.user = user;
     next();
   } catch (error) {
@@ -56,7 +56,7 @@ setupSocketHandlers(io);
 // Initialize database and start server
 const PORT = process.env.PORT || 3000;
 
-connect()
+db.connect()
   .then(() => {
     console.log('Database connected');
     

@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+const { Pool } = require('pg');
 
 // Create a PostgreSQL connection pool
 const pool = new Pool({
@@ -81,7 +81,7 @@ async function query(text, params) {
   }
 }
 
-export default {
+module.exports = {
   connect,
   query,
   pool
