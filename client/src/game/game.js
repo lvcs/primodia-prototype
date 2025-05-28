@@ -15,7 +15,7 @@ import {
     generateAndDisplayPlanet as generatePlanet,
     updatePlanetColors,
     getPlanetGroup,
-} from './planet.js';
+} from './planet/index.js';
 
 import { getSelectedHighlight } from './core/eventHandlers.js';
 import { startAnimationLoop } from './core/mainLoop.js';

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@components/ui/Tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@ui/components/Tabs';
 import PlanetTab from './PlanetTab'; // Import the PlanetTab component
 import CameraTab from './CameraTab'; // Import CameraTab
 import TileDebugTab from './TileDebugTab'; // Import TileDebugTab

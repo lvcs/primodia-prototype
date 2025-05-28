@@ -21,12 +21,10 @@ We are building a prototype for a 4X game in a 3D world.
 primodia/
 ├── client/               # Frontend
 │   ├── src/              # @ vite alias
-│   │   ├── components/   # Components used in the game UI; @components alias
 │   │   ├── config/       # Configuration files; @config alias
 │   │   ├── game/         # Game files; @game alias
 │   │   ├── hooks/        # React or Zustand hooks; @hooks alias
-│   │   ├── pages/        # Pages; @pages alias
-│   │   ├── styles/       # CSS Styles; @styles alias
+│   │   ├── ui/           # UI: Components, pages, styles; @ui alias
 │   │   ├── stores/       # State management stores; @stores alias
 │   │   └── utils/        # Shared client utils; @utils alias
 ├── shared/               # Shared code between client and server

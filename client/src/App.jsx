@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from './stores';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import LoadingPage from './pages/LoadingPage'; // Import the new LoadingPage
-import GamePage from './pages/GamePage'; // Import the new GamePage
+import LoginPage from '@ui/pages/LoginPage';
+import RegisterPage from '@ui/pages/RegisterPage';
+import LoadingPage from '@ui/pages/LoadingPage'; // Import the new LoadingPage
+import GamePage from '@ui/pages/GamePage'; // Import the new GamePage
 
 function App() {
   const [isGameLoading, setIsGameLoading] = useState(false);

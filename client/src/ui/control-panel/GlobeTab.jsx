@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { Button } from '@components/ui/Button';
-import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
-import { Slider } from '@components/ui/Slider';
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@components/ui/Select';
-import { Switch } from '@components/ui/Switch';
-import { Input } from '@components/ui/Input';
+import { Button } from '@ui/components/Button';
+import { ControlSectionWrapper } from '@ui/components/ControlSectionWrapper';
+import { Slider } from '@ui/components/Slider';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@ui/components/Select';
+import { Switch } from '@ui/components/Switch';
+import { Input } from '@ui/components/Input';
 import { useWorldStore } from '@stores';
 
 // Import constants for slider ranges

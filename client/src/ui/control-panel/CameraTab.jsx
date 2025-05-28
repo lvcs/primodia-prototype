@@ -5,8 +5,8 @@ import * as Const from '@config/gameConfig.js';
 import { calculateSphericalCoords } from '@game/camera/cam.js';
 import { useCameraStore } from '@stores';
 
-import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
-import { Slider } from '@components/ui/Slider';
+import { ControlSectionWrapper } from '@ui/components/ControlSectionWrapper';
+import { Slider } from '@ui/components/Slider';
 
 const applyCameraPanelControls = (updatedCamera) => {
   const camera = useCameraStore.getState().camera;

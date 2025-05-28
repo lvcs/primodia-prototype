@@ -1,14 +1,14 @@
 // All radius values are now in kilometers (1 unit = 1 km)
 // Planet generation, display, color updates, and rotation logic 
 import * as THREE from 'three';
-import { debug, error } from './utils/debug.js';
+import { debug, error } from '../utils/debug.js';
 import * as Const from '@config/gameConfig.js'; // Adjusted path
-import { planetSettings } from './world/planetVoronoi.js'; 
-import { generateWorld } from './world/worldGenerator.js';
-import { Terrains, getColorForTerrain } from './world/registries/TerrainRegistry.js';
-import { getColorForTemperature } from './world/registries/TemperatureRegistry.js';
-import { getColorForMoisture } from './world/registries/MoistureRegistry.js';
-import { clearTrees } from './world/Tree.js';
+import { planetSettings } from '../world/planetVoronoi.js'; 
+import { generateWorld } from '../world/worldGenerator.js';
+import { Terrains, getColorForTerrain } from '../world/registries/TerrainRegistry.js';
+import { getColorForTemperature } from '../world/registries/TemperatureRegistry.js';
+import { getColorForMoisture } from '../world/registries/MoistureRegistry.js';
+import { clearTrees } from '../world/Tree.js';
 
 let planetGroup;
 let worldData;

@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { ControlSectionWrapper } from '@components/ui/ControlSectionWrapper';
-import { Slider } from '@components/ui/Slider';
+import { ControlSectionWrapper } from '@ui/components/ControlSectionWrapper';
+import { Slider } from '@ui/components/Slider';
 import { useDebugStore } from '@stores';
 
 // TODO: If these sliders are to control the planet, the game logic needs to subscribe to these store values.

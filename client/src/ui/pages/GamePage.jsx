@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import UnifiedControlPanel from '@components/control-panel/UnifiedControlPanel';
-import UserInfo from '@components/layout/UserInfo';
-import TopBar from '@components/layout/TopBar';
-import MiniMap from '@components/layout/MiniMap';
+import UnifiedControlPanel from '@ui/control-panel/UnifiedControlPanel';
+import UserInfo from '@ui/layout/UserInfo';
+import TopBar from '@ui/layout/TopBar';
+import MiniMap from '@ui/layout/MiniMap';
 import { initGame } from '@game/game';
 import { useAuthStore } from '@stores';
 

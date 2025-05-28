@@ -251,7 +251,7 @@ client/src/
 1. **Configuration**: Added tree constants to `gameConfig.js` for easy tweaking
 2. **Tree Component**: Created `TreeComponent.js` with basic cylinder+cone tree geometry
 3. **World Integration**: Modified `worldGenerator.js` to add trees to forest-type tiles
-4. **Cleanup**: Enhanced `planet.js` disposal logic for proper tree cleanup
+4. **Cleanup**: Enhanced `planet/index.js` disposal logic for proper tree cleanup
 5. **Positioning**: Implemented planet-aware positioning with surface normal orientation
 6. **Density System**: Upgraded to area-based tree density with improved distribution
 7. **Polygon Distribution**: Added support for polygon-based tree placement using actual tile shapes
@@ -270,7 +270,7 @@ client/src/
 - `client/src/config/gameConfig.js` - Tree configuration constants
 - `client/src/game/world/TreeComponent.js` - Tree rendering component  
 - `client/src/game/world/worldGenerator.js` - Tree integration logic
-- `client/src/game/planet.js` - Enhanced cleanup for tree disposal
+- `client/src/game/planet/index.js` - Enhanced cleanup for tree disposal
 
 ## Testing Instructions
 1. Start the development server: `npm run dev`
