@@ -25,8 +25,7 @@ primodia/
 │   │   ├── game/         # Game files; @game alias
 │   │   ├── hooks/        # React or Zustand hooks; @hooks alias
 │   │   ├── ui/           # UI: Components, pages, styles; @ui alias
-│   │   ├── stores/       # State management stores; @stores alias
-│   │   └── utils/        # Shared client utils; @utils alias
+│   │   └── stores/       # State management stores; @stores alias
 ├── shared/               # Shared code between client and server
 ├── package.json          # Project dependencies
 └── README.md             # Project documentation
