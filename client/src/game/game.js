@@ -1,6 +1,6 @@
 import { planetSettings } from '@game/world/planetVoronoi.js';
-import { debug, error, initDebug } from './utils/debug.js';
-import RandomService from './core/RandomService.js'; 
+import { debug, error, initDebug } from '@utils/debug.js';
+import RandomService from '@game/core/RandomService.js'; 
 import { useCameraStore, useWorldStore } from '@stores';
 
 import {
@@ -20,7 +20,7 @@ import {
 import { getSelectedHighlight } from './core/eventHandlers.js';
 import { startAnimationLoop } from './core/mainLoop.js';
 
-import { newsetupOrbitControls } from './camera/cam.js';
+import { newsetupOrbitControls } from './camera/';
 
 let scene, camera, renderer, controls, worldConfig;
 

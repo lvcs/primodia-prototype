@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DEFAULT_ANIMATION_DURATION_MS, DEFAULT_EASING_CURVE } from '@config/cameraConfig';
+import { CAMERA_DEFAULT_ANIMATION_DURATION_MS, CAMERA_DEFAULT_EASING_CURVE } from '@config/cameraConfig';
 
 /**
  * Base class for camera controllers.
@@ -18,8 +18,8 @@ export class BaseCameraController {
     this.planetRadius = planetRadius;
     // Store animation configuration
     this.config = {
-      ANIMATION_DURATION_MS: DEFAULT_ANIMATION_DURATION_MS,
-      EASING_CURVE: DEFAULT_EASING_CURVE,
+      ANIMATION_DURATION_MS: CAMERA_DEFAULT_ANIMATION_DURATION_MS,
+      EASING_CURVE: CAMERA_DEFAULT_EASING_CURVE,
     };
     // Track if the camera is currently animating
     this.isAnimating = false;

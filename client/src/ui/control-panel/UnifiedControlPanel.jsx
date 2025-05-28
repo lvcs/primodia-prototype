@@ -3,16 +3,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@ui/components/Tabs';
 import PlanetTab from './PlanetTab'; // Import the PlanetTab component
 import CameraTab from './CameraTab'; // Import CameraTab
 import TileDebugTab from './TileDebugTab'; // Import TileDebugTab
-import CameraDebugTab from './CameraDebugTab'; // Import CameraDebugTab
-import PlanetDebugTab from './PlanetDebugTab'; // Import PlanetDebugTab
 
 function UnifiedControlPanel({ className }) {
   const tabs = [
     { id: 'camera', label: 'Camera', Component: CameraTab },
     { id: 'planet', label: 'Planet', Component: PlanetTab },  
     { id: 'tile-debug', label: 'Tile (debug)', Component: TileDebugTab },
-    { id: 'camera-debug', label: 'Camera (debug)', Component: CameraDebugTab },
-    { id: 'planet-debug', label: 'Planet (debug)', Component: PlanetDebugTab },
   ];
 
   return (

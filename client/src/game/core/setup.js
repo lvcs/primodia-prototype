@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as ConstFromGameConfig from '@config/gameConfig.js';
 import { setupCosmos } from '@game/cosmos/cosmos.js';
-import { initializeCam } from '@game/camera/cam.js';
+import { initializeCam } from '@game/camera/';
 import { useCameraStore } from '@stores';
 
 let cosmos, camera, renderer;

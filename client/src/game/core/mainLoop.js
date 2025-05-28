@@ -7,8 +7,6 @@ import { getPlanetGroup, getWorldData } from '@game/planet/index.js';
 import { getRenderer, getScene } from './setup.js'; 
 import { useCameraStore } from '@stores';
 
-// Import the new debug store for updating debug info from the main loop
-import { useDebugStore } from '@stores';
 
 const clock = new THREE.Clock();
 let animationFrameId = null;
@@ -49,7 +47,6 @@ function animate() {
 
         };
         
-        useDebugStore.getState().setPlanetDebugInfo(planetDebugData); // Update store directly
     }
 
     if (controls.enableDamping) {

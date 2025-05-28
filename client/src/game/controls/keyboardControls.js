@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as Const from '@config/gameConfig.js';
-import { getActionForKey, Actions } from '@config/keyboardConfig.js';
+import { getActionForKey, KEYBOARD_ACTIONS } from '@config';
 
 // --- State ---
 const activeKeys = new Set();
@@ -50,22 +50,22 @@ export function handleKeyboardInput(deltaTime = 1) {
     const effectiveTargetSpeed = THREE.MathUtils.lerp(speedAtMinZoom, speedAtMaxZoom, zoomFactor);
     activeKeys.forEach(action => {
         switch (action) {
-            case Actions.ROTATE_NORTH:
+            case KEYBOARD_ACTIONS.ROTATE_NORTH:
                 orbitController.rotate(-effectiveTargetSpeed, 0);
                 break;
-            case Actions.ROTATE_SOUTH:
+            case KEYBOARD_ACTIONS.ROTATE_SOUTH:
                 orbitController.rotate(effectiveTargetSpeed, 0);
                 break;
-            case Actions.ROTATE_EAST:
+            case KEYBOARD_ACTIONS.ROTATE_EAST:
                 orbitController.rotate(0, effectiveTargetSpeed);
                 break;
-            case Actions.ROTATE_WEST:
+            case KEYBOARD_ACTIONS.ROTATE_WEST:
                 orbitController.rotate(0, -effectiveTargetSpeed);
                 break;
-            case Actions.ZOOM_IN:
+            case KEYBOARD_ACTIONS.ZOOM_IN:
                 orbitController.zoom(-localWorldConfig.radius * Const.KEYBOARD_ZOOM_SPEED);
                 break;
-            case Actions.ZOOM_OUT:
+            case KEYBOARD_ACTIONS.ZOOM_OUT:
                 orbitController.zoom(localWorldConfig.radius * Const.KEYBOARD_ZOOM_SPEED);
                 break;
         }

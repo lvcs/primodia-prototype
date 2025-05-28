@@ -5,7 +5,6 @@ import {
   useUIStore, 
   useCameraStore, 
   useWorldStore, 
-  useDebugStore, 
   useAuthStore 
 } from './stores';
 import { Theme } from "@radix-ui/themes";
@@ -18,7 +17,6 @@ if (import.meta.env.DEV) {
   window.uiStore = useUIStore;
   window.cameraStore = useCameraStore;
   window.worldStore = useWorldStore;
-  window.debugStore = useDebugStore;
   window.authStore = useAuthStore;
 }
 

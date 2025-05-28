@@ -1,6 +1,4 @@
-// This file will export all Zustand stores.
-export { useUIStore } from './uiStore';
-export { useCameraStore } from './cameraStore';
-export { useWorldStore } from './worldStore';
-export { useDebugStore } from './debugStore';
-export { useAuthStore } from './authStore';
+export { useUIStore } from '@/ui/uiStore';
+export { useCameraStore } from '@game/camera/cameraStore';
+export { useWorldStore } from '@game/world/worldStore';
+export { useAuthStore } from '@game/auth/authStore';

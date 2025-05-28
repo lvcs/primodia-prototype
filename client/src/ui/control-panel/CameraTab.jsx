@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 import * as Const from '@config/gameConfig.js'; 
 
-import { calculateSphericalCoords } from '@game/camera/cam.js';
+import { calculateSphericalCoords } from '@game/camera/';
 import { useCameraStore } from '@stores';
 
 import { ControlSectionWrapper } from '@ui/components/ControlSectionWrapper';
