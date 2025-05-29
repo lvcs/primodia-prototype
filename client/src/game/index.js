@@ -1,5 +1,5 @@
 import { planetSettings } from '@game/world/planetVoronoi.js';
-import { debug, error, initDebug } from '@utils/debug.js';
+import { debug, error } from '@utils/debug.js';
 import RandomService from '@game/core/RandomService.js'; 
 import { useCameraStore, useWorldStore } from '@stores';
 
@@ -15,7 +15,7 @@ import {
     generateAndDisplayPlanet as generatePlanet,
     updatePlanetColors,
     getPlanetGroup,
-} from './planet/index.js';
+} from '@game/planet/index.js';
 
 import { getSelectedHighlight } from '@game/core/eventHandlers.js';
 import { startAnimationLoop } from '@game/core/mainLoop.js';

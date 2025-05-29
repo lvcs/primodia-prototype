@@ -4,7 +4,7 @@ import UnifiedControlPanel from '@ui/control-panel/UnifiedControlPanel';
 import UserInfo from '@ui/layout/UserInfo';
 import TopBar from '@ui/layout/TopBar';
 import MiniMap from '@ui/layout/MiniMap';
-import { initGame } from '@game/game';
+import { initGame } from '@/game';
 import { useAuthStore } from '@stores';
 
 function GamePage({ onSignOut, onPlanetViewClick }) {

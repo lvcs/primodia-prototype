@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PLANET_RADIUS, WORLD_DETAIL_DEFAULT } from '@config';
-import { setupCosmos } from '@game/cosmos/cosmos.js';
+import { setupCosmos } from '@game/cosmos';
 import { initializeCam } from '@game/camera/';
 import { useCameraStore } from '@stores';
 
