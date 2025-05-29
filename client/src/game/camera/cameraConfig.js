@@ -1,3 +1,13 @@
+
+// Camera (from game.js) // TODO: Move to cameraConfig.js
+export const CAMERA_FOV = 60;
+export const CAMERA_NEAR_PLANE = 0.1;
+export const CAMERA_FAR_PLANE = 100000;
+export const CAMERA_MIN_DISTANCE_FACTOR = 1.02; // Min zoom distance as a factor of planet radius
+export const CAMERA_MAX_DISTANCE_FACTOR = 5;   // Max zoom distance as a factor of planet radius
+
+export const CAMERA_ZOOM_DISTANCE_DEFAULT = 16000; // TODO: This duplicated CAMERA_PLANET_VIEW_DISTANCE
+
 // Camera Distance Constants
 export const CAMERA_PLANET_VIEW_DISTANCE = 16000;
 export const CAMERA_TILE_VIEW_DISTANCE = 9600;

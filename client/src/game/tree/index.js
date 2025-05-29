@@ -6,7 +6,7 @@ import {
   TREES_SIZE_VARIATION,
   TREES_TRUNK_COLOR,
   TREES_CANOPY_COLOR
-} from '@config/gameConfig';
+} from '@config';
 
 // Performance optimizations
 const LOD_DISTANCE_THRESHOLD = 5000; // Distance for LOD switching
@@ -116,7 +116,7 @@ class TreeSystem {
   }
 
   /**
-   * Generate tree position with simplified algorithms
+   * Generate tree position with simplified PLANET_RENDERING_ALGORITHMS
    */
   generateTreePosition(tileData, planetRadius) {
     if (tileData.polygonVertices && tileData.polygonVertices.length >= 3) {

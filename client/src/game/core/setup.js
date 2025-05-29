@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import * as ConstFromGameConfig from '@config/gameConfig.js';
+import { PLANET_RADIUS, WORLD_DETAIL_DEFAULT } from '@config';
 import { setupCosmos } from '@game/cosmos/cosmos.js';
 import { initializeCam } from '@game/camera/';
 import { useCameraStore } from '@stores';
@@ -29,8 +29,8 @@ export function setupThreeJS(canvasElement) {
 
 export function setupInitialWorldConfig() {
   worldConfig = {
-    radius: ConstFromGameConfig.PLANET_RADIUS,
-    detail: ConstFromGameConfig.DEFAULT_WORLD_DETAIL,
+    radius: PLANET_RADIUS,
+    detail: WORLD_DETAIL_DEFAULT,
   };
   return worldConfig;
 }

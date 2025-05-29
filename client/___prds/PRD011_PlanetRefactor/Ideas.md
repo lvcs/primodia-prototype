@@ -34,11 +34,11 @@
 // stores/worldStore.js
 export const useWorldStore = create((set, get) => ({
   // Generation parameters
-  numTiles: DEFAULT_NUMBER_OF_PLANET_TILES,
-  jitter: DEFAULT_JITTER,
+  numTiles: PLANET_TILES_DEFAULT,
+  jitter: PLANET_JITTER_DEFAULT,
   algorithm: 'fibonacci1',
   mapType: 'continents',
-  numPlates: DEFAULT_TECHTONIC_PLATES,
+  numPlates: PLANET_TECHTONIC_PLATES_DEFAULT,
   
   // View parameters
   viewMode: 'terrain',

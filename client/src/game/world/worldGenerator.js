@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { generatePlanetGeometryGroup, planetSettings, classifyTerrain, classifyTileTerrainFromProperties, DEFAULT_VIEW_MODE } from './planetVoronoi.js';
+import { generatePlanetGeometryGroup, planetSettings, classifyTerrain, classifyTileTerrainFromProperties, PLANET_VIEW_MODE_DEFAULT } from './planetVoronoi.js';
 import WorldPlanet from './model/WorldPlanet.js';
 import Tile from './model/Tile.js';
 import { terrainById, getColorForTerrain } from './registries/TerrainRegistry.js';
@@ -11,7 +11,7 @@ import RandomService from '@game/core/RandomService';
 import { 
   shouldHaveTrees,
   addTreesToScene,
-} from './Tree.js';
+} from '@game/tree';
 
 /**
  * Generates planet mesh (legacy) plus OO WorldPlanet description.
@@ -131,10 +131,10 @@ export function generateWorld(config, seed){
   // Use the value directly from planetSettings, which is controlled by the UI slider
   let numPlatesToUse = planetSettings.numPlates;
   // Ensure it's within a reasonable range if not already clamped by UI/constants
-  // (Assuming MIN_TECHTONIC_PLATES and MAX_TECHTONIC_PLATES are defined and used by the slider)
+  // (Assuming PLANET_TECHTONIC_PLATES_MIN and PLANET_TECHTONIC_PLATES_MAX are defined and used by the slider)
   // For safety, we can re-apply a clamp here if needed, though ideally the constants are the source of truth.
-  // numPlatesToUse = Math.max(Const.MIN_TECHTONIC_PLATES || 2, Math.min(numPlatesToUse, Const.MAX_TECHTONIC_PLATES || 50));
-  // The SliderControl in ui/index.js already uses MIN_TECHTONIC_PLATES and MAX_TECHTONIC_PLATES from Const,
+  // numPlatesToUse = Math.max(PLANET_TECHTONIC_PLATES_MIN || 2, Math.min(numPlatesToUse, PLANET_TECHTONIC_PLATES_MAX || 50));
+  // The SliderControl in ui/index.js already uses PLANET_TECHTONIC_PLATES_MIN and PLANET_TECHTONIC_PLATES_MAX from Const,
   // so planetSettings.numPlates should already be within this valid range.
 
   // generatePlates will internally use RandomService for its random choices.

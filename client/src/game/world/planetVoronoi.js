@@ -1,12 +1,8 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
-import { MapTypes, defaultMapType, generateMapTerrain } from './registries/MapTypeRegistry.js';
-import { debug } from '@game/utils/debug';
+import { generateMapTerrain } from './registries/MapTypeRegistry.js';
 import { terrainById, Terrains } from './registries/TerrainRegistry.js';
-import WorldPlanet from './model/WorldPlanet.js';
-import Tile from './model/Tile.js';
-import * as Const from '@config/gameConfig'; // Import constants
-import { DrawMode } from '../../config/gameConfig.js'; // CORRECTED PATH
+import { PLANET_RADIUS, PLANET_DRAW_MODE, PLANET_TILES_DEFAULT, PLANET_JITTER_DEFAULT, MAP_TYPE_DEFAULT, PLANET_ELEVATION_BIAS_DEFAULT, PLANET_TECHTONIC_PLATES_DEFAULT } from '@config'; // Import constants
 import RandomService from '../core/RandomService.js'; // Added import
 
 // All radius values are now in kilometers (1 unit = 1 km)
@@ -473,7 +469,7 @@ function generateVoronoiGeometry(points, delaunay) {
     return { geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices };
 }
 
-export const DEFAULT_VIEW_MODE = 'elevation'; // Added constant for default view
+export const PLANET_VIEW_MODE_DEFAULT = 'elevation'; // Added constant for default view
 
 // Debug function to troubleshoot potential issues with numPoints
 function debugAndFixNumPoints() {
@@ -482,15 +478,15 @@ function debugAndFixNumPoints() {
 
 // Settings object to store planet generation parameters
 export const planetSettings = {
-  drawMode: DrawMode.VORONOI,
+  drawMode: PLANET_DRAW_MODE.VORONOI,
   algorithm: 1,
-  numPoints: Const.DEFAULT_NUMBER_OF_PLANET_TILES,
-  jitter: Const.DEFAULT_JITTER,
-  mapType: defaultMapType,
+  numPoints: PLANET_TILES_DEFAULT,
+  jitter: PLANET_JITTER_DEFAULT,
+  mapType: MAP_TYPE_DEFAULT,
   outlineVisible: true,
-  numPlates: Const.DEFAULT_TECHTONIC_PLATES,
-  viewMode: DEFAULT_VIEW_MODE, // Changed to use the constant
-  elevationBias: Const.DEFAULT_ELEVATION_BIAS,
+  numPlates: PLANET_TECHTONIC_PLATES_DEFAULT,
+  viewMode: PLANET_VIEW_MODE_DEFAULT, // Changed to use the constant
+  elevationBias: PLANET_ELEVATION_BIAS_DEFAULT,
 };
 
 // Main function to generate the planet geometry
@@ -498,7 +494,7 @@ export function generatePlanetGeometryGroup(config) {
     // Check RandomService state
     
     // Use the latest planetSettings values
-    const { radius = Const.PLANET_RADIUS } = config; // Default to the global constant if not provided
+    const { radius = PLANET_RADIUS } = config; // Default to the global constant if not provided
     
     // Perform sanity check on numPoints
     debugAndFixNumPoints();
@@ -558,9 +554,9 @@ export function generatePlanetGeometryGroup(config) {
     
     // Generate geometry based on draw mode
     let geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices;
-    if (drawMode === DrawMode.VORONOI) {
+    if (drawMode === PLANET_DRAW_MODE.VORONOI) {
         ({geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices} = generateVoronoiGeometry(points, planetTriangulation));
-    } else if (drawMode === DrawMode.DELAUNAY) {
+    } else if (drawMode === PLANET_DRAW_MODE.DELAUNAY) {
         ({geometry, colors, ids, tileTerrain, tileSphericalExcesses} = generateDelaunayGeometry(points, planetTriangulation));
     }
     

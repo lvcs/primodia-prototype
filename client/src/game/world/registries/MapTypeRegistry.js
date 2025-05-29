@@ -132,7 +132,7 @@ export const MapRegistry = {
 };
 
 // Default map type
-export const defaultMapType = MapTypes.CONTINENTS;
+export const MAP_TYPE_DEFAULT = MapTypes.CONTINENTS;
 
 /**
  * Generate map terrain based on map type and position

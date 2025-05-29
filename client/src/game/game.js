@@ -20,7 +20,7 @@ import {
 import { getSelectedHighlight } from './core/eventHandlers.js';
 import { startAnimationLoop } from './core/mainLoop.js';
 
-import { newsetupOrbitControls } from './camera/';
+import { setupOrbitControls } from '@game/camera';
 
 let scene, camera, renderer, controls, worldConfig;
 
@@ -49,7 +49,7 @@ export function initGame(canvasElement) {
     // controls = setupOrbitControls(camera, renderer, worldConfig);
     // console.log(controls);
     
-    controls = newsetupOrbitControls(renderer);
+    controls = setupOrbitControls(renderer);
     startAnimationLoop(); // Starts the game loop
     
   

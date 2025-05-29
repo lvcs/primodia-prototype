@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import * as Const from '@config/gameConfig.js';
-import { getActionForKey, KEYBOARD_ACTIONS } from '@config';
+
+import { getActionForKey, KEYBOARD_ACTIONS, KEYBOARD_TARGET_ANGULAR_SPEED, KEYBOARD_SPEED_SCALE_AT_MIN_ZOOM, KEYBOARD_SPEED_SCALE_AT_MAX_ZOOM, KEYBOARD_ZOOM_SPEED } from '@config';
 
 // --- State ---
 const activeKeys = new Set();
@@ -40,9 +40,9 @@ function onKeyUp(event) {
 export function handleKeyboardInput(deltaTime = 1) {
     if (window.cameraAnimator && window.cameraAnimator.isAnimating) return;
     if (!localCamera || !localControls || !localWorldConfig || !orbitController) return;
-    const baseTargetSpeed = Const.KEYBOARD_TARGET_ANGULAR_SPEED;
-    const speedAtMinZoom = baseTargetSpeed * Const.KEYBOARD_SPEED_SCALE_AT_MIN_ZOOM;
-    const speedAtMaxZoom = baseTargetSpeed * Const.KEYBOARD_SPEED_SCALE_AT_MAX_ZOOM;
+    const baseTargetSpeed = KEYBOARD_TARGET_ANGULAR_SPEED;
+    const speedAtMinZoom = baseTargetSpeed * KEYBOARD_SPEED_SCALE_AT_MIN_ZOOM;
+    const speedAtMaxZoom = baseTargetSpeed * KEYBOARD_SPEED_SCALE_AT_MAX_ZOOM;
     const minZoom = localControls.minDistance;
     const maxZoom = localControls.maxDistance;
     const currentDistance = orbitController.radius || localCamera.position.length();
@@ -63,10 +63,10 @@ export function handleKeyboardInput(deltaTime = 1) {
                 orbitController.rotate(0, -effectiveTargetSpeed);
                 break;
             case KEYBOARD_ACTIONS.ZOOM_IN:
-                orbitController.zoom(-localWorldConfig.radius * Const.KEYBOARD_ZOOM_SPEED);
+                orbitController.zoom(-localWorldConfig.radius * KEYBOARD_ZOOM_SPEED);
                 break;
             case KEYBOARD_ACTIONS.ZOOM_OUT:
-                orbitController.zoom(localWorldConfig.radius * Const.KEYBOARD_ZOOM_SPEED);
+                orbitController.zoom(localWorldConfig.radius * KEYBOARD_ZOOM_SPEED);
                 break;
         }
     });

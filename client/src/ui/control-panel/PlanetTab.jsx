@@ -9,23 +9,23 @@ import { useWorldStore } from '@stores';
 
 // Import constants for slider ranges
 import {
-  MIN_NUMBER_OF_PLANET_TILES,
-  MAX_NUMBER_OF_PLANET_TILES,
-  STEP_NUMBER_OF_PLANET_TILES,
-  MIN_JITTER,
-  MAX_JITTER,
-  STEP_JITTER,
-  MIN_TECHTONIC_PLATES,
-  MAX_TECHTONIC_PLATES,
-  STEP_TECHTONIC_PLATES,
-  MIN_ELEVATION_BIAS,
-  MAX_ELEVATION_BIAS,
-  STEP_ELEVATION_BIAS,
-  DrawMode,
-  mockMapTypes,
-  planetViewOptions,
-  algorithms
-} from '@config/gameConfig';
+  PLANET_TILES_MIN,
+  PLANET_TILES_MAX,
+  PLANET_TILES_STEP,
+  PLANET_JITTER_MIN,
+  PLANET_JITTER_MAX,
+  PLANET_JITTER_STEP,
+  PLANET_TECHTONIC_PLATES_MIN,
+  PLANET_TECHTONIC_PLATES_MAX,
+  PLANET_TECHTONIC_PLATES_STEP,
+  PLANET_ELEVATION_BIAS_MIN,
+  PLANET_ELEVATION_BIAS_MAX,
+  PLANET_ELEVATION_BIAS_STEP,
+  PLANET_DRAW_MODE,
+  MAP_TYPES,
+  PLANET_VIEW_MODES,
+  PLANET_RENDERING_ALGORITHMS
+} from '@config';
 
 // TODO: Integrate MapRegistry for live data
 
@@ -107,7 +107,7 @@ function PlanetTab() {
     <div>
       <ControlSectionWrapper label="Draw Mode">
         <div className="flex space-x-2">
-          {Object.entries(DrawMode).map(([key, value]) => (
+          {Object.entries(PLANET_DRAW_MODE).map(([key, value]) => (
             <Button
               key={value}
               onClick={() => setDrawMode(value)}
@@ -121,7 +121,7 @@ function PlanetTab() {
 
       <ControlSectionWrapper label="Point Selection Algorithm">
         <div className="flex space-x-2">
-          {algorithms.map(algoNumber => (
+          {PLANET_RENDERING_ALGORITHMS.map(algoNumber => (
             <Button
               key={algoNumber}
               onClick={() => setAlgorithm(algoNumber)}
@@ -136,9 +136,9 @@ function PlanetTab() {
       <ControlSectionWrapper label={`Number of Points: ${numPoints}`}>
         <Slider
           value={[numPoints]}
-          min={MIN_NUMBER_OF_PLANET_TILES}
-          max={MAX_NUMBER_OF_PLANET_TILES}
-          step={STEP_NUMBER_OF_PLANET_TILES}
+          min={PLANET_TILES_MIN}
+          max={PLANET_TILES_MAX}
+          step={PLANET_TILES_STEP}
           onValueChange={handleNumPointsChange}
         />
       </ControlSectionWrapper>
@@ -146,9 +146,9 @@ function PlanetTab() {
       <ControlSectionWrapper label={`Jitter: ${jitter.toFixed(2)}`}>
         <Slider
           value={[jitter]}
-          min={MIN_JITTER}
-          max={MAX_JITTER}
-          step={STEP_JITTER}
+          min={PLANET_JITTER_MIN}
+          max={PLANET_JITTER_MAX}
+          step={PLANET_JITTER_STEP}
           onValueChange={handleJitterChange}
         />
       </ControlSectionWrapper>
@@ -159,7 +159,7 @@ function PlanetTab() {
             <SelectValue placeholder="Select map type..." />
           </SelectTrigger>
           <SelectContent>
-            {Object.values(mockMapTypes).map((mapDetails) => (
+            {Object.values(MAP_TYPES).map((mapDetails) => (
               <SelectItem key={mapDetails.id} value={mapDetails.id}>
                 {mapDetails.name} <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({mapDetails.description})</span>
               </SelectItem>
@@ -182,9 +182,9 @@ function PlanetTab() {
       <ControlSectionWrapper label={`Number of Plates: ${numPlates}`}>
         <Slider
           value={[numPlates]}
-          min={MIN_TECHTONIC_PLATES}
-          max={MAX_TECHTONIC_PLATES}
-          step={STEP_TECHTONIC_PLATES}
+          min={PLANET_TECHTONIC_PLATES_MIN}
+          max={PLANET_TECHTONIC_PLATES_MAX}
+          step={PLANET_TECHTONIC_PLATES_STEP}
           onValueChange={handleNumPlatesChange}
         />
       </ControlSectionWrapper>
@@ -192,9 +192,9 @@ function PlanetTab() {
       <ControlSectionWrapper label={`Elevation Bias: ${elevationBias.toFixed(2)}`}>
         <Slider
           value={[elevationBias]}
-          min={MIN_ELEVATION_BIAS}
-          max={MAX_ELEVATION_BIAS}
-          step={STEP_ELEVATION_BIAS}
+          min={PLANET_ELEVATION_BIAS_MIN}
+          max={PLANET_ELEVATION_BIAS_MAX}
+          step={PLANET_ELEVATION_BIAS_STEP}
           onValueChange={handleElevationBiasChange}
         />
       </ControlSectionWrapper>
@@ -219,7 +219,7 @@ function PlanetTab() {
             <SelectValue placeholder="Select view mode..." />
           </SelectTrigger>
           <SelectContent>
-            {planetViewOptions.map((option) => (
+            {PLANET_VIEW_MODES.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>

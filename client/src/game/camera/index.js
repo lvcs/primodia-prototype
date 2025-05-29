@@ -1,7 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-import * as Const from '@config/gameConfig.js'; 
+import {
+  CAMERA_FOV,
+  CAMERA_NEAR_PLANE,
+  CAMERA_FAR_PLANE,
+  CAMERA_MIN_DISTANCE_FACTOR,
+  CAMERA_MAX_DISTANCE_FACTOR,
+  CAMERA_ZOOM_DISTANCE_DEFAULT,
+  PLANET_RADIUS,
+} from '@config'; 
 import { useCameraStore } from '@stores';
 
 
@@ -18,7 +26,7 @@ export const calculateSphericalCoords = (posX, posY, posZ) => {
 
 
 export const initializeCam = ({aspectRatio}) => {
-  let camera = new THREE.PerspectiveCamera(Const.CAMERA_FOV, aspectRatio, Const.CAMERA_NEAR_PLANE, Const.CAMERA_FAR_PLANE);
+  let camera = new THREE.PerspectiveCamera(CAMERA_FOV, aspectRatio, CAMERA_NEAR_PLANE, CAMERA_FAR_PLANE);
   console.log(camera.getWorldDirection(new THREE.Vector3(0,0,1)) );
   
   useCameraStore.getState().setCamera(camera);
@@ -29,7 +37,7 @@ export const initializeCam = ({aspectRatio}) => {
 }
 
 
-export const newsetupOrbitControls = (_renderer) => {
+export const setupOrbitControls = (_renderer) => {
   let camera = useCameraStore.getState().camera;
   let orbitControls = new OrbitControls(camera, _renderer.domElement);
   // console.log(orbitControls);
@@ -37,15 +45,15 @@ export const newsetupOrbitControls = (_renderer) => {
   orbitControls.enableDamping = true;
   orbitControls.dampingFactor = 0.125;
   orbitControls.enablePan = true;
-  orbitControls.minDistance = Const.PLANET_RADIUS * Const.CAMERA_MIN_DISTANCE_FACTOR;
-  orbitControls.maxDistance = Const.PLANET_RADIUS * Const.CAMERA_MAX_DISTANCE_FACTOR;
+  orbitControls.minDistance = PLANET_RADIUS * CAMERA_MIN_DISTANCE_FACTOR;
+  orbitControls.maxDistance = PLANET_RADIUS * CAMERA_MAX_DISTANCE_FACTOR;
   orbitControls.minPolarAngle = 0;
   orbitControls.maxPolarAngle = Math.PI;
 
   camera.position.set(
     0,
     0,
-    Const.CAMERA_ZOOM_DISTANCE_DEFAULT
+    CAMERA_ZOOM_DISTANCE_DEFAULT
   );
   
   orbitControls.update();

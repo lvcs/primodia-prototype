@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import * as Const from '../../config/gameConfig.js';
+import { MOUSE_PAN_SPEED } from '@config';
 
 
 // --- State ---
@@ -39,15 +39,15 @@ function onMouseMove(event) {
     if (window.cameraAnimator && window.cameraAnimator.isAnimating) return;
     const deltaX = event.clientX - previousMousePosition.x;
     const deltaY = event.clientY - previousMousePosition.y;
-    let currentRotationSpeed = Const.MOUSE_PAN_SPEED;
+    let currentRotationSpeed = MOUSE_PAN_SPEED;
     // Adjust rotation speed based on zoom level
     if (localControls && localControls.target && localCamera && localCamera.position) {
         const currentDistance = localCamera.position.length();
         const minZoomDist = localControls.minDistance;
         const maxZoomDist = localControls.maxDistance;
         const zoomFactor = THREE.MathUtils.clamp((currentDistance - minZoomDist) / (maxZoomDist - minZoomDist), 0, 1);
-        const speedAtMaxZoomIn = Const.MOUSE_PAN_SPEED * 0.01;
-        const speedAtMaxZoomOut = Const.MOUSE_PAN_SPEED * 2;
+        const speedAtMaxZoomIn = MOUSE_PAN_SPEED * 0.01;
+        const speedAtMaxZoomOut = MOUSE_PAN_SPEED * 2;
         currentRotationSpeed = THREE.MathUtils.lerp(speedAtMaxZoomIn, speedAtMaxZoomOut, zoomFactor);
     }
     // Update camera orbit

@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { 
   renderTreesWithLOD, 
   clearLODTrees, 
@@ -12,7 +11,7 @@ import {
   disposeMinimalResources,
   getMinimalMemoryComparison 
 } from './TreeMinimalFunctional.js';
-import { addTreesToScene, clearTrees } from '../../client/src/game/world/Tree.js';
+import { addTreesToScene, clearTrees } from '@game/tree';
 
 /**
  * Tree System Comparison and Testing Tool

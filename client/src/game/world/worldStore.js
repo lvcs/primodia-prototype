@@ -1,14 +1,14 @@
 import { create } from 'zustand';
 
 import {
-  DEFAULT_NUMBER_OF_PLANET_TILES,
-  DEFAULT_JITTER,
-  DEFAULT_TECHTONIC_PLATES,
-  DEFAULT_ELEVATION_BIAS,
-  DrawMode,
-  defaultMapType,
-  DEFAULT_VIEW_MODE
-} from '@config/gameConfig';
+  PLANET_TILES_DEFAULT,
+  PLANET_JITTER_DEFAULT,
+  PLANET_TECHTONIC_PLATES_DEFAULT,
+  PLANET_ELEVATION_BIAS_DEFAULT,
+  PLANET_DRAW_MODE,
+  MAP_TYPE_DEFAULT,
+  PLANET_VIEW_MODE_DEFAULT
+} from '@config';
 
 // Import the actual game functions
 import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '@game/game';
@@ -19,15 +19,15 @@ import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '@game/game'
 const generateDefaultSeed = () => String(Date.now());
 
 const initialWorldSettings = {
-  drawMode: DrawMode.VORONOI,
+  drawMode: PLANET_DRAW_MODE.VORONOI,
   algorithm: 1, // Default from old planetSettings
-  numPoints: DEFAULT_NUMBER_OF_PLANET_TILES,
-  jitter: DEFAULT_JITTER,
-  mapType: defaultMapType,
+  numPoints: PLANET_TILES_DEFAULT,
+  jitter: PLANET_JITTER_DEFAULT,
+  mapType: MAP_TYPE_DEFAULT,
   outlineVisible: true, // Default from old planetSettings
-  numPlates: DEFAULT_TECHTONIC_PLATES,
-  viewMode: DEFAULT_VIEW_MODE, // Default from old planetSettings
-  elevationBias: DEFAULT_ELEVATION_BIAS,
+  numPlates: PLANET_TECHTONIC_PLATES_DEFAULT,
+  viewMode: PLANET_VIEW_MODE_DEFAULT, // Default from old planetSettings
+  elevationBias: PLANET_ELEVATION_BIAS_DEFAULT,
   currentSeed: generateDefaultSeed(), // Use a timestamp-based seed by default
 };
 

@@ -2,13 +2,13 @@
 // Planet generation, display, color updates, and rotation logic 
 import * as THREE from 'three';
 import { debug, error } from '../utils/debug.js';
-import * as Const from '@config/gameConfig.js'; // Adjusted path
+import { PLANET_GLOW_RADIUS_FACTOR, PLANET_GLOW_COLOR, PLANET_GLOW_OPACITY } from '@config'; // Adjusted path
 import { planetSettings } from '../world/planetVoronoi.js'; 
 import { generateWorld } from '../world/worldGenerator.js';
 import { Terrains, getColorForTerrain } from '../world/registries/TerrainRegistry.js';
 import { getColorForTemperature } from '../world/registries/TemperatureRegistry.js';
 import { getColorForMoisture } from '../world/registries/MoistureRegistry.js';
-import { clearTrees } from '../world/Tree.js';
+import { clearTrees } from '@game/tree';
 
 let planetGroup;
 let worldData;
@@ -19,8 +19,8 @@ export const getWorldData = () => worldData;
 // This function is now internal and used by generateAndDisplayPlanet
 // It might be better to move its logic into generateAndDisplayPlanet or make it static helper
 function addPlanetaryGlow(_scene, radius) {
-  const glowGeometry = new THREE.SphereGeometry(radius * Const.PLANETARY_GLOW_RADIUS_FACTOR, 64, 32);
-  const glowMaterial = new THREE.MeshBasicMaterial({ color: Const.PLANETARY_GLOW_COLOR, transparent: true, opacity: Const.PLANETARY_GLOW_OPACITY, side: THREE.BackSide });
+  const glowGeometry = new THREE.SphereGeometry(radius * PLANET_GLOW_RADIUS_FACTOR, 64, 32);
+  const glowMaterial = new THREE.MeshBasicMaterial({ color: PLANET_GLOW_COLOR, transparent: true, opacity: PLANET_GLOW_OPACITY, side: THREE.BackSide });
   const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
   glowMesh.userData.isGlow = true;
   _scene.add(glowMesh);

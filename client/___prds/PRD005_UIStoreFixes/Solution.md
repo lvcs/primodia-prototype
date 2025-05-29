@@ -112,7 +112,7 @@ function debugAndFixNumPoints() {
       isNaN(planetSettings.numPoints) || 
       planetSettings.numPoints < 50 || 
       planetSettings.numPoints > 128000) {
-    planetSettings.numPoints = Const.DEFAULT_NUMBER_OF_PLANET_TILES;
+    planetSettings.numPoints = PLANET_TILES_DEFAULT;
   }
   return planetSettings.numPoints;
 }
