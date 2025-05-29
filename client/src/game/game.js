@@ -9,7 +9,7 @@ import {
   setupLighting,
   getScene,
   getWorldConfig
-} from './core/setup.js';
+} from '@game/core/setup.js';
 
 import {
     generateAndDisplayPlanet as generatePlanet,
@@ -17,8 +17,8 @@ import {
     getPlanetGroup,
 } from './planet/index.js';
 
-import { getSelectedHighlight } from './core/eventHandlers.js';
-import { startAnimationLoop } from './core/mainLoop.js';
+import { getSelectedHighlight } from '@game/core/eventHandlers.js';
+import { startAnimationLoop } from '@game/core/mainLoop.js';
 
 import { setupOrbitControls } from '@game/camera';
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAuthStore } from './stores';
+import { useAuthStore } from '@stores';
 import LoginPage from '@ui/pages/LoginPage';
 import RegisterPage from '@ui/pages/RegisterPage';
 import LoadingPage from '@ui/pages/LoadingPage'; // Import the new LoadingPage
@@ -33,9 +33,6 @@ function App() {
     setGameInitialized(false);
   };
 
-  const handlePlanetViewClick = () => {
-    console.log('Planet View icon clicked in App.jsx. TODO: Implement camera animation.');
-  };
 
   const switchToRegister = () => setShowLogin(false);
   const switchToLogin = () => setShowLogin(true);
@@ -51,7 +48,7 @@ function App() {
   }
 
   if (isGameLoading && !gameInitialized) {
-    return <LoadingPage message="Preparing game..." />;
+    return <LoadingPage message="Loading game..." />;
   }
   
   if (currentUser && gameInitialized) {
@@ -59,7 +56,6 @@ function App() {
       <div id="app-container-react" className="w-screen h-screen bg-gray-900 text-white flex flex-col relative overflow-hidden dark">
         <GamePage
           onSignOut={handleSignOut}
-          onPlanetViewClick={handlePlanetViewClick}
         />
       </div>
     );

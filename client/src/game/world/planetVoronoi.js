@@ -3,7 +3,7 @@ import Delaunator from 'delaunator';
 import { generateMapTerrain } from './registries/MapTypeRegistry.js';
 import { terrainById, Terrains } from './registries/TerrainRegistry.js';
 import { PLANET_RADIUS, PLANET_DRAW_MODE, PLANET_TILES_DEFAULT, PLANET_JITTER_DEFAULT, MAP_TYPE_DEFAULT, PLANET_ELEVATION_BIAS_DEFAULT, PLANET_TECHTONIC_PLATES_DEFAULT } from '@config'; // Import constants
-import RandomService from '../core/RandomService.js'; // Added import
+import RandomService from '@game/core/RandomService.js'; // Added import
 
 // All radius values are now in kilometers (1 unit = 1 km)
 

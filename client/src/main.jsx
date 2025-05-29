@@ -6,13 +6,12 @@ import {
   useCameraStore, 
   useWorldStore, 
   useAuthStore 
-} from './stores';
+} from '@stores';
 import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import "@ui/styles/index.css"; // Import Tailwind CSS
 
-// Expose all stores to the window in development mode
-// Dev debug only, never use those in the codebase
+
 if (import.meta.env.DEV) {
   window.uiStore = useUIStore;
   window.cameraStore = useCameraStore;

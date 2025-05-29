@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Plate from './model/Plate.js';
-import RandomService from '../core/RandomService.js';
+import RandomService from '@game/core/RandomService.js';
 
 // --- Tectonic Plate Generation Constants ---
 
