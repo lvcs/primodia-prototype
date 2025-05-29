@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { BaseCameraController } from './BaseCameraController.js';
-import { CAMERA_VIEWS } from '@/config/cameraConfig.js';
+import { CAMERA_VIEWS } from '@config/cameraConfig.js';
 
 const TILE_CONFIG = CAMERA_VIEWS.tile;
 

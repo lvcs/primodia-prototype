@@ -41,8 +41,6 @@ export const PLANET_DRAW_MODE = {
   CENTROID: 'centroid'
 };
 
-
-
 export const PLANET_VIEW_MODES = [
   { value: 'terrain', label: 'Terrain' },
   { value: 'plates', label: 'Tectonic Plates' },

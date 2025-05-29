@@ -20,10 +20,17 @@ We are building a prototype for a 4X game in a 3D world.
 # Root Directory Structure
 client/               # Frontend
 ├── src/              # @ vite alias
-│   ├── config/       # Barrel for configuration files; @config alias
-│   ├── game/         # Game files; @game alias
+│   ├── config/       # Barrel for config files; @config alias
+│   ├── camera/       # Camera and OrbitControls
+│   ├── core/         # Mess. event handler, mainLoop, setup
+│   ├── game/         # game init
+│   ├── keyboard/
+│   ├── mouse/
+│   ├── planet/
 │   ├── ui/           # UI: Components, pages, styles; @ui alias
-│   └── stores/       # Barrel for store files; @stores alias
+│   ├── stores/       # Barrel for store files; @stores alias
+│   ├── utils/        # utilities and helper functions; @utils alias
+│   └── world/        # Create world out of cosmos and planet
 package.json          # Project dependencies
 README.md             # Project documentation
 
@@ -42,11 +49,13 @@ README.md             # Project documentation
 - Organize code into clearly defined features, facilitating scalability and maintainability.
 
 ## Feature Directory Structure
-feature/
-├── index.js               # Feature entry point with an API, main functions, and barrel export
-├── featureConfig.js       # Configuradtion dedicated to the feature; include in /src/config barrel if outside access is required
-├── featureStore.js        # Store dedicated to the feature; include in /src/stores barrel
-└── feature{Name}.js       # Additional feature code, that doesn't pollutes index.js
+src/
+├── feature/
+│   ├── index.js               # Feature entry point with an API, main functions, and barrel export
+│   ├── featureConfig.js       # Configuradtion dedicated to the feature; include in /src/config barrel if outside access is required
+│   ├── featureStore.js        # Store dedicated to the feature; include in /src/stores barrel
+│   ├── feature{Name}.js       # Additional feature code, that doesn't pollutes index.js
+│   └── subfeature/            # If a subfeature or object is closely tied to the main feature
 
 # Code Quality and Style
 - Use clear, explicit variable and function names. For boolean states, use auxiliary verbs (e.g., isLoading, hasError).
@@ -87,22 +96,23 @@ feature/
 
 Client application have these layers (from high to low):
 1. UI Components (React components), mouse & keyboard controls, Three.js camera controls
-2. Stores (Zustand stores)
-3. Game Logic (planet generation, etc.)
+2. Game Logic (planet generation, etc.)
+3. Stores (Zustand stores)
 4. Core Services (RandomService, utilities)
 
 - Higher-level modules can import from lower-level modules only:
-Components can import from Stores, Game Logic, and Core Services
-Stores can import from Game Logic and Core Services
-Game Logic can only import from Core Services
+UI Components can import from Stores, Game Logic, and Core Services
+Game Logic can only import from Core Services and Stores.
+Stores are dumb bags of state, can import config only.
 Core Services cannot import from anything above them
 
 - uiStore: Representation of UI elements, including opened menus, tabs, modals, dialogs, tooltips, notifications, and animations.
 - cameraStore: Representation of camera location, zoom, lookAt targets
+- gameStore: Seed, turn, era, tech tree, civic tree
 - worldStore: Representation of planet objects: number of tiles, jitter, techtonic plates, map type, elevation bias, seed
 
 # Configuration
-- Always read files in client/src/config
-- When adding new constants, always add to client/src/config files
+- Always read *Config.js files
+- When adding new constants, always add to appropriate *Config files
+- When creating new *Config.js file, include them in the barrel
 - Never change existing constants defined in config
-
