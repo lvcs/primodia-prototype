@@ -11,7 +11,7 @@ import RandomService from '@game/core/RandomService';
 import { 
   shouldHaveTrees,
   addTreesToScene,
-} from '@game/tree';
+} from '@game/planet/tree';
 
 /**
  * Generates planet mesh (legacy) plus OO WorldPlanet description.

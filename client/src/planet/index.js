@@ -8,7 +8,7 @@ import { generateWorld } from '@game/world/worldGenerator.js';
 import { Terrains, getColorForTerrain } from '@game/world/registries/TerrainRegistry.js';
 import { getColorForTemperature } from '@game/world/registries/TemperatureRegistry.js';
 import { getColorForMoisture } from '@game/world/registries/MoistureRegistry.js';
-import { clearTrees } from '@game/tree';
+import { clearTrees } from '@game/planet/tree';
 
 let planetGroup;
 let worldData;

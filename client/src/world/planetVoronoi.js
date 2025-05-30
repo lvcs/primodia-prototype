@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import Delaunator from 'delaunator';
 import { generateMapTerrain } from './registries/MapTypeRegistry.js';
 import { terrainById, Terrains } from './registries/TerrainRegistry.js';
-import { PLANET_RADIUS, PLANET_DRAW_MODE, PLANET_TILES_DEFAULT, PLANET_JITTER_DEFAULT, MAP_TYPE_DEFAULT, PLANET_ELEVATION_BIAS_DEFAULT, PLANET_TECHTONIC_PLATES_DEFAULT } from '@config'; // Import constants
+import { PLANET_RADIUS, PLANET_DRAW_MODE, PLANET_TILES_DEFAULT, PLANET_JITTER_DEFAULT, MAP_TYPE_DEFAULT, PLANET_ELEVATION_BIAS_DEFAULT, PLANET_TECHTONIC_PLATES_DEFAULT, PLANET_VIEW_MODE_DEFAULT } from '@config'; // Import constants
 import RandomService from '@game/core/RandomService.js'; // Added import
 
 // All radius values are now in kilometers (1 unit = 1 km)
@@ -469,8 +469,6 @@ function generateVoronoiGeometry(points, delaunay) {
     return { geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices };
 }
 
-export const PLANET_VIEW_MODE_DEFAULT = 'elevation'; // Added constant for default view
-
 // Debug function to troubleshoot potential issues with numPoints
 function debugAndFixNumPoints() {
   
@@ -485,7 +483,7 @@ export const planetSettings = {
   mapType: MAP_TYPE_DEFAULT,
   outlineVisible: true,
   numPlates: PLANET_TECHTONIC_PLATES_DEFAULT,
-  viewMode: PLANET_VIEW_MODE_DEFAULT, // Changed to use the constant
+  viewMode: PLANET_VIEW_MODE_DEFAULT,
   elevationBias: PLANET_ELEVATION_BIAS_DEFAULT,
 };
 
