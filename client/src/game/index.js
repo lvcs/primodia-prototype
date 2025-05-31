@@ -13,7 +13,6 @@ import {
     getPlanetGroup,
 } from '@game/planet/index.js';
 
-import { getSelectedHighlight } from '@game/core/eventHandlers.js';
 import { startAnimationLoop } from '@game/core/mainLoop.js';
 
 import { setupOrbitControls } from '@game/camera';
@@ -37,8 +36,7 @@ export function initGame(canvasElement) {
     camera = useCameraStore.getState().camera;
     renderer = threeContext.renderer;
     
-    const currentSelectedHighlight = getSelectedHighlight(); // From eventHandlers
-    generateAndDisplayPlanet(null, null , getPlanetGroup() , currentSelectedHighlight);
+    generateAndDisplayPlanet(null, null , getPlanetGroup());
     
     controls = setupOrbitControls(renderer);
     startAnimationLoop(); // Starts the game loop
@@ -57,7 +55,6 @@ export function requestPlanetRegeneration(worldSettings) {
   
   const existingControls = useCameraStore.getState().orbitControls;
   const pg = getPlanetGroup();
-  const sh = getSelectedHighlight();
   
   // Use settings if provided, otherwise keep existing planetSettings
   if (worldSettings) {
@@ -86,7 +83,7 @@ export function requestPlanetRegeneration(worldSettings) {
   }
   
   // Generate planet with updated settings
-  generateAndDisplayPlanet(null, existingControls, pg, sh);
+  generateAndDisplayPlanet(null, existingControls, pg);
     
   debug('Planet regeneration complete.');
   

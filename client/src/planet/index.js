@@ -17,7 +17,7 @@ let worldData;
 export const getPlanetGroup = () => planetGroup;
 export const getWorldData = () => worldData;
 
-export function generateAndDisplayPlanet(_worldConfig, _controls, _existingPlanetGroup, _existingSelectedHighlight) {
+export function generateAndDisplayPlanet(_worldConfig, _controls, _existingPlanetGroup) {
   const scene = useSceneStore.getState().getScene();
   
   try {
