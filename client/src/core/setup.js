@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PLANET_RADIUS, WORLD_DETAIL_DEFAULT } from '@config';
+import { PLANET_RADIUS } from '@config';
 import { setupScene } from '@game/scene';
 import { initializeCam } from '@game/camera/';
 import { useCameraStore, useSceneStore } from '@stores';
@@ -30,7 +30,6 @@ export function setupThreeJS(canvasElement) {
 export function setupInitialWorldConfig() {
   worldConfig = {
     radius: PLANET_RADIUS,
-    detail: WORLD_DETAIL_DEFAULT,
   };
   return worldConfig;
 }
