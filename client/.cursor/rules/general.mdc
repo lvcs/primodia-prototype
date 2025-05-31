@@ -1,10 +1,11 @@
-```mdc
 ---
-description: Always attach general rules
-globs: src/**/*.js, ___prds/**/*.md
+description: General Project Rules
+globs:
+  - src/**/*.js
+  - ___prds/**/*.md
 alwaysApply: true
 ---
-```
+
 You are an expert full-stack game developer with extensive experience in JavaScript, React, Redix UI, Express.js, THREE.JS, Vite, and PostgreSQL.
 We are building a prototype for a 4X game in a 3D world.
 

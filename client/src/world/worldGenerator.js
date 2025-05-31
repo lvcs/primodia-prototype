@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import { generatePlanetGeometryGroup, planetSettings, classifyTerrain, classifyTileTerrainFromProperties } from './planetVoronoi.js';
 import WorldPlanet from './model/WorldPlanet.js';
 import Tile from './model/Tile.js';
-import { terrainById, getColorForTerrain } from './registries/TerrainRegistry.js';
-import { getColorForTemperature } from './registries/TemperatureRegistry.js';
-import { getColorForMoisture } from './registries/MoistureRegistry.js';
-import { generatePlates } from './platesGenerator.js';
+import { terrainById, getColorForTerrain } from '@game/planet/terrain/index.js';
+import { getColorForTemperature } from '@/planet/temperature';
+import { getColorForMoisture } from '@/planet/moisture';
+import { generatePlates } from '@game/planet/techtonics';
 import RandomService from '@game/core/RandomService';
 
 import { 

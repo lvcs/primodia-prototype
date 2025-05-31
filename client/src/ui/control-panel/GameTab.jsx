@@ -15,7 +15,7 @@ const GameTab = () => {
   const seed = useGameStore((state) => state.seed);
   const turn = useGameStore((state) => state.turn);
 
-  const [currentSeed, setCurrentSeed] = useState(seed || 112233);
+  const [currentSeed, setCurrentSeed] = useState(seed);
   const [currentTurn, setCurrentTurn] = useState(turn || 1);
 
   useEffect(() => {

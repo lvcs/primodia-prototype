@@ -16,13 +16,7 @@ function UnifiedControlPanel({ className }) {
   return (
     <div className={`p-4 bg-gray-50 dark:bg-gray-800 shadow-lg rounded-lg ${className || ''}`}>
       <Tabs defaultValue={tabs[0]?.id || 'planet'} className="w-full">
-        <TabsList aria-label="Manage your game controls">
-          {tabs.map(tab => (
-            <TabsTrigger key={tab.id} value={tab.id}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+
         {tabs.map(tab => (
           <TabsContent key={tab.id} value={tab.id}>
             {tab.Component ? <tab.Component /> : (
@@ -34,6 +28,13 @@ function UnifiedControlPanel({ className }) {
             {/* {tab.id === 'camera' && <Button className='mt-2'>Reset View</Button>} */}
           </TabsContent>
         ))}
+                <TabsList aria-label="Manage your game controls">
+          {tabs.map(tab => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
       </Tabs>
     </div>
   );

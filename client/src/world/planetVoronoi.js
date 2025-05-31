@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
 import { generateMapTerrain } from './registries/MapTypeRegistry.js';
-import { Terrains } from './registries/TerrainRegistry.js';
+import { Terrains } from '@game/planet/terrain/index.js';
 import {
     PLANET_RADIUS,
     PLANET_DRAW_MODE,

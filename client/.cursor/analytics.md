@@ -1,4 +1,6 @@
-requirements.mdc: 10
-rule-analytics.mdc: 3
-general.mdc: 2
-client/react.mdc: 1
+feedback.mdc: 0
+general.mdc: 0
+requirements.mdc: 0
+rule-analytics.mdc: 0
+tailwind.mdc: 0
+tailwind4.mdc: 0

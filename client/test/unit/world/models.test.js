@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import Tile from '@/game/world/model/Tile';
-import TerrainType from '@/game/world/model/TerrainType';
-import WorldPlanet from '@/game/world/model/WorldPlanet';
-import Plate from '@/game/world/model/Plate';
+import Tile from '@game/world/model/Tile';
+import { TerrainType } from '@game/planet/terrain';
+import WorldPlanet from '@game/world/model/WorldPlanet';
+import { Plate } from '@game/planet/techtonics';
 import * as THREE from 'three';
 
 describe('World Model Classes', () => {

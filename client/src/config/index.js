@@ -4,5 +4,8 @@ export * from '@game/keyboard/keyboardConfig.js';
 export * from '@game/map/mapConfig.js';
 export * from '@game/mouse/mouseConfig.js';
 export * from '@game/planet/planetConfig.js';
+export * from '@game/planet/techtonics/techtonicsConfig.js';
+export * from '@game/planet/temperature/temperatureConfig.js';
+export * from '@game/planet/terrain/terrainConfig.js';
 export * from '@game/planet/tree/treeConfig.js';
 export * from '@game/world/worldConfig.js';

@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@ui/components/Button';
 import { ControlSectionWrapper } from '@ui/components/ControlSectionWrapper';
 import { Slider } from '@ui/components/Slider';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@ui/components/Select';
 import { Switch } from '@ui/components/Switch';
 import { Input } from '@ui/components/Input';
-import { useWorldStore } from '@stores';
+import { useWorldStore, useGameStore } from '@stores';
 
 // Import constants for slider ranges
 import {
@@ -36,6 +36,14 @@ import {
 
 // --- End Mock/Placeholder Game Logic Imports ---
 
+const applyPlanetPanelControls = (updatedPlanet) => {
+  const { setSeed } = useGameStore.getState();
+  
+  if (updatedPlanet.seed !== undefined) {
+    setSeed(updatedPlanet.seed);
+  }
+};
+
 function PlanetTab() {
   const {
     drawMode, setDrawMode,
@@ -46,16 +54,25 @@ function PlanetTab() {
     outlineVisible, setOutlineVisible,
     numPlates, setNumPlates,
     elevationBias, setElevationBias,
-    currentSeed, setCurrentSeed, regenerateWorldWithCurrentSettings,
+    regenerateWorldWithCurrentSettings,
     viewMode, setViewMode,
   } = useWorldStore();
 
-  // Local state for the seed input field, as it might differ from committed store seed until 'Regenerate' is clicked
-  const [worldSeedInput, setWorldSeedInput] = React.useState(currentSeed || '');
+  const seed = useGameStore((state) => state.seed);
+
+  const [currentSeed, setCurrentSeed] = useState(seed);
 
   useEffect(() => {
-    setWorldSeedInput(currentSeed || '');
-  }, [currentSeed]);
+    if (seed !== null) {
+      setCurrentSeed(seed);
+    }
+  }, [seed]);
+
+  const handleSeedInput = (event) => {
+    const value = event.target.value;
+    setCurrentSeed(value);
+    applyPlanetPanelControls({ seed: value });
+  };
 
   const handleNumPointsChange = (newValue) => {
     console.log('UI Slider changed numPoints to:', newValue[0], 'from previous value:', numPoints);
@@ -79,32 +96,11 @@ function PlanetTab() {
 
   const handleRegenerateWorld = () => {
     console.log('handleRegenerateWorld called');
-    let seedToUse = worldSeedInput.trim();
-    if (seedToUse === '') {
-      seedToUse = undefined; 
-    }
-    // Update the store's currentSeed if a specific seed is entered
-    // The store action `regenerateWorldWithCurrentSettings` will use the store's `currentSeed` if seedToUse is undefined here.
-    if (seedToUse !== undefined) {
-        console.log('Using seed from input:', seedToUse);
-        // First update the store's currentSeed value
-        setCurrentSeed(String(seedToUse)); 
-        
-        // Then regenerate the world with this seed, getting all other settings from the store
-        console.log('Calling regenerateWorldWithCurrentSettings with seed input');
-        regenerateWorldWithCurrentSettings(String(seedToUse));
-    } else {
-        console.log('Using seed from store or generating new seed');
-        // No seed provided, so just use whatever is in the store
-        // The store will pass its current state to the game functions
-        console.log('Calling regenerateWorldWithCurrentSettings without seed');
-        regenerateWorldWithCurrentSettings(); 
-    }
-    // The input field will be updated by the useEffect watching currentSeed from store.
+    regenerateWorldWithCurrentSettings();
   };
 
   return (
-    <div>
+    <section>
       <ControlSectionWrapper label="Draw Mode">
         <div className="flex space-x-2">
           {Object.entries(PLANET_DRAW_MODE).map(([key, value]) => (
@@ -199,17 +195,18 @@ function PlanetTab() {
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label="World Seed">
+      <ControlSectionWrapper label="Seed:">
         <div className="flex items-center space-x-2">
           <Input
-            id="map-seed-input"
-            type="text"
-            value={worldSeedInput}
-            onChange={(e) => setWorldSeedInput(e.target.value)}
-            placeholder="Enter seed or leave blank"
+            type="number"
+            value={currentSeed}
+            onChange={handleSeedInput}
             className="flex-grow"
+            placeholder="Enter seed value"
           />
-          <Button onClick={handleRegenerateWorld}>Regenerate</Button>
+          <Button onClick={handleRegenerateWorld}>
+            Regenerate
+          </Button>
         </div>
       </ControlSectionWrapper>
 
@@ -227,8 +224,7 @@ function PlanetTab() {
           </SelectContent>
         </Select>
       </ControlSectionWrapper>
-
-    </div>
+    </section>
   );
 }
 

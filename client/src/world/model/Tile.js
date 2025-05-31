@@ -6,7 +6,7 @@ export default class Tile {
   /**
    * @param {Object} opts
    * @param {number|string} opts.id unique numeric id
-   * @param {import('./TerrainType.js').default} opts.terrain TerrainType instance
+   * @param {import('@game/planet/terrain/TerrainType.js').default} opts.terrain TerrainType instance
    * @param {import('three').Vector3} opts.center Cartesian centroid on unit planet
    * @param {number[]} opts.neighbors adjacent tile ids
    * @param {number} opts.elevation elevation (-1.0 .. +1.0)

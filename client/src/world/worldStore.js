@@ -12,11 +12,9 @@ import {
 
 // Import the actual game functions
 import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '@game/game';
+import { useGameStore } from '@stores';
 
 // --- End Game Logic Imports ---
-
-// Generate a default seed based on the current timestamp
-const generateDefaultSeed = () => String(Date.now());
 
 const initialWorldSettings = {
   drawMode: PLANET_DRAW_MODE.VORONOI,
@@ -28,7 +26,6 @@ const initialWorldSettings = {
   numPlates: PLANET_TECHTONIC_PLATES_DEFAULT,
   viewMode: PLANET_VIEW_MODE_DEFAULT, // Default from old planetSettings
   elevationBias: PLANET_ELEVATION_BIAS_DEFAULT,
-  currentSeed: generateDefaultSeed(), // Use a timestamp-based seed by default
 };
 
 export const useWorldStore = create((set, get) => ({
@@ -91,16 +88,12 @@ export const useWorldStore = create((set, get) => ({
     console.log('setElevationBias - passing settings to triggerPlanetColorUpdate');
     triggerPlanetColorUpdate(settings);
   },
-  setCurrentSeed: (currentSeed) => {
-    set({ currentSeed });
-    // Regeneration with new seed is typically explicit via a button
-  },
-  regenerateWorldWithCurrentSettings: (seed) => {
-    // If seed is provided, it overrides currentSeed for this regeneration only
-    // The store's currentSeed is updated via setCurrentSeed if a specific seed input is used
+  regenerateWorldWithCurrentSettings: () => {
+    // Get seed from gameStore instead of local state
+    const seed = useGameStore.getState().seed;
     const settings = get();
-    console.log('regenerateWorldWithCurrentSettings - Regenerating world with seed:', seed || settings.currentSeed, 'and settings:', settings);
-    requestPlanetRegeneration(seed || settings.currentSeed, settings);
+    console.log('regenerateWorldWithCurrentSettings - Regenerating world with seed:', seed, 'and settings:', settings);
+    requestPlanetRegeneration(seed, settings);
     triggerPlanetColorUpdate(settings); // Often needed after regeneration
   },
 

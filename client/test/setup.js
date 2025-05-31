@@ -25,6 +25,14 @@ vi.mock('three', () => ({
   Mesh: vi.fn(),
   BoxGeometry: vi.fn(),
   MeshBasicMaterial: vi.fn(),
+  Clock: vi.fn(() => ({
+    getDelta: vi.fn(() => 0.016),
+    getElapsedTime: vi.fn(() => 1.0),
+  })),
+  MathUtils: {
+    radToDeg: vi.fn((rad) => rad * 180 / Math.PI),
+    degToRad: vi.fn((deg) => deg * Math.PI / 180),
+  },
 }))
 
 // Mock socket.io-client

@@ -74,10 +74,10 @@ export function requestPlanetRegeneration(seed, worldSettings) {
       error('Cannot regenerate planet: core components not initialized.');
       return;
   }
-  debug(`Requesting planet regeneration with seed: ${seed === undefined ? 'Default/Last' : seed}`);
-
+  
   // Use settings if provided, otherwise keep existing planetSettings
   if (worldSettings) {
+    
       console.log('Syncing provided settings to planetSettings before regeneration');
       console.log('BEFORE UPDATE - planetSettings.numPoints:', planetSettings.numPoints);
       

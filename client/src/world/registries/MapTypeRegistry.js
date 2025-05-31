@@ -1,5 +1,5 @@
 import MapType from '@game/world/model/MapType';
-import { Terrains } from './TerrainRegistry.js';
+import { Terrains } from '@game/planet/terrain/index.js';
 
 const TerrainType = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
 

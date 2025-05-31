@@ -1,14 +1,14 @@
-// All radius values are now in kilometers (1 unit = 1 km)
-// Planet generation, display, color updates, and rotation logic 
-import * as THREE from 'three';
-import { debug, error } from '@utils/debug.js';
-import { PLANET_GLOW_RADIUS_FACTOR, PLANET_GLOW_COLOR, PLANET_GLOW_OPACITY } from '@config'; // Adjusted path
+import { debug } from '@utils/debug.js';
 import { planetSettings } from '@game/world/planetVoronoi.js'; 
 import { generateWorld } from '@game/world/worldGenerator.js';
-import { Terrains, getColorForTerrain } from '@game/world/registries/TerrainRegistry.js';
-import { getColorForTemperature } from '@game/world/registries/TemperatureRegistry.js';
-import { getColorForMoisture } from '@game/world/registries/MoistureRegistry.js';
+import { getColorForTerrain } from '@game/planet/terrain/index.js';
 import { clearTrees } from '@game/planet/tree';
+import { createHemosphere, removeHemosphere } from './hemosphere';
+import { addPolarIndicators } from './polarIndicator';
+import { applyElevationColors } from './elevation';
+import { applyMoistureColors } from './moisture';
+import { applyTemperatureColors } from './temperature';
+import { applyPlateColors } from './techtonics';
 
 let planetGroup;
 let worldData;
@@ -16,30 +16,13 @@ let worldData;
 export const getPlanetGroup = () => planetGroup;
 export const getWorldData = () => worldData;
 
-// This function is now internal and used by generateAndDisplayPlanet
-// It might be better to move its logic into generateAndDisplayPlanet or make it static helper
-function addPlanetaryGlow(_scene, radius) {
-  const glowGeometry = new THREE.SphereGeometry(radius * PLANET_GLOW_RADIUS_FACTOR, 64, 32);
-  const glowMaterial = new THREE.MeshBasicMaterial({ color: PLANET_GLOW_COLOR, transparent: true, opacity: PLANET_GLOW_OPACITY, side: THREE.BackSide });
-  const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
-  glowMesh.userData.isGlow = true;
-  _scene.add(glowMesh);
-}
-
 export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _existingPlanetGroup, _existingSelectedHighlight) {
   let currentWorldConfig = { ..._worldConfig };
   
   try {
-
-    
     if (_existingPlanetGroup) {
-      _scene.remove(_existingPlanetGroup);
-      
-      // Dispose of tree components if they exist
-      if (_existingPlanetGroup.userData.treeData || _existingPlanetGroup.userData.optimizedTreeData) {
-        clearTrees(_scene);
-        console.log('[Planet] Cleaned up tree system');
-      }
+      _scene.remove(_existingPlanetGroup);      
+      clearTrees(_scene);
       
       _existingPlanetGroup.traverse(obj => {
         if (obj.geometry) obj.geometry.dispose();
@@ -50,92 +33,37 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
       });
     }
 
-    const oldGlowMesh = _scene.children.find(child => child.userData && child.userData.isGlow);
-    if (oldGlowMesh) {
-        _scene.remove(oldGlowMesh);
-        if(oldGlowMesh.geometry) oldGlowMesh.geometry.dispose();
-        if(oldGlowMesh.material) oldGlowMesh.material.dispose();
-    }
+    removeHemosphere(_scene);
 
-    // Update worldConfig with current planetSettings - this is critical!
     currentWorldConfig.planetSettings = { ...planetSettings };   
     
     worldData = generateWorld(currentWorldConfig);
     
     if (worldData && worldData.meshGroup) {
       planetGroup = worldData.meshGroup;
-      planetGroup.rotation.y = 0; 
-      planetGroup.userData = {
-        ...planetGroup.userData,
-        angularVelocity: new THREE.Vector3(0, 0, 0),
-        targetAngularVelocity: new THREE.Vector3(0, 0, 0),
-        isBeingDragged: false
-      };
 
-      const poleMarkerHeight = currentWorldConfig.radius * 0.20;
-      const poleMarkerRadius = currentWorldConfig.radius * 0.03;
-      const poleOffset = currentWorldConfig.radius * 0.02;   
-      const poleGeometry = new THREE.CylinderGeometry(poleMarkerRadius, poleMarkerRadius, poleMarkerHeight, 8);
-      
-      const northPoleMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-      const northPoleMarker = new THREE.Mesh(poleGeometry, northPoleMaterial);
-      northPoleMarker.position.y = currentWorldConfig.radius + poleOffset + (poleMarkerHeight / 2);
-      planetGroup.add(northPoleMarker);
-
-      const southPoleMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-      const southPoleMarker = new THREE.Mesh(poleGeometry, southPoleMaterial); 
-      southPoleMarker.position.y = -(currentWorldConfig.radius + poleOffset + (poleMarkerHeight / 2));
-      planetGroup.add(southPoleMarker);
+      addPolarIndicators(planetGroup);
 
       _scene.add(planetGroup);
-    } else {
-      error('Failed to generate planet mesh group. worldData:', worldData);
-      const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 6400;
-      const fallbackGeometry = new THREE.SphereGeometry(fallbackRadius, 32, 32);
-      const fallbackMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-      planetGroup = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
-      planetGroup.rotation.y = 0; 
-      planetGroup.userData = { 
-        angularVelocity: new THREE.Vector3(0, 0, 0),
-        targetAngularVelocity: new THREE.Vector3(0, 0, 0),
-        isBeingDragged: false
-      };
-      _scene.add(planetGroup);
-      worldData = null; 
     }
 
     if (worldData && worldData.cells) {
         debug('Simplified world data log:', {cellCount: worldData.cells.length, config: worldData.config});
     }
     
-    addPlanetaryGlow(_scene, currentWorldConfig.radius);
+    createHemosphere(_scene);
     updatePlanetColors(); 
 
     return { planetGroup, planet: worldData?.planet };
 
   } catch (err) {
     console.error('Caught error in generateAndDisplayPlanet. Original error object:', err);
-    if (err && err.message) error('Error in generateAndDisplayPlanet (message): ', err.message);
-    if (err && err.stack) console.error('Error stack trace:', err.stack);
-    error('Error in generateAndDisplayPlanet: Processing fallback.'); 
-
-    if (_existingPlanetGroup) _scene.remove(_existingPlanetGroup);
-    const fallbackRadius = currentWorldConfig?.radius || _worldConfig?.radius || 6400;
-    const fallbackGeometry = new THREE.SphereGeometry(fallbackRadius, 32, 32);
-    const fallbackMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-    planetGroup = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
-    planetGroup.rotation.y = 0; 
-    planetGroup.userData = { 
-        angularVelocity: new THREE.Vector3(0, 0, 0),
-        targetAngularVelocity: new THREE.Vector3(0, 0, 0),
-        isBeingDragged: false
-    };
-    _scene.add(planetGroup);
-    worldData = null; 
-    return { planetGroup, worldData: null };
   }
 }
 
+function hexToRgbArray(hex) {
+  return [ ((hex>>16)&255)/255, ((hex>>8)&255)/255, (hex&255)/255 ];
+}
 
 export function updatePlanetColors() {
   if(!planetGroup) return;
@@ -150,69 +78,29 @@ export function updatePlanetColors() {
   }
 
   const tileTerrain = mainMesh.userData.tileTerrain || {};
-  const tilePlate = mainMesh.userData.tilePlate || {};
-  const plateColors = mainMesh.userData.plateColors || {};
 
-  function hexToRgbArr(hex){
-    return [ ((hex>>16)&255)/255, ((hex>>8)&255)/255, (hex&255)/255 ];
+  if(planetSettings.viewMode === 'plates') {
+    applyPlateColors(mainMesh, colorsAttr, tileIds);
+  } else if(planetSettings.viewMode === 'elevation') {
+    applyElevationColors(mainMesh, colorsAttr, tileIds);
+  } else if(planetSettings.viewMode === 'moisture') {
+    applyMoistureColors(mainMesh, colorsAttr, tileIds);
+  } else if (planetSettings.viewMode === 'temperature') {
+    applyTemperatureColors(mainMesh, colorsAttr, tileIds, worldData);
+  } else { 
+    // Default terrain view
+    for(let i = 0; i < tileIds.count; i++) {
+      const tileId = tileIds.array[i];
+      const terrain = tileTerrain[tileId];
+      const elevation = mainMesh.userData.tileElevation ? mainMesh.userData.tileElevation[tileId] : 0;
+      const terrainColorHex = getColorForTerrain(terrain, elevation);
+      const rgb = hexToRgbArray(terrainColorHex);
+      
+      colorsAttr.array[i * 3] = rgb[0];
+      colorsAttr.array[i * 3 + 1] = rgb[1];
+      colorsAttr.array[i * 3 + 2] = rgb[2];
+    }
   }
-
   
-  function elevationRGB(val){
-    const elev = val + planetSettings.elevationBias;
-    const oceanHex = [
-      0x0a0033, 0x0b003a, 0x0c0040, 0x0d0047, 0x0e004d, 0x0f0054, 0x10005a, 0x110061, 0x120067, 0x13006e,
-      0x140074, 0x15007b, 0x160081, 0x170088, 0x18008e, 0x190095, 0x1a009b, 0x1b00a2, 0x1c00a8, 0x1d00af
-    ];
-    const landHex = [
-      0xfff9e5, 0xfff3cc, 0xffecb2, 0xffe699, 0xffe080, 0xffb366, 0xff804d, 0xff4d33, 0xff1a1a, 0xf21616,
-      0xe61212, 0xd90e0e, 0xcc0a0a, 0xbf0606, 0xb20202, 0xa60000, 0x990000, 0x7a0000, 0x5c0000, 0x3d0000
-    ];
-    if (elev < 0) {
-      const idx = Math.max(0, Math.min(19, Math.floor((elev + 1) / (1 / 20))));
-      const h = oceanHex[idx];
-      return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
-    } else {
-      const idx = Math.max(0, Math.min(19, Math.floor(elev / (1 / 20))));
-      const h = landHex[idx];
-      return [((h>>16)&255)/255,((h>>8)&255)/255,(h&255)/255];
-    }
-  }
-
-  const tempColor = new THREE.Color();
-
-  for(let i=0;i<tileIds.count;i++){
-    const tId = tileIds.array[i];
-    let rgb;
-    if(planetSettings.viewMode==='plates'){
-       const pid = tilePlate[tId];
-       const hex = plateColors[pid] || 0xffffff;
-       rgb = hexToRgbArr(hex);
-    } else if(planetSettings.viewMode==='elevation'){
-       const elev = mainMesh.userData.tileElevation ? mainMesh.userData.tileElevation[tId] : 0;
-       rgb = elevationRGB(elev);
-    } else if(planetSettings.viewMode==='moisture'){
-       const moist = mainMesh.userData.tileMoisture ? mainMesh.userData.tileMoisture[tId] : 0;
-       tempColor.setHex(getColorForMoisture(moist));
-       rgb = [tempColor.r, tempColor.g, tempColor.b];
-    } else if (planetSettings.viewMode === 'temperature') {
-        // Assuming worldData and worldData.planet are accessible here, or tile data is on mainMesh.userData
-        const tileData = worldData?.planet?.getTile(tId); // Example: find cell by ID
-        if (tileData && tileData.temperature !== undefined) { // Adjust based on actual data structure
-            tempColor.setHex(getColorForTemperature(tileData.temperature));
-            rgb = [tempColor.r, tempColor.g, tempColor.b];
-        } else {
-            rgb = [0.5, 0.5, 0.5]; 
-        }
-    } else { 
-       const terr = tileTerrain[tId];
-       const elevation = mainMesh.userData.tileElevation ? mainMesh.userData.tileElevation[tId] : 0;
-       const terrainColorHex = getColorForTerrain(terr, elevation);
-       rgb = hexToRgbArr(terrainColorHex);
-    }
-    colorsAttr.array[i*3] = rgb[0];
-    colorsAttr.array[i*3+1] = rgb[1];
-    colorsAttr.array[i*3+2] = rgb[2];
-  }
   colorsAttr.needsUpdate = true;
 } 

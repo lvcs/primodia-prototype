@@ -1,106 +1,68 @@
 import * as THREE from 'three';
-import Plate from './model/Plate.js';
+import Plate from './Plate.js';
 import RandomService from '@game/core/RandomService.js';
-
-// --- Tectonic Plate Generation Constants ---
-
-// Percentage chance for a new plate to be oceanic (0.0 to 1.0).
-const OCEANIC_PLATE_CHANCE = 0.7;
-// Min/max base elevation for oceanic plates.
-const OCEANIC_BASE_ELEVATION_MIN = -0.9;
-const OCEANIC_BASE_ELEVATION_MAX = -0.5;
-// Min/max base elevation for continental plates.
-const CONTINENTAL_BASE_ELEVATION_MIN = 0.1;
-const CONTINENTAL_BASE_ELEVATION_MAX = 0.5;
-
-// --- Elevation Calculation Constants (Inspired by Red Blob Games) ---
-
-// Defines how strongly plates must converge to form major features like mountains or deep trenches.
-// Negative values indicate convergence. Article used -0.75; current value is less extreme.
-const STRONG_CONVERGENCE_THRESHOLD = -0.4;
-// Target elevation for major mountain ranges resulting from plate collisions.
-const MOUNTAIN_ELEVATION = 1.0;
-// Target elevation for coastlines on the edge of land plates (e.g., beaches).
-const COASTLINE_LOWER_ELEVATION = 0.0;
-// Target elevation for coastlines on the edge of ocean plates (e.g., continental shelves, shallow ridges).
-const COASTLINE_HIGHER_ELEVATION = -0.15;
-// Target elevation for mid-ocean ridges formed by strong oceanic-oceanic plate convergence.
-const OCEAN_RIDGE_ELEVATION = -0.1;
-// Offset subtracted from an oceanic plate's base elevation to form deep ocean trenches.
-const DEEP_OCEAN_TRENCH_OFFSET = -0.45;
-// Default elevation for typical ocean floor when oceanic plates are not strongly converging.
-const DEFAULT_OCEAN_FLOOR = -0.75;
-
-// --- Elevation Priority Constants ---
-// Used to determine which geological feature's elevation "wins" when multiple interactions affect a tile.
-// Higher numbers indicate higher priority.
-const PRIORITY_BASE = 0;                 // Base elevation of the plate.
-const PRIORITY_OCEAN_FLOOR = 1;          // Standard ocean floor.
-const PRIORITY_COAST_RIDGE_TRENCH = 2;   // Coastlines, oceanic ridges, or trenches.
-const PRIORITY_MOUNTAIN = 3;             // Major mountain ranges.
-
-// --- Elevation Smoothing Constants ---
-// Number of passes for the elevation smoothing algorithm.
-const ELEVATION_SMOOTHING_PASSES = 2;
-// Blending factor for original elevation during smoothing (0.0 to 1.0). Higher retains more original features.
-const ELEVATION_SMOOTHING_ORIGINAL_WEIGHT = 0.6;
-// Blending factor for averaged elevation during smoothing (0.0 to 1.0).
-const ELEVATION_SMOOTHING_AVERAGED_WEIGHT = 0.4;
-
-// --- Noise Generation Constants ---
-// Multipliers for the sine function in noise3 to create chaotic patterns.
-const NOISE3_X_MULTIPLIER = 12.9898;
-const NOISE3_Y_MULTIPLIER = 78.233;
-const NOISE3_Z_MULTIPLIER = 37.719;
-
-// Default number of octaves for Fractional Brownian Motion (fBm) noise.
-const FBM_DEFAULT_OCTAVES = 4;
-// Initial amplitude for the first octave of fBm noise.
-const FBM_INITIAL_AMPLITUDE = 0.5;
-// Persistence factor for fBm noise; controls how much detail is added with each octave.
-// Typically between 0 and 1. Higher values mean rougher noise.
-const FBM_PERSISTENCE = 0.5;
-// Initial frequency for the first octave of fBm noise.
-const FBM_INITIAL_FREQUENCY = 1;
-
-// --- Moisture Generation Constants ---
-// Range for base moisture assigned to each tectonic plate.
-const PLATE_MOISTURE_BASE_MIN = 0.2;
-const PLATE_MOISTURE_BASE_MAX = 0.8; // Max = PLATE_MOISTURE_BASE_MIN + 0.6 (from original code)
-// Multipliers for noise3 to generate moisture variation within a plate.
-const MOISTURE_NOISE_X_MULTIPLIER = 23.4;
-const MOISTURE_NOISE_Y_MULTIPLIER = 17.8;
-const MOISTURE_NOISE_Z_MULTIPLIER = 11.2;
-// Amplitude of the moisture noise effect (scaled by this value).
-const MOISTURE_NOISE_AMPLITUDE = 0.05;
-// Offset for the moisture noise (centers the noise effect around 0; e.g. if amplitude is 0.4, noise ranges from -0.2 to 0.2).
-const MOISTURE_NOISE_OFFSET = MOISTURE_NOISE_AMPLITUDE / 2;
-
-// Default moisture value for tiles that somehow end up unassigned to a plate.
-const DEFAULT_TILE_MOISTURE = 0.5;
-
+import {
+  TECHTONICS_PLATE_OCEANIC_CHANCE,
+  TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN,
+  TECHTONICS_PLATE_OCEANIC_ELEVATION_MAX,
+  TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MIN,
+  TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MAX,
+  TECHTONICS_CONVERGENCE_STRONG_THRESHOLD,
+  TECHTONICS_ELEVATION_MOUNTAIN,
+  TECHTONICS_ELEVATION_COASTLINE_LOWER,
+  TECHTONICS_ELEVATION_COASTLINE_HIGHER,
+  TECHTONICS_ELEVATION_OCEAN_RIDGE,
+  TECHTONICS_ELEVATION_DEEP_OCEAN_TRENCH_OFFSET,
+  TECHTONICS_ELEVATION_DEFAULT_OCEAN_FLOOR,
+  TECHTONICS_PRIORITY_BASE,
+  TECHTONICS_PRIORITY_OCEAN_FLOOR,
+  TECHTONICS_PRIORITY_COAST_RIDGE_TRENCH,
+  TECHTONICS_PRIORITY_MOUNTAIN,
+  TECHTONICS_SMOOTHING_PASSES,
+  TECHTONICS_SMOOTHING_ORIGINAL_WEIGHT,
+  TECHTONICS_SMOOTHING_AVERAGED_WEIGHT,
+  TECHTONICS_NOISE3_X_MULTIPLIER,
+  TECHTONICS_NOISE3_Y_MULTIPLIER,
+  TECHTONICS_NOISE3_Z_MULTIPLIER,
+  TECHTONICS_FBM_DEFAULT_OCTAVES,
+  TECHTONICS_FBM_INITIAL_AMPLITUDE,
+  TECHTONICS_FBM_PERSISTENCE,
+  TECHTONICS_FBM_INITIAL_FREQUENCY,
+  TECHTONICS_MOISTURE_PLATE_BASE_MIN,
+  TECHTONICS_MOISTURE_PLATE_BASE_MAX,
+  TECHTONICS_MOISTURE_NOISE_X_MULTIPLIER,
+  TECHTONICS_MOISTURE_NOISE_Y_MULTIPLIER,
+  TECHTONICS_MOISTURE_NOISE_Z_MULTIPLIER,
+  TECHTONICS_MOISTURE_NOISE_AMPLITUDE,
+  TECHTONICS_MOISTURE_DEFAULT_TILE,
+  TECHTONICS_SEA_LEVEL,
+  TECHTONICS_MOISTURE_EQUATOR_MAX,
+  TECHTONICS_MOISTURE_30_DEG_MIN,
+  TECHTONICS_MOISTURE_60_DEG_MID,
+  TECHTONICS_MOISTURE_LATITUDE_WEIGHT,
+  TECHTONICS_MOISTURE_PLATE_WEIGHT
+} from './techtonicsConfig.js';
 
 // Utility hash-based pseudo-noise (simple and fast)
 // Generates a deterministic pseudo-random value between 0 and 1 based on 3D input coordinates.
 // Uses sine function with arbitrary multipliers for chaotic behavior.
 function noise3(x, y, z) {
-  const s = Math.sin(x * NOISE3_X_MULTIPLIER + y * NOISE3_Y_MULTIPLIER + z * NOISE3_Z_MULTIPLIER);
+  const s = Math.sin(x * TECHTONICS_NOISE3_X_MULTIPLIER + y * TECHTONICS_NOISE3_Y_MULTIPLIER + z * TECHTONICS_NOISE3_Z_MULTIPLIER);
   return s - Math.floor(s); // Returns a value between 0 and 1
 }
 
 // Fractional Brownian Motion (fBm) noise for more natural-looking terrain variations
 // Combines multiple "octaves" of the basic noise3 function at different frequencies and amplitudes
 // to create more complex and natural-looking patterns.
-function fbmNoise(vec, octaves = FBM_DEFAULT_OCTAVES) {
+function fbmNoise(vec, octaves = TECHTONICS_FBM_DEFAULT_OCTAVES) {
   let total = 0;
-  let frequency = FBM_INITIAL_FREQUENCY;
-  let amplitude = FBM_INITIAL_AMPLITUDE;
-  // const persistence = FBM_PERSISTENCE; // Renamed from FBM_PERSISTENCE to avoid conflict with the loop var
+  let frequency = TECHTONICS_FBM_INITIAL_FREQUENCY;
+  let amplitude = TECHTONICS_FBM_INITIAL_AMPLITUDE;
 
   for (let i = 0; i < octaves; i++) {
     total += noise3(vec.x * frequency, vec.y * frequency, vec.z * frequency) * amplitude;
     frequency *= 2; // Double frequency for finer detail
-    amplitude *= FBM_PERSISTENCE; // Reduce amplitude for finer detail
+    amplitude *= TECHTONICS_FBM_PERSISTENCE; // Reduce amplitude for finer detail
   }
   return total; // Typically 0 to ~1, sum of amplitudes
 }
@@ -108,7 +70,7 @@ function fbmNoise(vec, octaves = FBM_DEFAULT_OCTAVES) {
 /**
  * Generates tectonic plates, assigns tiles to them, and calculates tile elevations
  * based on plate interactions and noise, following principles from Red Blob Games.
- * @param {import('./model/WorldPlanet.js').default} planet The world planet object containing tiles.
+ * @param {import('@game/world/model/WorldPlanet.js').default} planet The world planet object containing tiles.
  * @param {number} numPlates The desired number of tectonic plates.
  * @returns {{plates: Plate[], tilePlate: Object}} An object containing the list of plates and a map of tile IDs to plate IDs.
  */
@@ -139,8 +101,8 @@ export function generatePlates(planet, numPlates = 16) {
         return new Plate({
             id: idx, seedTileId: seedId, center: [0,0,0], 
             motion: [fallbackMotion.x, fallbackMotion.y, fallbackMotion.z],
-            isOceanic: RandomService.nextFloat() < OCEANIC_PLATE_CHANCE,
-            baseElevation: OCEANIC_BASE_ELEVATION_MIN 
+            isOceanic: RandomService.nextFloat() < TECHTONICS_PLATE_OCEANIC_CHANCE,
+            baseElevation: TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN 
         });
     }
     const center = seedTile.center;
@@ -149,10 +111,10 @@ export function generatePlates(planet, numPlates = 16) {
     const motion = new THREE.Vector3().fromArray(center).cross(randomVec).normalize(); // Cross product ensures perpendicular motion vector
 
     // Determine if the plate is oceanic or continental and assign a base elevation.
-    const isOceanic = RandomService.nextFloat() < OCEANIC_PLATE_CHANCE;
+    const isOceanic = RandomService.nextFloat() < TECHTONICS_PLATE_OCEANIC_CHANCE;
     const baseElevation = isOceanic
-      ? (RandomService.nextFloat() * (OCEANIC_BASE_ELEVATION_MAX - OCEANIC_BASE_ELEVATION_MIN) + OCEANIC_BASE_ELEVATION_MIN)
-      : (RandomService.nextFloat() * (CONTINENTAL_BASE_ELEVATION_MAX - CONTINENTAL_BASE_ELEVATION_MIN) + CONTINENTAL_BASE_ELEVATION_MIN);
+      ? (RandomService.nextFloat() * (TECHTONICS_PLATE_OCEANIC_ELEVATION_MAX - TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN) + TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN)
+      : (RandomService.nextFloat() * (TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MAX - TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MIN) + TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MIN);
 
     return new Plate({
       id: idx,
@@ -222,7 +184,6 @@ export function generatePlates(planet, numPlates = 16) {
     if (tile.plate === undefined) {
         // This might happen if some tiles are disconnected from all seed points.
         // Assign to a default plate or handle as an error. For now, assign to plate 0 if it exists.
-        // console.warn(`Tile ${tile.id} was not assigned to any plate. Assigning to plate 0 or leaving undefined.`);
         if (plates.length > 0) tile.plate = 0;
     }
   });
@@ -246,38 +207,17 @@ export function generatePlates(planet, numPlates = 16) {
     }
   });
 
-
   // 4. Assign Tile Elevations based on Plate Interactions and Noise
-  // This section iterates through each tile and determines its elevation.
-  // For boundary tiles, elevation is based on the interaction between its plate and neighboring plates.
-  // For interior tiles, elevation is based on the plate's base elevation.
-  // Constants for elevation effects, inspired by Red Blob Games' article's logic.
-  // These values define the "target" elevation for different geological features.
-  // const STRONG_CONVERGENCE_THRESHOLD = -0.4; // How much plates must push together for major features. (Article used -0.75, this is less extreme)
-  // const MOUNTAIN_ELEVATION = 0.7;            // Elevation for major mountain ranges.
-  // const COASTLINE_LOWER_ELEVATION = 0.0;     // Elevation for coastlines on the edge of land plates (e.g. beaches).
-  // const COASTLINE_HIGHER_ELEVATION = -0.15;   // Elevation for coastlines on edge of ocean plates (e.g. continental shelf / shallow ridges).
-  // const OCEAN_RIDGE_ELEVATION = -0.1;        // Elevation for mid-ocean ridges (O+O strong convergence).
-  // const DEEP_OCEAN_TRENCH_OFFSET = -0.3;     // Added to ocean plate base for trenches.
-  // const DEFAULT_OCEAN_FLOOR = -0.4;          // Typical ocean floor depth for O+O non-strong convergence.
-
-  // Elevation priorities: Higher number means this feature "wins" over lower priority ones.
-  // const PRIORITY_BASE = 0;
-  // const PRIORITY_OCEAN_FLOOR = 1;
-  // const PRIORITY_COAST_RIDGE_TRENCH = 2;
-  // const PRIORITY_MOUNTAIN = 3;
-
   planet.tiles.forEach(tile => {
     const currentPlate = plates[tile.plate];
     if (!currentPlate) {
       // Should be handled by the assignment logic above, but as a fallback:
       tile.elevation = 0;
-      // console.warn(`Tile ${tile.id} has no plate assigned during elevation calculation.`);
       return;
     }
 
     let finalElevation = currentPlate.baseElevation;
-    let maxPriority = PRIORITY_BASE;
+    let maxPriority = TECHTONICS_PRIORITY_BASE;
     let isBoundaryTile = false;
     const tileCenterVec = vec3From(tile.center);
 
@@ -298,43 +238,43 @@ export function generatePlates(planet, numPlates = 16) {
       const relativeMotion = plate1Motion.clone().sub(plate2Motion);
       const convergenceScore = relativeMotion.dot(boundaryNormal);
 
-      const isStrongConvergence = convergenceScore < STRONG_CONVERGENCE_THRESHOLD;
+      const isStrongConvergence = convergenceScore < TECHTONICS_CONVERGENCE_STRONG_THRESHOLD;
       const cpIsOceanic = currentPlate.isOceanic;
       const npIsOceanic = neighborPlate.isOceanic;
 
       let candidateElevation = currentPlate.baseElevation;
-      let candidatePriority = PRIORITY_BASE;
+      let candidatePriority = TECHTONICS_PRIORITY_BASE;
 
       // Determine elevation based on Red Blob Games' simplified rules:
       if (!cpIsOceanic && !npIsOceanic) { // Land + Land
         if (isStrongConvergence) {
-          candidateElevation = MOUNTAIN_ELEVATION;
-          candidatePriority = PRIORITY_MOUNTAIN;
+          candidateElevation = TECHTONICS_ELEVATION_MOUNTAIN;
+          candidatePriority = TECHTONICS_PRIORITY_MOUNTAIN;
         }
         // Else: "do nothing" (tile keeps its plate's baseElevation), priority remains PRIORITY_BASE.
       } else if (!cpIsOceanic && npIsOceanic) { // Current: Land, Neighbor: Ocean
         if (isStrongConvergence) { // Land over Ocean -> Coastal Mountains on land side
-          candidateElevation = MOUNTAIN_ELEVATION;
-          candidatePriority = PRIORITY_MOUNTAIN;
+          candidateElevation = TECHTONICS_ELEVATION_MOUNTAIN;
+          candidatePriority = TECHTONICS_PRIORITY_MOUNTAIN;
         } else { // "Coastline"
-          candidateElevation = COASTLINE_LOWER_ELEVATION;
-          candidatePriority = PRIORITY_COAST_RIDGE_TRENCH;
+          candidateElevation = TECHTONICS_ELEVATION_COASTLINE_LOWER;
+          candidatePriority = TECHTONICS_PRIORITY_COAST_RIDGE_TRENCH;
         }
       } else if (cpIsOceanic && !npIsOceanic) { // Current: Ocean, Neighbor: Land
         if (isStrongConvergence) { // Ocean under Land -> Trench on ocean side
-          candidateElevation = currentPlate.baseElevation + DEEP_OCEAN_TRENCH_OFFSET;
-          candidatePriority = PRIORITY_COAST_RIDGE_TRENCH;
+          candidateElevation = currentPlate.baseElevation + TECHTONICS_ELEVATION_DEEP_OCEAN_TRENCH_OFFSET;
+          candidatePriority = TECHTONICS_PRIORITY_COAST_RIDGE_TRENCH;
         } else { // "Coastline"
-          candidateElevation = COASTLINE_HIGHER_ELEVATION;
-          candidatePriority = PRIORITY_COAST_RIDGE_TRENCH;
+          candidateElevation = TECHTONICS_ELEVATION_COASTLINE_HIGHER;
+          candidatePriority = TECHTONICS_PRIORITY_COAST_RIDGE_TRENCH;
         }
       } else { // Ocean + Ocean
         if (isStrongConvergence) { // Oceanic Ridge / Islands
-          candidateElevation = OCEAN_RIDGE_ELEVATION;
-          candidatePriority = PRIORITY_COAST_RIDGE_TRENCH;
+          candidateElevation = TECHTONICS_ELEVATION_OCEAN_RIDGE;
+          candidatePriority = TECHTONICS_PRIORITY_COAST_RIDGE_TRENCH;
         } else { // "Ocean" floor
-          candidateElevation = DEFAULT_OCEAN_FLOOR;
-          candidatePriority = PRIORITY_OCEAN_FLOOR;
+          candidateElevation = TECHTONICS_ELEVATION_DEFAULT_OCEAN_FLOOR;
+          candidatePriority = TECHTONICS_PRIORITY_OCEAN_FLOOR;
         }
       }
 
@@ -343,7 +283,7 @@ export function generatePlates(planet, numPlates = 16) {
       if (candidatePriority > maxPriority) {
         maxPriority = candidatePriority;
         finalElevation = candidateElevation;
-      } else if (candidatePriority === maxPriority && candidatePriority > PRIORITY_BASE) {
+      } else if (candidatePriority === maxPriority && candidatePriority > TECHTONICS_PRIORITY_BASE) {
         // For ties in priority (e.g. two mountain-forming interactions), pick the higher elevation.
         // For coast/ridge/trench ties, also pick higher (favors ridges over trenches if priorities accidentally match).
         finalElevation = Math.max(finalElevation, candidateElevation);
@@ -362,10 +302,7 @@ export function generatePlates(planet, numPlates = 16) {
   }); // End tiles loop
 
   // 5. Smooth Elevations: Apply a few passes of simple averaging with neighbors.
-  // This helps blend harsh transitions between different elevation zones (e.g., mountains and coasts)
-  // and creates more natural-looking slopes across the terrain.
-  // const smoothingPasses = 3;
-  for (let pass = 0; pass < ELEVATION_SMOOTHING_PASSES; pass++) {
+  for (let pass = 0; pass < TECHTONICS_SMOOTHING_PASSES; pass++) {
     const newElevations = new Map(); // Temporarily stores newly calculated elevations for this pass.
     planet.tiles.forEach(tile => {
       let elevationSum = tile.elevation;
@@ -383,32 +320,23 @@ export function generatePlates(planet, numPlates = 16) {
     // Blend current elevation with the new smoothed elevation to retain some features from before smoothing,
     // while also incorporating the averaged values for a smoother overall look.
     planet.tiles.forEach(tile => {
-      tile.elevation = (tile.elevation * ELEVATION_SMOOTHING_ORIGINAL_WEIGHT) + (newElevations.get(tile.id) * ELEVATION_SMOOTHING_AVERAGED_WEIGHT);
+      tile.elevation = (tile.elevation * TECHTONICS_SMOOTHING_ORIGINAL_WEIGHT) + (newElevations.get(tile.id) * TECHTONICS_SMOOTHING_AVERAGED_WEIGHT);
     });
   }
 
   // 6. Assign Moisture (Latitudinal gradient modulated by plate and with noise)
-  // Define moisture profile constants for latitude
-  const MOISTURE_EQUATOR_MAX = 0.9;  // Max moisture at the equator
-  const MOISTURE_30_DEG_MIN = 0.1;   // Min moisture at 30 degrees latitude
-  const MOISTURE_60_DEG_MID = 0.5;   // Medium moisture at 60 degrees latitude and towards poles
-
-  // Weights for combining latitudinal and plate-based moisture
-  const LATITUDE_MOISTURE_WEIGHT = 0.7;
-  const PLATE_MOISTURE_WEIGHT = 0.3;
-
   // Pre-calculate sine values for latitudes
   const SIN_30_DEG = Math.sin(30 * Math.PI / 180);
   const SIN_60_DEG = Math.sin(60 * Math.PI / 180);
 
   // Assign a base moisture influence to each plate
   const plateMoistureFactors = plates.map(() => 
-    RandomService.nextFloat() * (PLATE_MOISTURE_BASE_MAX - PLATE_MOISTURE_BASE_MIN) + PLATE_MOISTURE_BASE_MIN
+    RandomService.nextFloat() * (TECHTONICS_MOISTURE_PLATE_BASE_MAX - TECHTONICS_MOISTURE_PLATE_BASE_MIN) + TECHTONICS_MOISTURE_PLATE_BASE_MIN
   );
 
   planet.tiles.forEach(tile => {
     if (!tile.center || tile.center.length < 3) {
-        tile.moisture = DEFAULT_TILE_MOISTURE; 
+        tile.moisture = TECHTONICS_MOISTURE_DEFAULT_TILE; 
         return;
     }
 
@@ -417,29 +345,29 @@ export function generatePlates(planet, numPlates = 16) {
     let latitudinalBaseMoisture;
     if (absLatY <= SIN_30_DEG) { 
       const t = absLatY / SIN_30_DEG; 
-      latitudinalBaseMoisture = MOISTURE_EQUATOR_MAX - t * (MOISTURE_EQUATOR_MAX - MOISTURE_30_DEG_MIN);
+      latitudinalBaseMoisture = TECHTONICS_MOISTURE_EQUATOR_MAX - t * (TECHTONICS_MOISTURE_EQUATOR_MAX - TECHTONICS_MOISTURE_30_DEG_MIN);
     } else if (absLatY <= SIN_60_DEG) { 
       const t = (absLatY - SIN_30_DEG) / (SIN_60_DEG - SIN_30_DEG); 
-      latitudinalBaseMoisture = MOISTURE_30_DEG_MIN + t * (MOISTURE_60_DEG_MID - MOISTURE_30_DEG_MIN);
+      latitudinalBaseMoisture = TECHTONICS_MOISTURE_30_DEG_MIN + t * (TECHTONICS_MOISTURE_60_DEG_MID - TECHTONICS_MOISTURE_30_DEG_MIN);
     } else { 
-      latitudinalBaseMoisture = MOISTURE_60_DEG_MID;
+      latitudinalBaseMoisture = TECHTONICS_MOISTURE_60_DEG_MID;
     }
 
     // Get plate's moisture factor
-    let plateMoistureFactor = DEFAULT_TILE_MOISTURE; // Default if plate info is missing
+    let plateMoistureFactor = TECHTONICS_MOISTURE_DEFAULT_TILE; // Default if plate info is missing
     if (tile.plate !== undefined && plates[tile.plate] && plateMoistureFactors[tile.plate] !== undefined) {
         plateMoistureFactor = plateMoistureFactors[tile.plate];
     }
 
     // Combine latitudinal and plate moisture influences
-    const combinedBaseMoisture = (LATITUDE_MOISTURE_WEIGHT * latitudinalBaseMoisture) + 
-                               (PLATE_MOISTURE_WEIGHT * plateMoistureFactor);
+    const combinedBaseMoisture = (TECHTONICS_MOISTURE_LATITUDE_WEIGHT * latitudinalBaseMoisture) + 
+                               (TECHTONICS_MOISTURE_PLATE_WEIGHT * plateMoistureFactor);
 
     // Add local noise
-    const scaledNoise = noise3(tile.center[0] * MOISTURE_NOISE_X_MULTIPLIER, 
-                               tile.center[1] * MOISTURE_NOISE_Y_MULTIPLIER, 
-                               tile.center[2] * MOISTURE_NOISE_Z_MULTIPLIER);
-    const moistureNoiseVal = (scaledNoise - 0.5) * MOISTURE_NOISE_AMPLITUDE;
+    const scaledNoise = noise3(tile.center[0] * TECHTONICS_MOISTURE_NOISE_X_MULTIPLIER, 
+                               tile.center[1] * TECHTONICS_MOISTURE_NOISE_Y_MULTIPLIER, 
+                               tile.center[2] * TECHTONICS_MOISTURE_NOISE_Z_MULTIPLIER);
+    const moistureNoiseVal = (scaledNoise - 0.5) * TECHTONICS_MOISTURE_NOISE_AMPLITUDE;
                                    
     tile.moisture = Math.max(0, Math.min(1, combinedBaseMoisture + moistureNoiseVal));
   });
@@ -470,11 +398,10 @@ export function generatePlates(planet, numPlates = 16) {
   });
 
   // 8. Identify Ocean-Connected Water Tiles (for Lake differentiation)
-  const SEA_LEVEL = -0.05; // Tiles below this might be ocean or coast
   const oceanSeedTiles = new Set();
   planet.tiles.forEach(tile => {
     tile.isOceanConnected = false; // Reset/initialize
-    if (tile.elevation < SEA_LEVEL) {
+    if (tile.elevation < TECHTONICS_SEA_LEVEL) {
       oceanSeedTiles.add(tile.id);
     }
   });
@@ -488,7 +415,7 @@ export function generatePlates(planet, numPlates = 16) {
         currentTile.isOceanConnected = true;
         currentTile.neighbors.forEach(neighborId => {
             const neighborTile = planet.getTile(neighborId);
-            if (neighborTile && neighborTile.elevation < SEA_LEVEL && !neighborTile.isOceanConnected && !oceanQueue.includes(neighborId)) {
+            if (neighborTile && neighborTile.elevation < TECHTONICS_SEA_LEVEL && !neighborTile.isOceanConnected && !oceanQueue.includes(neighborId)) {
                 if (!oceanSeedTiles.has(neighborId)) { 
                     oceanQueue.push(neighborId);
                     oceanSeedTiles.add(neighborId); 
