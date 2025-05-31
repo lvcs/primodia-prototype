@@ -88,7 +88,7 @@ export function requestPlanetRegeneration(seed, worldSettings) {
       planetSettings.algorithm = worldSettings.algorithm;
       planetSettings.numPoints = worldSettings.numPoints;
       planetSettings.jitter = worldSettings.jitter;
-      planetSettings.mapType = worldSettings.mapType;
+  
       planetSettings.outlineVisible = worldSettings.outlineVisible;
       planetSettings.numPlates = worldSettings.numPlates;
       planetSettings.viewMode = worldSettings.viewMode;

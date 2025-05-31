@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
-import { generateMapTerrain } from './registries/MapTypeRegistry.js';
+
 import { Terrains } from '@game/planet/terrain/index.js';
 import {
     PLANET_RADIUS,
@@ -10,7 +10,6 @@ import {
     PLANET_ELEVATION_BIAS_DEFAULT,
     PLANET_TECHTONIC_PLATES_DEFAULT,
     PLANET_VIEW_MODE_DEFAULT,
-    MAP_TYPE_DEFAULT,
 } from '@config'; // Import constants
 import RandomService from '@game/core/RandomService.js'; // Added import
 
@@ -184,21 +183,8 @@ function addSouthPoleTriangles(southPoleOriginalIndex, delaunatorInstance, origi
 
 // Function to determine terrain type based on vertex position
 function determineTerrainType(position, randomFloat) {
-    // Derive elevation and moisture for the map-specific algorithm
-    // const elevation = position.y; // Using y-coordinate of the normal as a proxy for elevation -- No longer needed here directly for the call
-    // const moisture = 0.5; // Placeholder for moisture - this might need a more sophisticated approach -- No longer needed here directly for the call
-
-    // Call the map-specific terrain generation function
-    // Pass the full 'position' vector and ensure 'randomFloat' is the third argument.
-    const mapBasedTerrain = generateMapTerrain(planetSettings.mapType, position, randomFloat);
-    
-    if (mapBasedTerrain) {
-        return mapBasedTerrain;
-    }
-    
-    // Fallback logic if mapBasedTerrain is not returned (or mapType doesn't have a specific generator)
-    const y = position.y; // Already have this as elevation
-    const noiseValue = Math.sin(position.x * 10) * Math.cos(position.z * 8) * 0.1; // Existing noise
+    const y = position.y; // Using y-coordinate as elevation
+    const noiseValue = Math.sin(position.x * 10) * Math.cos(position.z * 8) * 0.1; // Noise for variation
     
     if (y < -0.8) { // South pole
         return TerrainTypeIds.SNOW;
@@ -485,7 +471,6 @@ export const planetSettings = {
   algorithm: 1,
   numPoints: PLANET_TILES_DEFAULT,
   jitter: PLANET_JITTER_DEFAULT,
-  mapType: MAP_TYPE_DEFAULT,
   outlineVisible: true,
   numPlates: PLANET_TECHTONIC_PLATES_DEFAULT,
   viewMode: PLANET_VIEW_MODE_DEFAULT,

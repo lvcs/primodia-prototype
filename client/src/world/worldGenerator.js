@@ -28,7 +28,7 @@ export function generateWorld(config){
     planetSettings.algorithm = config.planetSettings.algorithm;
     planetSettings.numPoints = config.planetSettings.numPoints;
     planetSettings.jitter = config.planetSettings.jitter;
-    planetSettings.mapType = config.planetSettings.mapType;
+
     planetSettings.outlineVisible = config.planetSettings.outlineVisible;
     planetSettings.numPlates = config.planetSettings.numPlates;
     planetSettings.viewMode = config.planetSettings.viewMode;

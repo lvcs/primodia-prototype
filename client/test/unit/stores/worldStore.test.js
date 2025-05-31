@@ -76,17 +76,7 @@ describe('WorldStore', () => {
       );
     });
 
-    it('should update mapType and trigger regeneration', () => {
-      const { requestPlanetRegeneration } = require('@game/game');
-      
-      store.setMapType('pangaea');
-      
-      expect(store.mapType).toBe('pangaea');
-      expect(requestPlanetRegeneration).toHaveBeenCalledWith(
-        undefined,
-        expect.objectContaining({ mapType: 'pangaea' })
-      );
-    });
+
 
     it('should update numPlates and trigger regeneration', () => {
       const { requestPlanetRegeneration } = require('@game/game');
@@ -237,7 +227,6 @@ describe('WorldStore', () => {
         algorithm: store.algorithm,
         numPoints: 7500,
         jitter: store.jitter,
-        mapType: store.mapType,
         outlineVisible: store.outlineVisible,
         numPlates: store.numPlates,
         viewMode: store.viewMode,

@@ -22,10 +22,10 @@ import {
   PLANET_ELEVATION_BIAS_MAX,
   PLANET_ELEVATION_BIAS_STEP,
   PLANET_DRAW_MODE,
-  MAP_TYPES,
+
   PLANET_VIEW_MODES,
   PLANET_RENDERING_ALGORITHMS
-} from '@config/gameConfig';
+} from '@config';
 
 // TODO: Integrate MapRegistry for live data
 
@@ -42,7 +42,7 @@ function PlanetTab() {
     algorithm, setAlgorithm,
     numPoints, setNumPoints,
     jitter, setJitter,
-    mapType, setMapType,
+
     outlineVisible, setOutlineVisible,
     numPlates, setNumPlates,
     elevationBias, setElevationBias,
@@ -107,7 +107,7 @@ function PlanetTab() {
     <div>
       <ControlSectionWrapper label="Draw Mode">
         <div className="flex space-x-2">
-          {Object.entries(DrawMode).map(([key, value]) => (
+          {Object.entries(PLANET_DRAW_MODE).map(([key, value]) => (
             <Button
               key={value}
               onClick={() => setDrawMode(value)}
@@ -153,20 +153,7 @@ function PlanetTab() {
         />
       </ControlSectionWrapper>
 
-      <ControlSectionWrapper label="Map Type">
-        <Select value={mapType} onValueChange={setMapType}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select map type..." />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.values(MAP_TYPES).map((mapDetails) => (
-              <SelectItem key={mapDetails.id} value={mapDetails.id}>
-                {mapDetails.name} <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({mapDetails.description})</span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </ControlSectionWrapper>
+
 
       <ControlSectionWrapper className="flex items-center space-x-2">
         <Switch

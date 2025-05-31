@@ -6,7 +6,6 @@ import {
   PLANET_TECHTONIC_PLATES_DEFAULT,
   PLANET_ELEVATION_BIAS_DEFAULT,
   PLANET_DRAW_MODE,
-  MAP_TYPE_DEFAULT,
   PLANET_VIEW_MODE_DEFAULT
 } from '@config';
 
@@ -21,7 +20,6 @@ const initialWorldSettings = {
   algorithm: 1, // Default from old planetSettings
   numPoints: PLANET_TILES_DEFAULT,
   jitter: PLANET_JITTER_DEFAULT,
-  mapType: MAP_TYPE_DEFAULT,
   outlineVisible: true, // Default from old planetSettings
   numPlates: PLANET_TECHTONIC_PLATES_DEFAULT,
   viewMode: PLANET_VIEW_MODE_DEFAULT, // Default from old planetSettings
@@ -58,12 +56,7 @@ export const useWorldStore = create((set, get) => ({
     console.log('setJitter - passing settings to requestPlanetRegeneration');
     requestPlanetRegeneration(undefined, settings);
   },
-  setMapType: (mapType) => {
-    set({ mapType });
-    const settings = get();
-    console.log('setMapType - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(undefined, settings);
-  },
+
   setOutlineVisible: (outlineVisible) => {
     set({ outlineVisible });
     const settings = get();

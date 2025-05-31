@@ -1,7 +1,6 @@
 export * from '@game/camera/cameraConfig.js';
 export * from '@game/game/gameConfig.js';
 export * from '@game/keyboard/keyboardConfig.js';
-export * from '@game/map/mapConfig.js';
 export * from '@game/mouse/mouseConfig.js';
 export * from '@game/planet/planetConfig.js';
 export * from '@game/planet/techtonics/techtonicsConfig.js';
