@@ -1,1 +1,1 @@
-export const SCENE_BACKGROUND_COLOR = 0x0a0a2a; 
+export const SCENE_COSMOS_BACKGROUND_COLOR = 0x0a0a2a; 

@@ -4,43 +4,23 @@ import { create } from 'zustand';
 const initialState = {
   scene: null,
   renderer: null,
-  isSceneInitialized: false,
-  isRendererInitialized: false,
 };
 
 export const useSceneStore = create((set, get) => ({
-  ...initialState,
+  // State properties
+  scene: null,
+  renderer: null,
 
   // Actions to modify state
-  setScene: (scene) => set({ 
-    scene, 
-    isSceneInitialized: scene !== null 
-  }),
-
-  setRenderer: (renderer) => set({ 
-    renderer, 
-    isRendererInitialized: renderer !== null 
-  }),
+  setScene: (scene) => set({ scene }),
+  setRenderer: (renderer) => set({ renderer }),
 
   getScene: () => get().scene,
   getRenderer: () => get().renderer,
 
-  // Check if both scene and renderer are ready
-  isReady: () => {
-    const state = get();
-    return state.isSceneInitialized && state.isRendererInitialized;
-  },
-
   // Clear scene and renderer references
-  clearScene: () => set({ 
-    scene: null, 
-    isSceneInitialized: false 
-  }),
-
-  clearRenderer: () => set({ 
-    renderer: null, 
-    isRendererInitialized: false 
-  }),
+  clearScene: () => set({ scene: null }),
+  clearRenderer: () => set({ renderer: null }),
 
   // Reset to initial state
   resetSceneState: () => set(initialState),

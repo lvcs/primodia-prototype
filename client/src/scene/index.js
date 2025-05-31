@@ -1,10 +1,14 @@
 import { Scene, Color } from 'three';
-import { SCENE_BACKGROUND_COLOR } from './sceneConfig.js';
-
-const scene = new Scene();
+import { SCENE_COSMOS_BACKGROUND_COLOR } from './sceneConfig.js';
+import { useSceneStore } from '@stores';
 
 const setupScene = () => {
-    scene.background = new Color(SCENE_BACKGROUND_COLOR);
+    const scene = new Scene();
+    scene.background = new Color(SCENE_COSMOS_BACKGROUND_COLOR);
+    
+    // Store the scene in the sceneStore
+    useSceneStore.getState().setScene(scene);
+    
     return scene;
 }
 
