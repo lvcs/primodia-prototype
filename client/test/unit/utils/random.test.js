@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createNewSeed, getSeed, nextFloat, nextInt, shuffleArrayInPlace } from '@game/core/RandomService';
+import { createNewSeed, getSeed, nextFloat, nextInt, shuffleArray, shuffleArrayInPlace } from '@utils/random';
 import { useGameStore } from '@stores';
 
 // Mock the game store
@@ -14,7 +14,7 @@ vi.mock('@stores', () => ({
   }
 }));
 
-describe('RandomService', () => {
+describe('Random Utility Module', () => {
   let mockGameStore;
 
   beforeEach(() => {
@@ -49,6 +49,18 @@ describe('RandomService', () => {
       
       expect(result).toBe(testSeed);
       expect(mockGameStore.getSeed).toHaveBeenCalled();
+    });
+
+    it('should handle string seeds by converting to numeric', () => {
+      mockGameStore.getSeed.mockReturnValue(undefined);
+      mockGameStore.setPrngSeed.mockImplementation(() => {});
+      mockGameStore.setSeed.mockImplementation(() => {});
+      
+      const result = createNewSeed('test-seed');
+      
+      expect(typeof result).toBe('number');
+      expect(result).toBeGreaterThan(0);
+      expect(mockGameStore.setSeed).toHaveBeenCalledWith(result);
     });
   });
 
@@ -87,6 +99,31 @@ describe('RandomService', () => {
       expect(value2).toBeLessThanOrEqual(20);
     });
 
+    it('should throw error when PRNG not initialized', () => {
+      mockGameStore.getPrngSeed.mockReturnValue(null);
+      
+      expect(() => nextFloat()).toThrow('Seed not initialized - call createNewSeed() first');
+    });
+
+    it('should handle edge cases for integer generation', () => {
+      const sameValue = nextInt(5, 5);
+      expect(sameValue).toBe(5);
+      
+      const zeroRange = nextInt(0, 0);
+      expect(zeroRange).toBe(0);
+    });
+  });
+
+  describe('Array Shuffling', () => {
+    beforeEach(() => {
+      // Setup a working PRNG state
+      let mockSeed = 987654321;
+      mockGameStore.getPrngSeed.mockImplementation(() => mockSeed);
+      mockGameStore.setPrngSeed.mockImplementation((newSeed) => {
+        mockSeed = newSeed;
+      });
+    });
+
     it('should shuffle arrays in place', () => {
       const original = [1, 2, 3, 4, 5];
       const array = [...original];
@@ -94,19 +131,39 @@ describe('RandomService', () => {
       shuffleArrayInPlace(array);
       
       expect(array).toHaveLength(original.length);
-      // Note: Due to the nature of shuffling, we can't guarantee the array will be different
-      // but we can check that it contains the same elements
+      // Check that it contains the same elements
       expect(array.sort()).toEqual(original.sort());
     });
 
-    it('should throw error when PRNG not initialized', () => {
-      mockGameStore.getPrngSeed.mockReturnValue(null);
+    it('should shuffle arrays and return new array', () => {
+      const original = [1, 2, 3, 4, 5];
       
-      expect(() => nextFloat()).toThrow('Seed not initialized - call createNewSeed() first');
+      const shuffled = shuffleArray(original);
+      
+      expect(shuffled).toHaveLength(original.length);
+      expect(shuffled).not.toBe(original); // Should be a new array
+      expect(shuffled.sort()).toEqual(original.sort());
+      expect(original).toEqual([1, 2, 3, 4, 5]); // Original should be unchanged
+    });
+
+    it('should handle empty arrays', () => {
+      const emptyArray = [];
+      const shuffledEmpty = shuffleArray(emptyArray);
+      
+      expect(shuffledEmpty).toEqual([]);
+      expect(shuffledEmpty).not.toBe(emptyArray);
+    });
+
+    it('should handle single element arrays', () => {
+      const singleElement = [42];
+      const shuffledSingle = shuffleArray(singleElement);
+      
+      expect(shuffledSingle).toEqual([42]);
+      expect(shuffledSingle).not.toBe(singleElement);
     });
   });
 
-  describe('Consistency', () => {
+  describe('Consistency and Reproducibility', () => {
     it('should be consistent with same seed', () => {
       // Setup consistent seed
       let mockSeed = 12345;
@@ -123,6 +180,27 @@ describe('RandomService', () => {
       const sequence2 = [nextFloat(), nextFloat(), nextFloat()];
       
       expect(sequence1).toEqual(sequence2);
+    });
+
+    it('should produce different sequences with different seeds', () => {
+      let mockSeed1 = 12345;
+      let mockSeed2 = 54321;
+      
+      // First sequence
+      mockGameStore.getPrngSeed.mockImplementation(() => mockSeed1);
+      mockGameStore.setPrngSeed.mockImplementation((newSeed) => {
+        mockSeed1 = newSeed;
+      });
+      const sequence1 = [nextFloat(), nextFloat()];
+      
+      // Second sequence with different seed
+      mockGameStore.getPrngSeed.mockImplementation(() => mockSeed2);
+      mockGameStore.setPrngSeed.mockImplementation((newSeed) => {
+        mockSeed2 = newSeed;
+      });
+      const sequence2 = [nextFloat(), nextFloat()];
+      
+      expect(sequence1).not.toEqual(sequence2);
     });
   });
 
@@ -193,5 +271,28 @@ describe('RandomService', () => {
       expect(firstGeneration.terrainValues).toEqual(secondGeneration.terrainValues);
       expect(firstGeneration.shuffledIds).toEqual(secondGeneration.shuffledIds);
     });
+
+    it('should handle complex generation patterns', () => {
+      // Test multiple interleaved operations
+      const results = [];
+      
+      for (let i = 0; i < 3; i++) {
+        results.push({
+          float: nextFloat(),
+          int: nextInt(1, 100),
+          shuffled: shuffleArray([1, 2, 3])
+        });
+      }
+      
+      expect(results).toHaveLength(3);
+      results.forEach(result => {
+        expect(result.float).toBeGreaterThanOrEqual(0);
+        expect(result.float).toBeLessThan(1);
+        expect(result.int).toBeGreaterThanOrEqual(1);
+        expect(result.int).toBeLessThanOrEqual(100);
+        expect(result.shuffled).toHaveLength(3);
+        expect(result.shuffled.sort()).toEqual([1, 2, 3]);
+      });
+    });
   });
-});
+}); 

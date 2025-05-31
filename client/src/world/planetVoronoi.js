@@ -11,7 +11,7 @@ import {
     PLANET_TECHTONIC_PLATES_DEFAULT,
     PLANET_VIEW_MODE_DEFAULT,
 } from '@config'; // Import constants
-import { nextFloat } from '@game/core/RandomService.js'; // Import functional API
+import { nextFloat } from '@utils/random'; // Import functional API
 
 
 const TerrainTypeIds = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});

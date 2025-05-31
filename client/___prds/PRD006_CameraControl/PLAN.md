@@ -34,7 +34,6 @@ Address issues with camera zoom synchronization with `cameraStore`, initializati
     -   [X] Identify or create a dedicated configuration file for camera settings (`client/src/config/cameraConfig.js`).
     -   [X] Define `CAMERA_PLANET_VIEW_DISTANCE` (`16000`) and `CAMERA_TILE_VIEW_DISTANCE` (`6800`).
 -   [X] **CameraStore Initialization:**
-    -   [X] Open `client/src/stores/cameraStore.js`.
     -   [X] Import `CAMERA_PLANET_VIEW_DISTANCE` and `CAMERA_TILE_VIEW_DISTANCE`.
     -   [X] Set the initial `zoom` state appropriately based on view mode.
 

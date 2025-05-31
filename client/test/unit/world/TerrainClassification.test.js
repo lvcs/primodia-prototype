@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { classifyTileTerrainFromProperties } from '@game/world/planetVoronoi';
-import { shouldHaveTrees } from '@game/planet/tree';
+import { classifyTileTerrainFromProperties } from '@/world/planetVoronoi';
+import { shouldHaveTrees } from '@/planet/tree';
 
-import { getColorForTerrain } from '@game/planet/terrain';
+import { getColorForTerrain } from '@/planet/terrain';
 
 // Mock terrain types for testing
 const mockTile = {

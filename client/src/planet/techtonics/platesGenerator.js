@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Plate from './Plate.js';
-import { nextFloat, nextInt, shuffleArrayInPlace } from '@game/core/RandomService.js';
+import { nextFloat, nextInt, shuffleArrayInPlace } from '@utils/random';
 import {
   TECHTONICS_PLATE_OCEANIC_CHANCE,
   TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN,

@@ -5,6 +5,7 @@ import UserInfo from '@ui/layout/UserInfo';
 import TopBar from '@ui/layout/TopBar';
 import MiniMap from '@ui/layout/MiniMap';
 import { initGame } from '@/game';
+import { stopAnimationLoop } from '@/core/mainLoop';
 import { useAuthStore } from '@stores';
 
 function GamePage({ onSignOut, onPlanetViewClick }) {
@@ -19,6 +20,11 @@ function GamePage({ onSignOut, onPlanetViewClick }) {
         console.error('Failed to initialize game:', error);
       }
     }
+
+    // Cleanup function to stop animation loop when component unmounts
+    return () => {
+      stopAnimationLoop();
+    };
   }, []); // Game initialization should only run once when the component mounts
 
   return (

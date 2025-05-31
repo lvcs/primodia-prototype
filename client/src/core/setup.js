@@ -4,14 +4,14 @@ import { setupScene } from '@game/scene';
 import { initializeCam } from '@game/camera/';
 import { useCameraStore, useSceneStore } from '@stores';
 
-let scene, camera, renderer;
+let camera, renderer;
 let worldConfig;
 
 export function setupThreeJS(canvasElement) {
   if (!canvasElement) {
     throw new Error("setupThreeJS requires a canvasElement argument.");
   }
-  scene = setupScene();
+  const scene = setupScene();
   
   // Use canvas dimensions for aspect ratio initially, but it should adapt on resize
   const aspectRatio = canvasElement.clientWidth / canvasElement.clientHeight;
@@ -24,7 +24,7 @@ export function setupThreeJS(canvasElement) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   // Resizing should be handled by an event listener in the game setup or main loop,
   // updating camera aspect and renderer size.
-  return { scene, camera, renderer };
+  return { renderer };
 }
 
 export function setupInitialWorldConfig() {

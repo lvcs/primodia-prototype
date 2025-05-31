@@ -6,7 +6,7 @@ import { terrainById, getColorForTerrain } from '@game/planet/terrain/index.js';
 import { getColorForTemperature } from '@/planet/temperature';
 import { getColorForMoisture } from '@/planet/moisture';
 import { generatePlates } from '@game/planet/techtonics';
-import { nextFloat } from '@game/core/RandomService';
+import { nextFloat } from '@utils/random';
 
 import { 
   shouldHaveTrees,

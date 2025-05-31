@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { useWorldStore } from '@/world/worldStore';
 
 // Mock the game functions to avoid complex dependencies
-vi.mock('@game/game', () => ({
+vi.mock('@/game', () => ({
   requestPlanetRegeneration: vi.fn(),
   triggerPlanetColorUpdate: vi.fn(),
 }));
@@ -28,7 +28,7 @@ describe('WorldStore', () => {
 
   describe('Settings Updates', () => {
     it('should update drawMode and trigger regeneration', async () => {
-      const { requestPlanetRegeneration } = await import('@game/game');
+      const { requestPlanetRegeneration } = await import('@/game');
       
       useWorldStore.getState().setDrawMode('delaunay');
       
@@ -39,7 +39,7 @@ describe('WorldStore', () => {
     });
 
     it('should update numPoints and trigger regeneration', async () => {
-      const { requestPlanetRegeneration } = await import('@game/game');
+      const { requestPlanetRegeneration } = await import('@/game');
       
       useWorldStore.getState().setNumPoints(5000);
       
@@ -50,7 +50,7 @@ describe('WorldStore', () => {
     });
 
     it('should update jitter and trigger regeneration', async () => {
-      const { requestPlanetRegeneration } = await import('@game/game');
+      const { requestPlanetRegeneration } = await import('@/game');
       
       useWorldStore.getState().setJitter(0.2);
       
@@ -61,7 +61,7 @@ describe('WorldStore', () => {
     });
 
     it('should update numPlates and trigger regeneration', async () => {
-      const { requestPlanetRegeneration } = await import('@game/game');
+      const { requestPlanetRegeneration } = await import('@/game');
       
       useWorldStore.getState().setNumPlates(8);
       
@@ -74,7 +74,7 @@ describe('WorldStore', () => {
 
   describe('Visual Updates (No Regeneration)', () => {
     it('should update outlineVisible and trigger color update only', async () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@game/game');
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
       useWorldStore.getState().setOutlineVisible(false);
       
@@ -86,7 +86,7 @@ describe('WorldStore', () => {
     });
 
     it('should update viewMode and trigger color update only', async () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@game/game');
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
       useWorldStore.getState().setViewMode('terrain');
       
@@ -98,7 +98,7 @@ describe('WorldStore', () => {
     });
 
     it('should update elevationBias and trigger color update only', async () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@game/game');
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
       useWorldStore.getState().setElevationBias(0.3);
       
@@ -112,7 +112,7 @@ describe('WorldStore', () => {
 
   describe('World Regeneration', () => {
     it('should regenerate with current settings and seed from gameStore', async () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@game/game');
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
       // Set up some state
       useWorldStore.getState().setNumPoints(8000);
@@ -123,8 +123,7 @@ describe('WorldStore', () => {
       expect(requestPlanetRegeneration).toHaveBeenCalledWith(
         expect.objectContaining({
           numPoints: 8000
-        }),
-        null // In test environment, gameStore seed is null
+        })
       );
       expect(triggerPlanetColorUpdate).toHaveBeenCalled();
     });
@@ -150,7 +149,7 @@ describe('WorldStore', () => {
 
   describe('State Consistency', () => {
     it('should maintain state consistency across multiple updates', async () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@game/game');
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
       // Perform multiple updates
       useWorldStore.getState().setNumPoints(6000);
@@ -171,7 +170,7 @@ describe('WorldStore', () => {
     });
 
     it('should pass complete state to regeneration functions', async () => {
-      const { requestPlanetRegeneration } = await import('@game/game');
+      const { requestPlanetRegeneration } = await import('@/game');
       
       useWorldStore.getState().setNumPoints(7500);
       

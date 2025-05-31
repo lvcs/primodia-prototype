@@ -1,7 +1,7 @@
 import { planetSettings } from '@game/world/planetVoronoi.js';
 import { debug, error } from '@utils/debug.js';
-import { createNewSeed, getSeed } from '@game/core/RandomService.js'; 
-import { useCameraStore, useWorldStore } from '@stores';
+import { createNewSeed, getSeed } from '@utils/random'; 
+import { useCameraStore, useWorldStore, useSceneStore } from '@stores';
 
 import {
   setupThreeJS,
@@ -35,7 +35,7 @@ export function initGame(canvasElement) {
     createNewSeed();
 
     const threeContext = setupThreeJS(canvasElement); 
-    scene = threeContext.scene; 
+    scene = useSceneStore.getState().getScene();
     camera = useCameraStore.getState().camera;
     renderer = threeContext.renderer;
     
