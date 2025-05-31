@@ -4,9 +4,7 @@ import { createNewSeed, getSeed } from '@utils/random';
 import { useCameraStore, useWorldStore, useSceneStore } from '@stores';
 
 import {
-  setupThreeJS,
-  setupInitialWorldConfig,
-  getWorldConfig
+  setupThreeJS
 } from '@game/core/setup.js';
 
 import {
@@ -20,7 +18,7 @@ import { startAnimationLoop } from '@game/core/mainLoop.js';
 
 import { setupOrbitControls } from '@game/camera';
 
-let scene, renderer, controls, worldConfig;
+let scene, renderer, controls;
 
 
 export function initGame(canvasElement) {
@@ -39,10 +37,8 @@ export function initGame(canvasElement) {
     camera = useCameraStore.getState().camera;
     renderer = threeContext.renderer;
     
-    worldConfig = setupInitialWorldConfig();
-    
     const currentSelectedHighlight = getSelectedHighlight(); // From eventHandlers
-    generateAndDisplayPlanet(worldConfig, null , getPlanetGroup() , currentSelectedHighlight);
+    generateAndDisplayPlanet(null, null , getPlanetGroup() , currentSelectedHighlight);
     
     controls = setupOrbitControls(renderer);
     startAnimationLoop(); // Starts the game loop
@@ -59,15 +55,9 @@ export function initGame(canvasElement) {
 export function requestPlanetRegeneration(worldSettings) {
   console.log('requestPlanetRegeneration called with settings:', worldSettings);
   
-  const wc = getWorldConfig();
   const existingControls = useCameraStore.getState().orbitControls;
   const pg = getPlanetGroup();
   const sh = getSelectedHighlight();
-
-  if (!wc ) { 
-      error('Cannot regenerate planet: core components not initialized.');
-      return;
-  }
   
   // Use settings if provided, otherwise keep existing planetSettings
   if (worldSettings) {
@@ -96,7 +86,7 @@ export function requestPlanetRegeneration(worldSettings) {
   }
   
   // Generate planet with updated settings
-  generateAndDisplayPlanet(wc, existingControls, pg, sh);
+  generateAndDisplayPlanet(null, existingControls, pg, sh);
     
   debug('Planet regeneration complete.');
   

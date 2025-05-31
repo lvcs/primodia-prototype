@@ -19,7 +19,6 @@ export const getWorldData = () => worldData;
 
 export function generateAndDisplayPlanet(_worldConfig, _controls, _existingPlanetGroup, _existingSelectedHighlight) {
   const scene = useSceneStore.getState().getScene();
-  let currentWorldConfig = { ..._worldConfig };
   
   try {
     if (_existingPlanetGroup) {
@@ -37,7 +36,9 @@ export function generateAndDisplayPlanet(_worldConfig, _controls, _existingPlane
 
     removeHemosphere();
 
-    currentWorldConfig.planetSettings = { ...planetSettings };   
+    const currentWorldConfig = {
+      planetSettings: { ...planetSettings }
+    };   
     
     worldData = generateWorld(currentWorldConfig);
     

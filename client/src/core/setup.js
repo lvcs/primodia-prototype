@@ -4,7 +4,6 @@ import { initializeCam } from '@game/camera/';
 import { useCameraStore, useSceneStore } from '@stores';
 
 let camera, renderer;
-let worldConfig;
 
 export function setupThreeJS(canvasElement) {
   if (!canvasElement) {
@@ -26,12 +25,5 @@ export function setupThreeJS(canvasElement) {
   return { renderer };
 }
 
-export function setupInitialWorldConfig() {
-  worldConfig = {
-  };
-  return worldConfig;
-}
-
 export const getRenderer = () => renderer;
 export const getControls = () => useCameraStore.getState().orbitControls;
-export const getWorldConfig = () => worldConfig;

@@ -4,15 +4,14 @@ import { getActionForKey, KEYBOARD_ACTIONS, KEYBOARD_TARGET_ANGULAR_SPEED, KEYBO
 
 // --- State ---
 const activeKeys = new Set();
-let localCamera, localControls, localWorldConfig, orbitController;
+let localCamera, localControls, orbitController;
 
 /**
  * Initialize keyboard controls for camera orbit.
  */
-export function initKeyboardControls(camera, controls, worldConfig, controller) {
+export function initKeyboardControls(camera, controls, controller) {
     localCamera = camera;
     localControls = controls;
-    localWorldConfig = worldConfig;
     orbitController = controller;
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
@@ -39,7 +38,7 @@ function onKeyUp(event) {
  */
 export function handleKeyboardInput(deltaTime = 1) {
     if (window.cameraAnimator && window.cameraAnimator.isAnimating) return;
-    if (!localCamera || !localControls || !localWorldConfig || !orbitController) return;
+    if (!localCamera || !localControls || !orbitController) return;
     const baseTargetSpeed = KEYBOARD_TARGET_ANGULAR_SPEED;
     const speedAtMinZoom = baseTargetSpeed * KEYBOARD_SPEED_SCALE_AT_MIN_ZOOM;
     const speedAtMaxZoom = baseTargetSpeed * KEYBOARD_SPEED_SCALE_AT_MAX_ZOOM;
