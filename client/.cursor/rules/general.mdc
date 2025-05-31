@@ -106,10 +106,10 @@ Game Logic can only import from Core Services and Stores.
 Stores are dumb bags of state, can import config only.
 Core Services cannot import from anything above them
 
-- uiStore: Representation of UI elements, including opened menus, tabs, modals, dialogs, tooltips, notifications, and animations.
-- cameraStore: Representation of camera location, zoom, lookAt targets
-- gameStore: Seed, turn, era, tech tree, civic tree
-- worldStore: Representation of planet objects: number of tiles, jitter, techtonic plates, map type, elevation bias, seed
+- @stores/uiStore: Representation of UI elements, including opened menus, tabs, modals, dialogs, tooltips, notifications, and animations.
+- @stores/cameraStore: Representation of camera location, zoom, lookAt targets
+- @stores/gameStore: Seed, turn, era, tech tree, civic tree
+- @stores/worldStore: Representation of planet objects: number of tiles, jitter, techtonic plates, map type, elevation bias, seed
 
 - Name storage keys after the store they belong to
 

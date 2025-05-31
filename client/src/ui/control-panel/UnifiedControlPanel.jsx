@@ -1,11 +1,13 @@
 import PropTypes from 'prop-types';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@ui/components/Tabs';
+import GameTab from './GameTab';
 import PlanetTab from './PlanetTab'; // Import the PlanetTab component
 import CameraTab from './CameraTab'; // Import CameraTab
 import TileDebugTab from './TileDebugTab'; // Import TileDebugTab
 
 function UnifiedControlPanel({ className }) {
   const tabs = [
+    { id: 'game', label: 'Game', Component: GameTab },
     { id: 'camera', label: 'Camera', Component: CameraTab },
     { id: 'planet', label: 'Planet', Component: PlanetTab },  
     { id: 'tile-debug', label: 'Tile (debug)', Component: TileDebugTab },

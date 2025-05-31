@@ -24,11 +24,6 @@ class RandomServiceController {
     return this.prng.nextFloat();
   }
 
-  nextInt(min, max) {
-    this._ensureInitialized();
-    return this.prng.nextInt(min, max);
-  }
-
   shuffleArray(array) {
     this._ensureInitialized();
     this.prng.shuffleArray(array);
