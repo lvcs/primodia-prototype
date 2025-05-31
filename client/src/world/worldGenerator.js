@@ -289,7 +289,7 @@ export function generateWorld(config){
 
   // Add optimized trees to the scene
   if (tilesForTrees.length > 0) {
-    const treeResult = addTreesToScene(tilesForTrees, meshGroup);
+    const treeResult = addTreesToScene(tilesForTrees);
     
     // Store tree data for potential cleanup
     meshGroup.userData.treeData = treeResult;

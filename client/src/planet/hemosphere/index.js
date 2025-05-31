@@ -5,10 +5,10 @@ import {
   PLANET_GLOW_COLOR,
   PLANET_GLOW_OPACITY
 } from '@config';
-import { getScene } from '@game/core/setup.js';
+import { useSceneStore } from '@stores';
 
 export function createHemosphere() {
-  const scene = getScene();
+  const scene = useSceneStore.getState().getScene();
   const glowGeometry = new THREE.SphereGeometry(PLANET_RADIUS * PLANET_GLOW_RADIUS_FACTOR, 64, 32);
   const glowMaterial = new THREE.MeshBasicMaterial({ 
     color: PLANET_GLOW_COLOR, 
@@ -21,7 +21,8 @@ export function createHemosphere() {
   scene.add(glowMesh);
 }
 
-export function removeHemosphere(scene) {
+export function removeHemosphere() {
+  const scene = useSceneStore.getState().getScene();
   const oldGlowMesh = scene.children.find(child => child.userData && child.userData.isGlow);
   if (oldGlowMesh) {
     scene.remove(oldGlowMesh);

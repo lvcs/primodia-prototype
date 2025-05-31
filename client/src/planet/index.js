@@ -9,6 +9,7 @@ import { applyElevationColors } from './elevation';
 import { applyMoistureColors } from './moisture';
 import { applyTemperatureColors } from './temperature';
 import { applyPlateColors } from './techtonics';
+import { useSceneStore } from '@stores';
 
 let planetGroup;
 let worldData;
@@ -16,13 +17,14 @@ let worldData;
 export const getPlanetGroup = () => planetGroup;
 export const getWorldData = () => worldData;
 
-export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _existingPlanetGroup, _existingSelectedHighlight) {
+export function generateAndDisplayPlanet(_worldConfig, _controls, _existingPlanetGroup, _existingSelectedHighlight) {
+  const scene = useSceneStore.getState().getScene();
   let currentWorldConfig = { ..._worldConfig };
   
   try {
     if (_existingPlanetGroup) {
-      _scene.remove(_existingPlanetGroup);      
-      clearTrees(_scene);
+      scene.remove(_existingPlanetGroup);      
+      clearTrees();
       
       _existingPlanetGroup.traverse(obj => {
         if (obj.geometry) obj.geometry.dispose();
@@ -33,7 +35,7 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
       });
     }
 
-    removeHemosphere(_scene);
+    removeHemosphere();
 
     currentWorldConfig.planetSettings = { ...planetSettings };   
     
@@ -44,14 +46,14 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
 
       addPolarIndicators(planetGroup);
 
-      _scene.add(planetGroup);
+      scene.add(planetGroup);
     }
 
     if (worldData && worldData.cells) {
         debug('Simplified world data log:', {cellCount: worldData.cells.length, config: worldData.config});
     }
     
-    createHemosphere(_scene);
+    createHemosphere();
     updatePlanetColors(); 
 
     return { planetGroup, planet: worldData?.planet };

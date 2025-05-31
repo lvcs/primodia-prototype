@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { handleKeyboardInput } from '@game/keyboard'; 
 import { getPlanetGroup } from '@game/planet'; 
-import { getRenderer, getScene } from './setup.js'; 
-import { useCameraStore } from '@stores';
+import { getRenderer } from './setup.js'; 
+import { useCameraStore, useSceneStore } from '@stores';
 
 
 const clock = new THREE.Clock();
@@ -14,7 +14,7 @@ function animate() {
 
     const camera = useCameraStore.getState().camera;
     const renderer = getRenderer();
-    const scene = getScene();
+    const scene = useSceneStore.getState().getScene();
     const controls = useCameraStore.getState().orbitControls;
     const planetGroup = getPlanetGroup();
 

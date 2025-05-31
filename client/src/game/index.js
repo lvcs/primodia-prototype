@@ -7,7 +7,6 @@ import {
   setupThreeJS,
   setupInitialWorldConfig,
   setupLighting,
-  getScene,
   getWorldConfig
 } from '@game/core/setup.js';
 
@@ -44,10 +43,10 @@ export function initGame(canvasElement) {
     worldConfig = setupInitialWorldConfig();
     
     const currentSelectedHighlight = getSelectedHighlight(); // From eventHandlers
-    generateAndDisplayPlanet(scene, worldConfig, null , getPlanetGroup() , currentSelectedHighlight);
+    generateAndDisplayPlanet(worldConfig, null , getPlanetGroup() , currentSelectedHighlight);
   
 
-    setupLighting(scene);
+    setupLighting();
     
     controls = setupOrbitControls(renderer);
     startAnimationLoop(); // Starts the game loop
@@ -64,13 +63,12 @@ export function initGame(canvasElement) {
 export function requestPlanetRegeneration(worldSettings) {
   console.log('requestPlanetRegeneration called with settings:', worldSettings);
   
-  const s = getScene();
   const wc = getWorldConfig();
   const existingControls = useCameraStore.getState().orbitControls;
   const pg = getPlanetGroup();
   const sh = getSelectedHighlight();
 
-  if (!s || !wc ) { 
+  if (!wc ) { 
       error('Cannot regenerate planet: core components not initialized.');
       return;
   }
@@ -102,7 +100,7 @@ export function requestPlanetRegeneration(worldSettings) {
   }
   
   // Generate planet with updated settings
-  generateAndDisplayPlanet(s, wc, existingControls, pg, sh);
+  generateAndDisplayPlanet(wc, existingControls, pg, sh);
     
   debug('Planet regeneration complete.');
   

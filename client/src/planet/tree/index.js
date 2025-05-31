@@ -7,6 +7,7 @@ import {
   TREES_TRUNK_COLOR,
   TREES_CANOPY_COLOR
 } from '@config';
+import { useSceneStore } from '@stores';
 
 // Performance optimizations
 const LOD_DISTANCE_THRESHOLD = 5000; // Distance for LOD switching
@@ -303,11 +304,12 @@ class TreeSystem {
   /**
    * Add tree meshes to scene
    */
-  addToScene(scene) {
+  addToScene() {
     if (!this.isInitialized) {
       return;
     }
     
+    const scene = useSceneStore.getState().getScene();
     scene.add(this.trunkInstancedMesh);
     scene.add(this.canopyInstancedMesh);
   }
@@ -315,7 +317,8 @@ class TreeSystem {
   /**
    * Remove tree meshes from scene
    */
-  removeFromScene(scene) {
+  removeFromScene() {
+    const scene = useSceneStore.getState().getScene();
     if (this.trunkInstancedMesh) {
       scene.remove(this.trunkInstancedMesh);
     }
@@ -433,7 +436,7 @@ export const shouldHaveTrees = (terrainId) => {
 /**
  * Add trees to scene for qualifying tiles
  */
-export const addTreesToScene = (tiles, scene) => {
+export const addTreesToScene = (tiles) => {
   const treeTiles = tiles.filter(tile => shouldHaveTrees(tile.terrainId));
   
   if (treeTiles.length === 0) {
@@ -456,7 +459,7 @@ export const addTreesToScene = (tiles, scene) => {
   });
 
   // Add to scene
-  treeSystem.addToScene(scene);
+  treeSystem.addToScene();
 
   const stats = treeSystem.getStats();
   console.log(`[TreeSystem] Generated ${stats.totalTrees} trees (estimated memory: ${(stats.memoryUsage / 1024 / 1024).toFixed(2)} MB)`);
@@ -467,8 +470,8 @@ export const addTreesToScene = (tiles, scene) => {
 /**
  * Clear trees from scene
  */
-export const clearTrees = (scene) => {
-  treeSystem.removeFromScene(scene);
+export const clearTrees = () => {
+  treeSystem.removeFromScene();
   treeSystem.dispose();
 };
 
