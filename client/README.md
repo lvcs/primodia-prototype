@@ -77,7 +77,7 @@ Create a `.env` file in the client directory if needed for environment-specific 
 
 ## Technologies Used
 
-- **React 18** - UI framework
+- **React 19** - UI framework
 - **Three.js** - 3D graphics
 - **Vite** - Build tool and dev server
 - **Zustand** - State management

@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { handleKeyboardInput } from '@game/keyboard'; 
-import { getRenderer } from './setup.js'; 
-import { useCameraStore, useSceneStore } from '@stores';
+import { useCameraStore, useSceneStore, useRenderStore } from '@stores';
 
 
 const clock = new THREE.Clock();
@@ -12,7 +11,7 @@ function animate() {
     const deltaTime = clock.getDelta();
 
     const camera = useCameraStore.getState().camera;
-    const renderer = getRenderer();
+    const renderer = useRenderStore.getState().getRenderer();
     const scene = useSceneStore.getState().getScene();
     const controls = useCameraStore.getState().orbitControls;
 

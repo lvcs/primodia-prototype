@@ -1,7 +1,7 @@
 import { planetSettings } from '@game/world/planetVoronoi.js';
 import { debug, error } from '@utils/debug.js';
 import { createNewSeed, getSeed } from '@utils/random'; 
-import { useCameraStore, useWorldStore, useSceneStore } from '@stores';
+import { useCameraStore, useWorldStore, useSceneStore, useRenderStore } from '@stores';
 
 import {
   setupThreeJS
@@ -20,21 +20,17 @@ import { setupOrbitControls } from '@game/camera';
 let scene, renderer, controls;
 
 
-export function initGame(canvasElement) {
+export function initGame() {
   console.log('initGame called');
   try {
     debug('Initializing game (React client)...');
-    if (!canvasElement) {
-      error("initGame cannot proceed without a canvasElement.");
-      throw new Error("Canvas element not provided to initGame.");
-    }
 
     createNewSeed();
 
-    const threeContext = setupThreeJS(canvasElement); 
+    setupThreeJS(); 
     scene = useSceneStore.getState().getScene();
     camera = useCameraStore.getState().camera;
-    renderer = threeContext.renderer;
+    renderer = useRenderStore.getState().getRenderer();
     
     generateAndDisplayPlanet(null, null , getPlanetGroup());
     

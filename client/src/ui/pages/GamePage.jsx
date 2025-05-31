@@ -6,7 +6,7 @@ import TopBar from '@ui/layout/TopBar';
 import MiniMap from '@ui/layout/MiniMap';
 import { initGame } from '@/game';
 import { stopAnimationLoop } from '@/render/mainLoop';
-import { useAuthStore } from '@stores';
+import { useAuthStore, useRenderStore } from '@stores';
 
 function GamePage({ onSignOut, onPlanetViewClick }) {
   const canvasRef = useRef(null);
@@ -15,7 +15,9 @@ function GamePage({ onSignOut, onPlanetViewClick }) {
   useEffect(() => {
     if (canvasRef.current) {
       try {
-        initGame(canvasRef.current);
+        // Set canvas in render store when it's initialized
+        useRenderStore.getState().setCanvas(canvasRef.current);
+        initGame();
       } catch (error) {
         console.error('Failed to initialize game:', error);
       }

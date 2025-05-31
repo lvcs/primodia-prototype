@@ -1,13 +1,16 @@
-import * as THREE from 'three';
+import { WebGLRenderer, PCFSoftShadowMap } from 'three';
 import { setupScene } from '@game/scene';
 import { initializeCam } from '@game/camera/';
-import { useCameraStore, useSceneStore } from '@stores';
+import { useRenderStore } from '@stores';
 
-let camera, renderer;
+let camera;
 
-export function setupThreeJS(canvasElement) {
+export function setupThreeJS() {
+  const { setRenderer, getCanvas } = useRenderStore.getState();
+
+  const canvasElement = getCanvas();
   if (!canvasElement) {
-    throw new Error("setupThreeJS requires a canvasElement argument.");
+    throw new Error("setupThreeJS requires a canvas to be set in the render store.");
   }
   const scene = setupScene();
   
@@ -15,14 +18,11 @@ export function setupThreeJS(canvasElement) {
   const aspectRatio = canvasElement.clientWidth / canvasElement.clientHeight;
   camera = initializeCam({aspectRatio: aspectRatio});
   
-  renderer = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true, alpha: true });
+  const renderer = new WebGLRenderer({ canvas: canvasElement, antialias: true, alpha: true });
   renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight); // Use canvas size
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  // Resizing should be handled by an event listener in the game setup or main loop,
-  // updating camera aspect and renderer size.
-  return { renderer };
+  renderer.shadowMap.type = PCFSoftShadowMap;
+  
+  setRenderer(renderer);
 }
-
-export const getRenderer = () => renderer;
