@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { getActionForKey, KEYBOARD_ACTIONS, KEYBOARD_TARGET_ANGULAR_SPEED, KEYBOARD_SPEED_SCALE_AT_MIN_ZOOM, KEYBOARD_SPEED_SCALE_AT_MAX_ZOOM, KEYBOARD_ZOOM_SPEED } from '@config';
+import { getActionForKey, KEYBOARD_ACTIONS, KEYBOARD_TARGET_ANGULAR_SPEED, KEYBOARD_SPEED_SCALE_AT_MIN_ZOOM, KEYBOARD_SPEED_SCALE_AT_MAX_ZOOM, KEYBOARD_ZOOM_SPEED, PLANET_RADIUS } from '@config';
 
 // --- State ---
 const activeKeys = new Set();
@@ -63,10 +63,10 @@ export function handleKeyboardInput(deltaTime = 1) {
                 orbitController.rotate(0, -effectiveTargetSpeed);
                 break;
             case KEYBOARD_ACTIONS.ZOOM_IN:
-                orbitController.zoom(-localWorldConfig.radius * KEYBOARD_ZOOM_SPEED);
+                orbitController.zoom(-PLANET_RADIUS * KEYBOARD_ZOOM_SPEED);
                 break;
             case KEYBOARD_ACTIONS.ZOOM_OUT:
-                orbitController.zoom(localWorldConfig.radius * KEYBOARD_ZOOM_SPEED);
+                orbitController.zoom(PLANET_RADIUS * KEYBOARD_ZOOM_SPEED);
                 break;
         }
     });

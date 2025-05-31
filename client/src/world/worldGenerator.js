@@ -7,6 +7,7 @@ import { getColorForTemperature } from '@/planet/temperature';
 import { getColorForMoisture } from '@/planet/moisture';
 import { generatePlates } from '@game/planet/techtonics';
 import { nextFloat } from '@utils/random';
+import { PLANET_RADIUS } from '@config';
 
 import { 
   shouldHaveTrees,
@@ -15,7 +16,7 @@ import {
 
 /**
  * Generates planet mesh (legacy) plus OO WorldPlanet description.
- * @param {{radius:number, planetSettings?:object}} config
+ * @param {{planetSettings?:object}} config
  * @returns {{ meshGroup: THREE.Group, planet: WorldPlanet, config: any, actualSeed: string }}
  */
 export function generateWorld(config){
@@ -48,14 +49,14 @@ export function generateWorld(config){
   const posAttr = mainMesh.geometry.getAttribute('position');
   const tileTerrain = mainMesh.userData.tileTerrain || {};
   const tileSphericalExcesses = mainMesh.userData.tileSphericalExcesses || {}; // Get excesses
-  const planetRadius = config.radius; // Actual radius of the planet
+  const planetRadius = PLANET_RADIUS; // Actual radius of the planet
 
   const planet = new WorldPlanet({
     drawMode: planetSettings.drawMode,
     algorithm: planetSettings.algorithm,
     numTiles: planetSettings.numPoints,
     jitter: planetSettings.jitter,
-    size: config.radius
+    size: PLANET_RADIUS
   });
 
   // compute centroid per tile
@@ -260,18 +261,18 @@ export function generateWorld(config){
     if (shouldHaveTrees(tile.terrain.id)) {
       // Convert tile center from normalized coordinates to world coordinates
       const worldCenter = {
-        x: tile.center[0] * config.radius,
-        y: tile.center[1] * config.radius,
-        z: tile.center[2] * config.radius
+        x: tile.center[0] * PLANET_RADIUS,
+        y: tile.center[1] * PLANET_RADIUS,
+        z: tile.center[2] * PLANET_RADIUS
       };
       
       // Get polygon vertices for this tile if available and convert to world coordinates
       let polygonVertices = null;
       if (tilePolygonVertices[tile.id]) {
         polygonVertices = tilePolygonVertices[tile.id].map(vertex => ({
-          x: vertex.x * config.radius,
-          y: vertex.y * config.radius,
-          z: vertex.z * config.radius
+          x: vertex.x * PLANET_RADIUS,
+          y: vertex.y * PLANET_RADIUS,
+          z: vertex.z * PLANET_RADIUS
         }));
       }
       

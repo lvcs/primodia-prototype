@@ -28,7 +28,7 @@ export const PLANET_ELEVATION_BIAS_STEP = 0.01;
 
 
 // Planetary Glow (from game.js)
-export const PLANET_GLOW_RADIUS_FACTOR = 1.15; // Multiplies worldConfig.radius
+export const PLANET_GLOW_RADIUS_FACTOR = 1.15;
 export const PLANET_GLOW_OPACITY = 0.15;
 export const PLANET_GLOW_COLOR = 0x5c95ff;
 
