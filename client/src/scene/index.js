@@ -55,5 +55,5 @@ const setHemisphereLight = (scene) => {
     return hemiplanetLight;
 }
 
-// setupScene is only used internally by core/setup.js
+// setupScene is only used internally by render/setup.js
 export { setupScene }; 

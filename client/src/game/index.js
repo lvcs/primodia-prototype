@@ -5,7 +5,7 @@ import { useCameraStore, useWorldStore, useSceneStore } from '@stores';
 
 import {
   setupThreeJS
-} from '@game/core/setup.js';
+} from '@game/render/setup.js';
 
 import {
     generateAndDisplayPlanet,
@@ -13,7 +13,7 @@ import {
     getPlanetGroup,
 } from '@game/planet/index.js';
 
-import { startAnimationLoop } from '@game/core/mainLoop.js';
+import { startAnimationLoop } from '@game/render/mainLoop.js';
 
 import { setupOrbitControls } from '@game/camera';
 
