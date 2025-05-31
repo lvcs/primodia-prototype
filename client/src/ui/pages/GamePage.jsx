@@ -5,7 +5,7 @@ import UserInfo from '@ui/layout/UserInfo';
 import TopBar from '@ui/layout/TopBar';
 import MiniMap from '@ui/layout/MiniMap';
 import { initGame } from '@/game';
-import { stopAnimationLoop } from '@/render';
+import { stopAnimationLoop, cleanupCanvasResize } from '@/render';
 import { useAuthStore, useRenderStore } from '@stores';
 
 function GamePage({ onSignOut, onPlanetViewClick }) {
@@ -26,6 +26,7 @@ function GamePage({ onSignOut, onPlanetViewClick }) {
     // Cleanup function to stop animation loop when component unmounts
     return () => {
       stopAnimationLoop();
+      cleanupCanvasResize();
     };
   }, []); // Game initialization should only run once when the component mounts
 
@@ -39,7 +40,7 @@ function GamePage({ onSignOut, onPlanetViewClick }) {
         />
       )}
       <div id="game-container-react" className="w-full h-full absolute inset-0" style={{ display: 'block' }}>
-        <canvas ref={canvasRef} id="game-canvas-react" className="absolute inset-0" style={{ width: '100vw', height: '100vh' }}></canvas>
+        <canvas ref={canvasRef} id="game-canvas-react" className="w-full h-full"></canvas>
         <div id="ui-overlay-react" className="absolute inset-0 w-full h-full pointer-events-none">
           <TopBar />
           <MiniMap />

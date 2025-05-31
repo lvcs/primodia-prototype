@@ -25,9 +25,12 @@ export const calculateSphericalCoords = (posX, posY, posZ) => {
 };
 
 
-export const initializeCam = ({aspectRatio}) => {
+export const initializeCamera = () => {
+  const { getAspectRatio } = useRenderStore.getState();
+  
+  const aspectRatio = getAspectRatio();
+  
   let camera = new THREE.PerspectiveCamera(CAMERA_FOV, aspectRatio, CAMERA_NEAR_PLANE, CAMERA_FAR_PLANE);
-  console.log(camera.getWorldDirection(new THREE.Vector3(0,0,1)) );
   
   useCameraStore.getState().setCamera(camera);
   console.log(useCameraStore.getState().camera);
