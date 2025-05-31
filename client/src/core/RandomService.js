@@ -134,12 +134,3 @@ export {
   shuffleArray,
   shuffleArrayInPlace
 };
-
-// Default export for backward compatibility
-export default {
-  initialize: createNewSeed,
-  getSeed: () => useGameStore.getState().getSeed(),
-  nextFloat,
-  nextInt,
-  shuffleArray: shuffleArrayInPlace, // Keep original mutating behavior for compatibility
-}; 

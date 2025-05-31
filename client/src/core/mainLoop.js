@@ -2,7 +2,7 @@ import * as THREE from 'three';
 // Adjust path for keyboardControls.js
 import { handleKeyboardInput } from '@game/keyboard'; 
 // Adjust path for planet directory
-import { getPlanetGroup, getWorldData } from '@game/planet/index.js'; 
+import { getPlanetGroup } from '@game/planet/index.js'; 
 // updateComponentUIDisplay from old CameraControlsSection is obsolete with React UI
 import { getRenderer, getScene } from './setup.js'; 
 import { useCameraStore } from '@stores';

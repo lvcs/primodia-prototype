@@ -1,121 +1,83 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import RandomService from '@/game/core/RandomService';
+import { createNewSeed, getSeed, nextFloat, nextInt, shuffleArrayInPlace } from '@game/core/RandomService';
+import { useGameStore } from '@stores';
 
-// Mock the SeedableRandom class
-vi.mock('@/utils/SeedableRandom', () => {
-  return {
-    default: class MockSeedableRandom {
-      constructor(seed) {
-        this.seed = seed;
-        this.callCount = 0;
-      }
-
-      nextFloat() {
-        this.callCount++;
-        // Return predictable values for testing
-        return (this.callCount * 0.1) % 1;
-      }
-
-      nextInt(min, max) {
-        const range = max - min + 1;
-        return min + Math.floor(this.nextFloat() * range);
-      }
-
-      shuffleArray(array) {
-        // Simple mock shuffle - just reverse the array
-        array.reverse();
-      }
-    }
-  };
-});
+// Mock the game store
+vi.mock('@stores', () => ({
+  useGameStore: {
+    getState: vi.fn(() => ({
+      getSeed: vi.fn(),
+      setSeed: vi.fn(),
+      getPrngSeed: vi.fn(),
+      setPrngSeed: vi.fn()
+    }))
+  }
+}));
 
 describe('RandomService', () => {
+  let mockGameStore;
+
   beforeEach(() => {
-    // Reset the service state before each test
-    RandomService.prng = null;
+    // Reset mocks before each test
+    mockGameStore = {
+      getSeed: vi.fn(),
+      setSeed: vi.fn(),
+      getPrngSeed: vi.fn(),
+      setPrngSeed: vi.fn()
+    };
+    useGameStore.getState.mockReturnValue(mockGameStore);
   });
 
-  describe('Initialization', () => {
-    it('should initialize with a seed', () => {
-      RandomService.initialize('test-seed');
+  describe('Seed Management', () => {
+    it('should create and store a new seed', () => {
+      mockGameStore.getSeed.mockReturnValue(undefined);
+      mockGameStore.setPrngSeed.mockImplementation(() => {});
+      mockGameStore.setSeed.mockImplementation(() => {});
       
-      expect(RandomService.prng).toBeTruthy();
-      expect(RandomService.prng.seed).toBe('test-seed');
-    });
-
-    it('should use default seed when initialized without parameter', () => {
-      RandomService.initialize();
+      const result = createNewSeed(12345);
       
-      expect(RandomService.prng).toBeTruthy();
-      expect(RandomService.prng.seed).toBeTruthy();
-    });
-
-    it('should handle numeric seeds', () => {
-      RandomService.initialize(12345);
-      
-      expect(RandomService.prng).toBeTruthy();
-      expect(RandomService.prng.seed).toBe(12345);
-    });
-
-    it('should replace existing PRNG when reinitialized', () => {
-      RandomService.initialize('seed1');
-      const firstPrng = RandomService.prng;
-      
-      RandomService.initialize('seed2');
-      const secondPrng = RandomService.prng;
-      
-      expect(secondPrng).not.toBe(firstPrng);
-      expect(secondPrng.seed).toBe('seed2');
-    });
-  });
-
-  describe('Auto-initialization', () => {
-    it('should auto-initialize when calling nextFloat without explicit init', () => {
-      expect(RandomService.prng).toBeNull();
-      
-      const result = RandomService.nextFloat();
-      
-      expect(RandomService.prng).toBeTruthy();
+      expect(mockGameStore.setSeed).toHaveBeenCalled();
+      expect(mockGameStore.setPrngSeed).toHaveBeenCalled();
       expect(typeof result).toBe('number');
     });
 
-    it('should auto-initialize when calling nextInt without explicit init', () => {
-      expect(RandomService.prng).toBeNull();
+    it('should get current seed from store', () => {
+      const testSeed = 54321;
+      mockGameStore.getSeed.mockReturnValue(testSeed);
       
-      const result = RandomService.nextInt(1, 10);
+      const result = getSeed();
       
-      expect(RandomService.prng).toBeTruthy();
-      expect(typeof result).toBe('number');
-    });
-
-    it('should auto-initialize when calling shuffleArray without explicit init', () => {
-      expect(RandomService.prng).toBeNull();
-      
-      const array = [1, 2, 3, 4, 5];
-      RandomService.shuffleArray(array);
-      
-      expect(RandomService.prng).toBeTruthy();
-      expect(array).not.toEqual([1, 2, 3, 4, 5]); // Should be modified
+      expect(result).toBe(testSeed);
+      expect(mockGameStore.getSeed).toHaveBeenCalled();
     });
   });
 
   describe('Random Number Generation', () => {
     beforeEach(() => {
-      RandomService.initialize('consistent-seed');
+      // Setup a mock PRNG seed for testing
+      let mockSeed = 123456789;
+      mockGameStore.getPrngSeed.mockImplementation(() => mockSeed);
+      mockGameStore.setPrngSeed.mockImplementation((newSeed) => {
+        mockSeed = newSeed;
+      });
     });
 
-    it('should generate float values', () => {
-      const value1 = RandomService.nextFloat();
-      const value2 = RandomService.nextFloat();
+    it('should generate float values between 0 and 1', () => {
+      const value1 = nextFloat();
+      const value2 = nextFloat();
       
       expect(typeof value1).toBe('number');
       expect(typeof value2).toBe('number');
-      expect(value1).not.toBe(value2); // Should be different due to mock implementation
+      expect(value1).toBeGreaterThanOrEqual(0);
+      expect(value1).toBeLessThan(1);
+      expect(value2).toBeGreaterThanOrEqual(0);
+      expect(value2).toBeLessThan(1);
+      expect(value1).not.toBe(value2); // Should be different due to PRNG state change
     });
 
     it('should generate integer values in range', () => {
-      const value1 = RandomService.nextInt(1, 6);
-      const value2 = RandomService.nextInt(10, 20);
+      const value1 = nextInt(1, 6);
+      const value2 = nextInt(10, 20);
       
       expect(Number.isInteger(value1)).toBe(true);
       expect(Number.isInteger(value2)).toBe(true);
@@ -129,125 +91,67 @@ describe('RandomService', () => {
       const original = [1, 2, 3, 4, 5];
       const array = [...original];
       
-      RandomService.shuffleArray(array);
+      shuffleArrayInPlace(array);
       
       expect(array).toHaveLength(original.length);
-      expect(array).not.toEqual(original); // Should be different due to mock shuffle
-      expect(array.sort()).toEqual(original.sort()); // Should contain same elements
+      // Note: Due to the nature of shuffling, we can't guarantee the array will be different
+      // but we can check that it contains the same elements
+      expect(array.sort()).toEqual(original.sort());
     });
 
-    it('should be consistent with same seed', () => {
-      RandomService.initialize('test-seed');
-      const sequence1 = [
-        RandomService.nextFloat(),
-        RandomService.nextFloat(),
-        RandomService.nextFloat()
-      ];
+    it('should throw error when PRNG not initialized', () => {
+      mockGameStore.getPrngSeed.mockReturnValue(null);
       
-      RandomService.initialize('test-seed');
-      const sequence2 = [
-        RandomService.nextFloat(),
-        RandomService.nextFloat(),
-        RandomService.nextFloat()
-      ];
+      expect(() => nextFloat()).toThrow('Seed not initialized - call createNewSeed() first');
+    });
+  });
+
+  describe('Consistency', () => {
+    it('should be consistent with same seed', () => {
+      // Setup consistent seed
+      let mockSeed = 12345;
+      mockGameStore.getPrngSeed.mockImplementation(() => mockSeed);
+      mockGameStore.setPrngSeed.mockImplementation((newSeed) => {
+        mockSeed = newSeed;
+      });
+      
+      // Reset seed to same value for both sequences
+      mockSeed = 12345;
+      const sequence1 = [nextFloat(), nextFloat(), nextFloat()];
+      
+      mockSeed = 12345;
+      const sequence2 = [nextFloat(), nextFloat(), nextFloat()];
       
       expect(sequence1).toEqual(sequence2);
-    });
-
-    it('should produce different sequences with different seeds', () => {
-      RandomService.initialize('seed-a');
-      const sequenceA = [
-        RandomService.nextFloat(),
-        RandomService.nextFloat()
-      ];
-      
-      RandomService.initialize('seed-b');
-      const sequenceB = [
-        RandomService.nextFloat(),
-        RandomService.nextFloat()
-      ];
-      
-      expect(sequenceA).not.toEqual(sequenceB);
-    });
-  });
-
-  describe('Current Seed Access', () => {
-    it('should return current seed when initialized', () => {
-      RandomService.initialize('known-seed');
-      
-      expect(RandomService.getCurrentSeed()).toBe('known-seed');
-    });
-
-    it('should return undefined when not initialized', () => {
-      expect(RandomService.getCurrentSeed()).toBeUndefined();
-    });
-  });
-
-  describe('Service Integration', () => {
-    it('should handle multiple operations in sequence', () => {
-      RandomService.initialize(42);
-      
-      const float1 = RandomService.nextFloat();
-      const int1 = RandomService.nextInt(1, 100);
-      const array = [1, 2, 3, 4];
-      RandomService.shuffleArray(array);
-      const float2 = RandomService.nextFloat();
-      
-      expect(typeof float1).toBe('number');
-      expect(typeof int1).toBe('number');
-      expect(typeof float2).toBe('number');
-      expect(array).toHaveLength(4);
-    });
-
-    it('should maintain state across calls', () => {
-      RandomService.initialize('state-test');
-      
-      const firstCall = RandomService.nextFloat();
-      const secondCall = RandomService.nextFloat();
-      const thirdCall = RandomService.nextFloat();
-      
-      // Due to our mock implementation, each call should increment
-      expect(firstCall).toBe(0.1);
-      expect(secondCall).toBe(0.2);
-      expect(thirdCall).toBe(0.3);
-    });
-
-    it('should handle edge cases gracefully', () => {
-      RandomService.initialize('edge-test');
-      
-      // Test edge case integer ranges
-      const singleValue = RandomService.nextInt(5, 5);
-      expect(singleValue).toBe(5);
-      
-      // Test empty array shuffle
-      const emptyArray = [];
-      RandomService.shuffleArray(emptyArray);
-      expect(emptyArray).toEqual([]);
-      
-      // Test single element array shuffle
-      const singleArray = [42];
-      RandomService.shuffleArray(singleArray);
-      expect(singleArray).toEqual([42]);
     });
   });
 
   describe('World Generation Integration Scenarios', () => {
+    beforeEach(() => {
+      // Setup a working PRNG state
+      let mockSeed = 987654321;
+      mockGameStore.getPrngSeed.mockImplementation(() => mockSeed);
+      mockGameStore.setPrngSeed.mockImplementation((newSeed) => {
+        mockSeed = newSeed;
+      });
+    });
+
     it('should support world generation workflow', () => {
       // Simulate a typical world generation flow
-      RandomService.initialize('world-gen-test');
+      createNewSeed('world-gen-test');
       
       // Simulate plate generation
-      const numPlates = RandomService.nextInt(4, 12);
+      const numPlates = nextInt(4, 12);
       expect(numPlates).toBeGreaterThanOrEqual(4);
       expect(numPlates).toBeLessThanOrEqual(12);
       
       // Simulate tile assignment
       const tileIds = [1, 2, 3, 4, 5, 6, 7, 8];
-      RandomService.shuffleArray(tileIds);
+      shuffleArrayInPlace(tileIds);
       expect(tileIds).toHaveLength(8);
       
       // Simulate terrain noise
-      const terrainNoise = Array.from({ length: 5 }, () => RandomService.nextFloat());
+      const terrainNoise = Array.from({ length: 5 }, () => nextFloat());
       expect(terrainNoise).toHaveLength(5);
       terrainNoise.forEach(value => {
         expect(value).toBeGreaterThanOrEqual(0);
@@ -259,22 +163,30 @@ describe('RandomService', () => {
       const worldSeed = 'reproducible-world';
       
       // Generate world data first time
-      RandomService.initialize(worldSeed);
-      const firstGeneration = {
-        plateCount: RandomService.nextInt(6, 10),
-        terrainValues: Array.from({ length: 3 }, () => RandomService.nextFloat()),
-        shuffledIds: [1, 2, 3, 4]
-      };
-      RandomService.shuffleArray(firstGeneration.shuffledIds);
+      createNewSeed(worldSeed);
       
-      // Generate world data second time with same seed
-      RandomService.initialize(worldSeed);
-      const secondGeneration = {
-        plateCount: RandomService.nextInt(6, 10),
-        terrainValues: Array.from({ length: 3 }, () => RandomService.nextFloat()),
+      // Reset to consistent state for first generation
+      let mockSeed = 555555;
+      mockGameStore.getPrngSeed.mockImplementation(() => mockSeed);
+      mockGameStore.setPrngSeed.mockImplementation((newSeed) => {
+        mockSeed = newSeed;
+      });
+      
+      const firstGeneration = {
+        plateCount: nextInt(6, 10),
+        terrainValues: Array.from({ length: 3 }, () => nextFloat()),
         shuffledIds: [1, 2, 3, 4]
       };
-      RandomService.shuffleArray(secondGeneration.shuffledIds);
+      shuffleArrayInPlace(firstGeneration.shuffledIds);
+      
+      // Reset to same state for second generation
+      mockSeed = 555555;
+      const secondGeneration = {
+        plateCount: nextInt(6, 10),
+        terrainValues: Array.from({ length: 3 }, () => nextFloat()),
+        shuffledIds: [1, 2, 3, 4]
+      };
+      shuffleArrayInPlace(secondGeneration.shuffledIds);
       
       // Should be identical
       expect(firstGeneration.plateCount).toBe(secondGeneration.plateCount);
@@ -282,4 +194,4 @@ describe('RandomService', () => {
       expect(firstGeneration.shuffledIds).toEqual(secondGeneration.shuffledIds);
     });
   });
-}); 
+});

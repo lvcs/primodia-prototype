@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Plate from './Plate.js';
-import RandomService from '@game/core/RandomService.js';
+import { nextFloat, nextInt, shuffleArrayInPlace } from '@game/core/RandomService.js';
 import {
   TECHTONICS_PLATE_OCEANIC_CHANCE,
   TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN,
@@ -84,7 +84,7 @@ export function generatePlates(planet, numPlates = 16) {
   // 1. Create Plates: Randomly select seed tiles for each plate.
   const seedIds = [];
   const availableTileIds = [...tileIds]; // Clone to allow modification
-  RandomService.shuffleArray(availableTileIds);
+  shuffleArrayInPlace(availableTileIds);
   for (let i = 0; i < numPlates && i < availableTileIds.length; i++) {
     seedIds.push(availableTileIds[i]);
   }
@@ -97,24 +97,24 @@ export function generatePlates(planet, numPlates = 16) {
     if (!seedTile) {
         console.error("Seed tile not found for ID:", seedId);
         // Provide a fallback Plate to prevent crashes
-        const fallbackMotion = new THREE.Vector3(RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5).normalize();
+        const fallbackMotion = new THREE.Vector3(nextFloat() - 0.5, nextFloat() - 0.5, nextFloat() - 0.5).normalize();
         return new Plate({
             id: idx, seedTileId: seedId, center: [0,0,0], 
             motion: [fallbackMotion.x, fallbackMotion.y, fallbackMotion.z],
-            isOceanic: RandomService.nextFloat() < TECHTONICS_PLATE_OCEANIC_CHANCE,
+            isOceanic: nextFloat() < TECHTONICS_PLATE_OCEANIC_CHANCE,
             baseElevation: TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN 
         });
     }
     const center = seedTile.center;
     // Generate a random motion vector for the plate, tangent to the planet surface at its center.
-    const randomVec = new THREE.Vector3(RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5, RandomService.nextFloat() - 0.5).normalize();
+    const randomVec = new THREE.Vector3(nextFloat() - 0.5, nextFloat() - 0.5, nextFloat() - 0.5).normalize();
     const motion = new THREE.Vector3().fromArray(center).cross(randomVec).normalize(); // Cross product ensures perpendicular motion vector
 
     // Determine if the plate is oceanic or continental and assign a base elevation.
-    const isOceanic = RandomService.nextFloat() < TECHTONICS_PLATE_OCEANIC_CHANCE;
+    const isOceanic = nextFloat() < TECHTONICS_PLATE_OCEANIC_CHANCE;
     const baseElevation = isOceanic
-      ? (RandomService.nextFloat() * (TECHTONICS_PLATE_OCEANIC_ELEVATION_MAX - TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN) + TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN)
-      : (RandomService.nextFloat() * (TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MAX - TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MIN) + TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MIN);
+      ? (nextFloat() * (TECHTONICS_PLATE_OCEANIC_ELEVATION_MAX - TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN) + TECHTONICS_PLATE_OCEANIC_ELEVATION_MIN)
+      : (nextFloat() * (TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MAX - TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MIN) + TECHTONICS_PLATE_CONTINENTAL_ELEVATION_MIN);
 
     return new Plate({
       id: idx,
@@ -141,14 +141,14 @@ export function generatePlates(planet, numPlates = 16) {
   });
 
   // Shuffle the initial queue to make the flood fill order less dependent on plate creation order.
-  RandomService.shuffleArray(queue);
+  shuffleArrayInPlace(queue);
 
   let head = 0; // Use a head index for efficient queue processing instead of splice
   while(head < queue.length) {
     // Randomly pick an item from the unprocessed part of the queue (from index head to queue.length - 1)
     const unprocessedCount = queue.length - head;
     // Generate a random index within the unprocessed part of the queue
-    const randomIndexInUnprocessedPortion = Math.floor(RandomService.nextFloat() * unprocessedCount);
+    const randomIndexInUnprocessedPortion = Math.floor(nextFloat() * unprocessedCount);
     const actualIndexInQueue = head + randomIndexInUnprocessedPortion;
     
     const selectedTileId = queue[actualIndexInQueue]; // Get the randomly selected tile
@@ -168,7 +168,7 @@ export function generatePlates(planet, numPlates = 16) {
 
     // Create a mutable copy of neighbors and shuffle them for more local randomness
     const neighbors = [...tile.neighbors]; 
-    RandomService.shuffleArray(neighbors); 
+    shuffleArrayInPlace(neighbors); 
 
     neighbors.forEach(neighborId => {
       if (tilePlate[neighborId] === undefined) { // If neighbor not yet assigned
@@ -331,7 +331,7 @@ export function generatePlates(planet, numPlates = 16) {
 
   // Assign a base moisture influence to each plate
   const plateMoistureFactors = plates.map(() => 
-    RandomService.nextFloat() * (TECHTONICS_MOISTURE_PLATE_BASE_MAX - TECHTONICS_MOISTURE_PLATE_BASE_MIN) + TECHTONICS_MOISTURE_PLATE_BASE_MIN
+    nextFloat() * (TECHTONICS_MOISTURE_PLATE_BASE_MAX - TECHTONICS_MOISTURE_PLATE_BASE_MIN) + TECHTONICS_MOISTURE_PLATE_BASE_MIN
   );
 
   planet.tiles.forEach(tile => {

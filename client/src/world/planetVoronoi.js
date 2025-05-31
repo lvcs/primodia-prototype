@@ -11,7 +11,7 @@ import {
     PLANET_TECHTONIC_PLATES_DEFAULT,
     PLANET_VIEW_MODE_DEFAULT,
 } from '@config'; // Import constants
-import RandomService from '@game/core/RandomService.js'; // Added import
+import { nextFloat } from '@game/core/RandomService.js'; // Import functional API
 
 
 const TerrainTypeIds = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
@@ -329,7 +329,7 @@ function generateDelaunayGeometry(xyz, delaunay) {
         const centroid = new THREE.Vector3(centroidX, centroidY, centroidZ).normalize();
         
         // Determine terrain type based on position
-        const terrainType = determineTerrainType(centroid, RandomService.nextFloat.bind(RandomService));
+        const terrainType = determineTerrainType(centroid, nextFloat);
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[t] = terrainType;
 
@@ -416,7 +416,7 @@ function generateVoronoiGeometry(points, delaunay) {
         }).sort((a, b) => a.angle - b.angle);
 
         // Determine terrain type based on vertex position
-        const terrainType = determineTerrainType(normal, RandomService.nextFloat.bind(RandomService));
+        const terrainType = determineTerrainType(normal, nextFloat);
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[v] = terrainType;
         
@@ -493,8 +493,8 @@ export function generatePlanetGeometryGroup(config) {
     const drawMode = planetSettings.drawMode;
     
     let points;
-    // Bind RandomService.nextFloat for convenience
-    const randomFloat = RandomService.nextFloat.bind(RandomService);
+    // Use the functional API directly
+    const randomFloat = nextFloat;
 
     if(algorithm === 1){
         points = generateFibonacciPlanet1(N, jitter, randomFloat);

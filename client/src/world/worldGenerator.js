@@ -6,7 +6,7 @@ import { terrainById, getColorForTerrain } from '@game/planet/terrain/index.js';
 import { getColorForTemperature } from '@/planet/temperature';
 import { getColorForMoisture } from '@/planet/moisture';
 import { generatePlates } from '@game/planet/techtonics';
-import RandomService from '@game/core/RandomService';
+import { nextFloat } from '@game/core/RandomService';
 
 import { 
   shouldHaveTrees,
@@ -37,23 +37,8 @@ export function generateWorld(config){
   } else {
     console.warn('[generateWorld] No planetSettings received in config, using existing values');
   }
-
-
-  // Always use a string seed for consistent results and check before RandomService initialization
-  // let effectiveSeed = (seed === undefined) ? String(Date.now()) : String(seed);
   
- 
-  // Explicitly reset the Random Service state before initialization to avoid any state carryover
-  // RandomService.prng = null;
-  
-  // Initialize the global random service with the provided seed.
-  // All subsequent procedural generation steps will use this seeded PRNG.
-  // RandomService.initialize();
-  
- 
-  // Bind RandomService.nextFloat for convenience where needed in this scope or passed down
-  const randomFloat = RandomService.nextFloat.bind(RandomService);
-
+   
   const meshGroup = generatePlanetGeometryGroup(config);
   const mainMesh = meshGroup.children.find(c=>c.userData && c.userData.isMainMesh);
   if(!mainMesh){
@@ -87,7 +72,7 @@ export function generateWorld(config){
     const id = parseInt(idStr,10);
     const centerVec = sums[id].divideScalar(counts[id]).normalize();
     const center = [centerVec.x, centerVec.y, centerVec.z];
-    const terrId = tileTerrain[id] || classifyTerrain(centerVec, randomFloat);
+    const terrId = tileTerrain[id] || classifyTerrain(centerVec, nextFloat);
     const terrain = terrainById(terrId) || terrainById('PLAINS');
     
     // Calculate actual area
@@ -146,8 +131,8 @@ export function generateWorld(config){
     // Generate plate colors using the seeded PRNG for consistency.
     const plateColors = {};
     plates.forEach(p=>{
-      // Use RandomService for reproducible colors if the seed is the same.
-      const color = new THREE.Color().setHSL(RandomService.nextFloat(), 0.6, 0.5);
+      // Use the functional API for reproducible colors if the seed is the same.
+      const color = new THREE.Color().setHSL(nextFloat(), 0.6, 0.5);
       plateColors[p.id] = color.getHex();
     });
     mainMesh.userData.plateColors = plateColors;
