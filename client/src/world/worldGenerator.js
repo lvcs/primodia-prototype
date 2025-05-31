@@ -72,7 +72,7 @@ export function generateWorld(config){
     const id = parseInt(idStr,10);
     const centerVec = sums[id].divideScalar(counts[id]).normalize();
     const center = [centerVec.x, centerVec.y, centerVec.z];
-    const terrId = tileTerrain[id] || classifyTerrain(centerVec, nextFloat);
+    const terrId = tileTerrain[id] || classifyTerrain(centerVec);
     const terrain = terrainById(terrId) || terrainById('PLAINS');
     
     // Calculate actual area

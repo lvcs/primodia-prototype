@@ -182,7 +182,7 @@ function addSouthPoleTriangles(southPoleOriginalIndex, delaunatorInstance, origi
 }
 
 // Function to determine terrain type based on vertex position
-function determineTerrainType(position, randomFloat) {
+function determineTerrainType(position) {
     const y = position.y; // Using y-coordinate as elevation
     const noiseValue = Math.sin(position.x * 10) * Math.cos(position.z * 8) * 0.1; // Noise for variation
     
@@ -191,13 +191,13 @@ function determineTerrainType(position, randomFloat) {
     } else if (y > 0.8) { // North pole
         return TerrainTypeIds.SNOW;
     } else if (y < -0.5) {
-        return randomFloat() > 0.7 ? TerrainTypeIds.TUNDRA : TerrainTypeIds.PLAINS;
+        return nextFloat() > 0.7 ? TerrainTypeIds.TUNDRA : TerrainTypeIds.PLAINS;
     } else if (y < -0.2) {
         if (noiseValue > 0.05) return TerrainTypeIds.FOREST;
         if (noiseValue < -0.05) return TerrainTypeIds.HILLS;
         return TerrainTypeIds.PLAINS;
     } else if (y < 0.2) { // Equatorial regions
-        const rand = randomFloat();
+        const rand = nextFloat();
         if (rand < 0.4) return TerrainTypeIds.OCEAN; // Increased chance of ocean for demo
         if (rand < 0.6) return TerrainTypeIds.COAST;
         if (noiseValue > 0.05) return TerrainTypeIds.JUNGLE;
@@ -208,7 +208,7 @@ function determineTerrainType(position, randomFloat) {
         if (noiseValue < -0.05) return TerrainTypeIds.HILLS;
         return TerrainTypeIds.PLAINS;
     } else { // Approaches North pole
-        return randomFloat() > 0.7 ? TerrainTypeIds.TUNDRA : TerrainTypeIds.PLAINS;
+        return nextFloat() > 0.7 ? TerrainTypeIds.TUNDRA : TerrainTypeIds.PLAINS;
     }
 }
 
@@ -329,7 +329,7 @@ function generateDelaunayGeometry(xyz, delaunay) {
         const centroid = new THREE.Vector3(centroidX, centroidY, centroidZ).normalize();
         
         // Determine terrain type based on position
-        const terrainType = determineTerrainType(centroid, nextFloat);
+        const terrainType = determineTerrainType(centroid);
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[t] = terrainType;
 
@@ -416,7 +416,7 @@ function generateVoronoiGeometry(points, delaunay) {
         }).sort((a, b) => a.angle - b.angle);
 
         // Determine terrain type based on vertex position
-        const terrainType = determineTerrainType(normal, nextFloat);
+        const terrainType = determineTerrainType(normal);
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[v] = terrainType;
         
