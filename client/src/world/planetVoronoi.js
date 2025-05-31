@@ -17,7 +17,7 @@ import { nextFloat } from '@game/core/RandomService.js'; // Import functional AP
 const TerrainTypeIds = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
 const terrainColors = Object.fromEntries(Object.values(Terrains).map(t=>[t.id,t.color]));
 
-function generateFibonacciPlanet1(N, jitter, randomFloat) {
+function generateFibonacciPlanet1(N, jitter) {
     const points = [];
     const phi = Math.PI * (Math.sqrt(5) - 1); // golden ratio
     
@@ -34,8 +34,8 @@ function generateFibonacciPlanet1(N, jitter, randomFloat) {
         const z = Math.sin(theta) * radius;
         
         if (jitter > 0) {
-            const angle = randomFloat() * Math.PI * 2;
-            const amount = randomFloat() * jitter;
+            const angle = nextFloat() * Math.PI * 2;
+            const amount = nextFloat() * jitter;
             const rx = Math.cos(angle) * amount;
             const rz = Math.sin(angle) * amount;
             
@@ -55,7 +55,7 @@ function generateFibonacciPlanet1(N, jitter, randomFloat) {
     return points;
 }
 
-function generateFibonacciPlanet2(N, jitter, randomFloat) {
+function generateFibonacciPlanet2(N, jitter) {
     console.log(`[generateFibonacciPlanet2] Called with N=${N}, jitter=${jitter}`);
     const points = [];
     const dlong = Math.PI * (3-Math.sqrt(5)); // ~2.39996323
@@ -73,8 +73,8 @@ function generateFibonacciPlanet2(N, jitter, randomFloat) {
         const z = Math.sin(theta) * radius;
         
         if (jitter > 0) {
-            const angle = randomFloat() * Math.PI * 2;
-            const amount = randomFloat() * jitter;
+            const angle = nextFloat() * Math.PI * 2;
+            const amount = nextFloat() * jitter;
             const rx = Math.cos(angle) * amount;
             const rz = Math.sin(angle) * amount;
             
@@ -493,13 +493,11 @@ export function generatePlanetGeometryGroup(config) {
     const drawMode = planetSettings.drawMode;
     
     let points;
-    // Use the functional API directly
-    const randomFloat = nextFloat;
 
     if(algorithm === 1){
-        points = generateFibonacciPlanet1(N, jitter, randomFloat);
+        points = generateFibonacciPlanet1(N, jitter);
     } else {
-        points = generateFibonacciPlanet2(N, jitter, randomFloat);
+        points = generateFibonacciPlanet2(N, jitter);
     }
     
     // Project points for triangulation

@@ -22,7 +22,7 @@ import { startAnimationLoop } from '@game/core/mainLoop.js';
 
 import { setupOrbitControls } from '@game/camera';
 
-let scene, camera, renderer, controls, worldConfig;
+let scene, renderer, controls, worldConfig;
 
 
 export function initGame(canvasElement) {
