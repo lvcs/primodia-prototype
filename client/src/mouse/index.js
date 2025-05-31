@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { MOUSE_PAN_SPEED } from '@config';
+import { useRenderStore } from '@stores';
 
 
 // --- State ---
@@ -10,11 +11,16 @@ let localControls, localCamera, localRenderer, orbitController;
 /**
  * Initialize mouse controls for camera orbit.
  */
-export function initMouseControls(camera, controls, renderer, controller) {
+export function initMouseControls(camera, controls, controller) {
     localCamera = camera;
     localControls = controls;
-    localRenderer = renderer;
+    localRenderer = useRenderStore.getState().getRenderer();
     orbitController = controller;
+    
+    if (!localRenderer) {
+        throw new Error('Renderer not found in render store. Make sure setupThreeJS is called first.');
+    }
+    
     localRenderer.domElement.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);

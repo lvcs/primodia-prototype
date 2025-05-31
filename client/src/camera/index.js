@@ -10,7 +10,7 @@ import {
   CAMERA_ZOOM_DISTANCE_DEFAULT,
   PLANET_RADIUS,
 } from '@config'; 
-import { useCameraStore } from '@stores';
+import { useCameraStore, useRenderStore } from '@stores';
 
 
 export const calculateSphericalCoords = (posX, posY, posZ) => {
@@ -37,9 +37,15 @@ export const initializeCam = ({aspectRatio}) => {
 }
 
 
-export const setupOrbitControls = (_renderer) => {
+export const setupOrbitControls = () => {
   let camera = useCameraStore.getState().camera;
-  let orbitControls = new OrbitControls(camera, _renderer.domElement);
+  let renderer = useRenderStore.getState().getRenderer();
+  
+  if (!renderer) {
+    throw new Error('Renderer not found in render store. Make sure setupThreeJS is called first.');
+  }
+  
+  let orbitControls = new OrbitControls(camera, renderer.domElement);
   // console.log(orbitControls);
 
   orbitControls.enableDamping = true;

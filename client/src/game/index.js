@@ -17,7 +17,7 @@ import { startAnimationLoop } from '@game/render/mainLoop.js';
 
 import { setupOrbitControls } from '@game/camera';
 
-let scene, renderer, controls;
+let scene, controls;
 
 
 export function initGame() {
@@ -30,11 +30,10 @@ export function initGame() {
     setupThreeJS(); 
     scene = useSceneStore.getState().getScene();
     camera = useCameraStore.getState().camera;
-    renderer = useRenderStore.getState().getRenderer();
     
     generateAndDisplayPlanet(null, null , getPlanetGroup());
     
-    controls = setupOrbitControls(renderer);
+    controls = setupOrbitControls();
     startAnimationLoop(); // Starts the game loop
     
   
