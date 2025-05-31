@@ -26,4 +26,3 @@ export function setupThreeJS(canvasElement) {
 }
 
 export const getRenderer = () => renderer;
-export const getControls = () => useCameraStore.getState().orbitControls;
