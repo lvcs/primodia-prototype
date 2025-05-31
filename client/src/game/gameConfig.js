@@ -1,0 +1,1 @@
+export const GAME_DEFAULT_SEED = 1122334455;

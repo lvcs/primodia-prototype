@@ -26,7 +26,7 @@ function addPlanetaryGlow(_scene, radius) {
   _scene.add(glowMesh);
 }
 
-export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _existingPlanetGroup, _existingSelectedHighlight, seed) {
+export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _existingPlanetGroup, _existingSelectedHighlight) {
   let currentWorldConfig = { ..._worldConfig };
   
   try {
@@ -58,19 +58,9 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     }
 
     // Update worldConfig with current planetSettings - this is critical!
-    currentWorldConfig.planetSettings = { ...planetSettings };
+    currentWorldConfig.planetSettings = { ...planetSettings };   
     
-    // Set the seed in config to ensure it's used consistently
-    if (seed !== undefined) {
-      console.log(`Setting explicit seed "${seed}" in worldConfig for generateWorld`);
-      currentWorldConfig.seed = seed;
-    } else if (planetSettings.currentSeed) {
-      // console.log(`Using planetSettings.currentSeed "${planetSettings.currentSeed}" in worldConfig`);
-      currentWorldConfig.seed = planetSettings.currentSeed;
-    }
-    
-    
-    worldData = generateWorld(currentWorldConfig, seed);
+    worldData = generateWorld(currentWorldConfig);
     
     if (worldData && worldData.meshGroup) {
       planetGroup = worldData.meshGroup;
@@ -121,9 +111,7 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     addPlanetaryGlow(_scene, currentWorldConfig.radius);
     updatePlanetColors(); 
 
-    // Return the actual seed that was used along with other data
-    const actualSeed = worldData?.actualSeed || seed || (planetSettings.currentSeed ? String(planetSettings.currentSeed) : String(Date.now()));
-    return { planetGroup, planet: worldData?.planet, actualSeed };
+    return { planetGroup, planet: worldData?.planet };
 
   } catch (err) {
     console.error('Caught error in generateAndDisplayPlanet. Original error object:', err);
@@ -144,7 +132,7 @@ export function generateAndDisplayPlanet(_scene, _worldConfig, _controls, _exist
     };
     _scene.add(planetGroup);
     worldData = null; 
-    return { planetGroup, worldData: null, actualSeed: seed || String(Date.now()) };
+    return { planetGroup, worldData: null };
   }
 }
 
@@ -169,9 +157,7 @@ export function updatePlanetColors() {
     return [ ((hex>>16)&255)/255, ((hex>>8)&255)/255, (hex&255)/255 ];
   }
 
-  // const terrainColorCache = {}; // This seems unused, getColorForTerrain handles caching or direct calc
-  // Object.values(Terrains).forEach(t=>{ terrainColorCache[t.id] = [ ((t.color>>16)&255)/255, ((t.color>>8)&255)/255, (t.color&255)/255 ]; });
-
+  
   function elevationRGB(val){
     const elev = val + planetSettings.elevationBias;
     const oceanHex = [

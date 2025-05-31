@@ -2,10 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import { 
-  useUIStore, 
+  useAuthStore,
   useCameraStore, 
+  useGameStore,
   useWorldStore, 
-  useAuthStore 
+  useUIStore, 
 } from '@stores';
 import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
@@ -13,10 +14,11 @@ import "@ui/styles/index.css"; // Import Tailwind CSS
 
 
 if (import.meta.env.DEV) {
-  window.uiStore = useUIStore;
-  window.cameraStore = useCameraStore;
-  window.worldStore = useWorldStore;
   window.authStore = useAuthStore;
+  window.cameraStore = useCameraStore;
+  window.gameStore = useGameStore;
+  window.uiStore = useUIStore;
+  window.worldStore = useWorldStore;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

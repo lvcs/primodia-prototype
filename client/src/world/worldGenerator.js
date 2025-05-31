@@ -18,7 +18,8 @@ import {
  * @param {{radius:number, planetSettings?:object}} config
  * @returns {{ meshGroup: THREE.Group, planet: WorldPlanet, config: any, actualSeed: string }}
  */
-export function generateWorld(config, seed){
+export function generateWorld(config){
+  
   // If config contains planetSettings, use it to override the global planetSettings object
   if (config.planetSettings) {
     
@@ -39,15 +40,15 @@ export function generateWorld(config, seed){
 
 
   // Always use a string seed for consistent results and check before RandomService initialization
-  let effectiveSeed = (seed === undefined) ? String(Date.now()) : String(seed);
+  // let effectiveSeed = (seed === undefined) ? String(Date.now()) : String(seed);
   
  
   // Explicitly reset the Random Service state before initialization to avoid any state carryover
-  RandomService.prng = null;
+  // RandomService.prng = null;
   
   // Initialize the global random service with the provided seed.
   // All subsequent procedural generation steps will use this seeded PRNG.
-  RandomService.initialize(effectiveSeed);
+  // RandomService.initialize();
   
  
   // Bind RandomService.nextFloat for convenience where needed in this scope or passed down
@@ -261,7 +262,7 @@ export function generateWorld(config, seed){
   }
 
   meshGroup.userData.planet = planet;
-  meshGroup.userData.actualSeed = effectiveSeed; // Store seed in userData for easy access
+  // meshGroup.userData.actualSeed = effectiveSeed; // Store seed in userData for easy access
 
   // Add trees to qualifying tiles using optimized system
   
@@ -315,5 +316,5 @@ export function generateWorld(config, seed){
     console.log(`[Trees] No forest tiles found - no trees generated`);
   }
 
-  return { meshGroup, planet, config, actualSeed: effectiveSeed };
+  return { meshGroup, planet, config };
 } 

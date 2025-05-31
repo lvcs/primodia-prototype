@@ -1,6 +1,6 @@
 import { planetSettings } from '@game/world/planetVoronoi.js';
 import { debug, error } from '@utils/debug.js';
-import RandomService from '@game/core/RandomService.js'; 
+import { createNewSeed, getSeed } from '@game/core/RandomService.js'; 
 import { useCameraStore, useWorldStore } from '@stores';
 
 import {
@@ -12,7 +12,7 @@ import {
 } from '@game/core/setup.js';
 
 import {
-    generateAndDisplayPlanet as generatePlanet,
+    generateAndDisplayPlanet,
     updatePlanetColors,
     getPlanetGroup,
 } from '@game/planet/index.js';
@@ -26,12 +26,16 @@ let scene, camera, renderer, controls, worldConfig;
 
 
 export function initGame(canvasElement) {
+  console.log('initGame called');
   try {
     debug('Initializing game (React client)...');
     if (!canvasElement) {
       error("initGame cannot proceed without a canvasElement.");
       throw new Error("Canvas element not provided to initGame.");
     }
+
+    createNewSeed();
+
     const threeContext = setupThreeJS(canvasElement); 
     scene = threeContext.cosmos; 
     camera = useCameraStore.getState().camera;
@@ -40,14 +44,10 @@ export function initGame(canvasElement) {
     worldConfig = setupInitialWorldConfig();
     
     const currentSelectedHighlight = getSelectedHighlight(); // From eventHandlers
-    generatePlanet(scene, worldConfig, null , getPlanetGroup() , currentSelectedHighlight);
-    planetSettings.currentSeed = RandomService.getCurrentSeed();
+    generateAndDisplayPlanet(scene, worldConfig, null , getPlanetGroup() , currentSelectedHighlight);
   
 
     setupLighting(scene);
-    // Controls are set up after initial planet generation, so camera can target planet center
-    // controls = setupOrbitControls(camera, renderer, worldConfig);
-    // console.log(controls);
     
     controls = setupOrbitControls(renderer);
     startAnimationLoop(); // Starts the game loop
@@ -102,31 +102,11 @@ export function requestPlanetRegeneration(seed, worldSettings) {
   }
   
   // Generate planet with updated settings
-  const result = generatePlanet(s, wc, existingControls, pg, sh, seed);
-  
-  // Update the store with the actual seed used
-  if (result && result.actualSeed) {
-    console.log('Actual seed used for planet generation:', result.actualSeed);
+  generateAndDisplayPlanet(s, wc, existingControls, pg, sh);
     
-    // Update the current seed in the store
-    try {
-      // Use a setTimeout to avoid any circular dependency issues
-      setTimeout(() => {
-        const { setCurrentSeed } = useWorldStore.getState();
-        if (setCurrentSeed) {
-          console.log('Updating store with actual seed:', result.actualSeed);
-          setCurrentSeed(result.actualSeed);
-        }
-      }, 0);
-    } catch (err) {
-      console.error('Error updating seed in store:', err);
-    }
-  }
-  
-
   debug('Planet regeneration complete.');
   
-  return result;
+  return;
 }
 
 // Modified to accept settings as a parameter instead of accessing the store
