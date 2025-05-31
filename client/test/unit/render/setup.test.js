@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { setupThreeJS } from '@/render/setup';
+import { setupRenderer } from '@/render';
 import { useRenderStore } from '@stores';
 
 // Mock THREE.js
@@ -27,14 +27,14 @@ vi.mock('@game/camera/', () => ({
   initializeCam: vi.fn().mockReturnValue({})
 }));
 
-describe('setupThreeJS', () => {
+describe('setupRenderer', () => {
   beforeEach(() => {
     // Reset the render store
     useRenderStore.getState().resetRenderState();
   });
 
   it('should throw error when no canvas is set in store', () => {
-    expect(() => setupThreeJS()).toThrow('setupThreeJS requires a canvas to be set in the render store.');
+            expect(() => setupRenderer()).toThrow('setupRenderer requires a canvas to be set in the render store.');
   });
 
   it('should successfully setup when canvas is available in store', () => {
@@ -48,7 +48,7 @@ describe('setupThreeJS', () => {
     useRenderStore.getState().setCanvas(mockCanvas);
 
     // Should not throw
-    expect(() => setupThreeJS()).not.toThrow();
+            expect(() => setupRenderer()).not.toThrow();
   });
 
   it('should store renderer in render store', () => {
@@ -59,7 +59,7 @@ describe('setupThreeJS', () => {
 
     useRenderStore.getState().setCanvas(mockCanvas);
     
-    setupThreeJS();
+            setupRenderer();
     
     // Should store renderer in the render store
     const renderer = useRenderStore.getState().getRenderer();

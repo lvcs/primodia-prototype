@@ -1,6 +1,6 @@
 ---
 description: Rule Analytics
-globs: *
+globs: *.js
 alwaysApply: true
 ---
 

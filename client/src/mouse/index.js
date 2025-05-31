@@ -18,7 +18,7 @@ export function initMouseControls(camera, controls, controller) {
     orbitController = controller;
     
     if (!localRenderer) {
-        throw new Error('Renderer not found in render store. Make sure setupThreeJS is called first.');
+        throw new Error('Renderer not found in render store. Make sure setupRenderer is called first.');
     }
     
     localRenderer.domElement.addEventListener('mousedown', onMouseDown);

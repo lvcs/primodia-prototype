@@ -4,16 +4,12 @@ import { createNewSeed, getSeed } from '@utils/random';
 import { useCameraStore, useWorldStore, useSceneStore, useRenderStore } from '@stores';
 
 import {
-  setupThreeJS
-} from '@game/render/setup.js';
-
-import {
     generateAndDisplayPlanet,
     updatePlanetColors,
     getPlanetGroup,
 } from '@game/planet/index.js';
 
-import { startAnimationLoop } from '@game/render/mainLoop.js';
+import { setupRenderer, startAnimationLoop } from '@/render';
 
 import { setupOrbitControls } from '@game/camera';
 
@@ -27,7 +23,7 @@ export function initGame() {
 
     createNewSeed();
 
-    setupThreeJS(); 
+    setupRenderer(); 
     scene = useSceneStore.getState().getScene();
     camera = useCameraStore.getState().camera;
     

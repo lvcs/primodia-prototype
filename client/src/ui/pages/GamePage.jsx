@@ -5,7 +5,7 @@ import UserInfo from '@ui/layout/UserInfo';
 import TopBar from '@ui/layout/TopBar';
 import MiniMap from '@ui/layout/MiniMap';
 import { initGame } from '@/game';
-import { stopAnimationLoop } from '@/render/mainLoop';
+import { stopAnimationLoop } from '@/render';
 import { useAuthStore, useRenderStore } from '@stores';
 
 function GamePage({ onSignOut, onPlanetViewClick }) {

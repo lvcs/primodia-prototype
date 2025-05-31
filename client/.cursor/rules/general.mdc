@@ -1,11 +1,8 @@
 ---
 description: General Project Rules
-globs:
-  - src/**/*.js
-  - ___prds/**/*.md
+globs: src/**/*.js
 alwaysApply: true
 ---
-
 You are an expert full-stack game developer with extensive experience in JavaScript, React, Redix UI, Express.js, THREE.JS, Vite, and PostgreSQL.
 We are building a prototype for a 4X game in a 3D world.
 
@@ -19,21 +16,25 @@ We are building a prototype for a 4X game in a 3D world.
 - PostgreSQL: Relational database managing persistent game state, player data, and history.
 
 # Root Directory Structure
-client/               # Frontend
-├── src/              # @ vite alias
-│   ├── config/       # Barrel for config files; @config alias
-│   ├── camera/       # Camera and OrbitControls
-│   ├── core/         # Mess. event handler, mainLoop, setup
-│   ├── game/         # game init
-│   ├── keyboard/
-│   ├── mouse/
-│   ├── planet/
-│   ├── ui/           # UI: Components, pages, styles; @ui alias
-│   ├── stores/       # Barrel for store files; @stores alias
-│   ├── utils/        # utilities and helper functions; @utils alias
-│   └── world/        # Create world out of scene and planet
-package.json          # Project dependencies
-README.md             # Project documentation
+src/              # @ vite alias
+├── auth/         # Authentication and user management
+├── camera/       # Camera and OrbitControls
+├── config/       # Barrel for config files; @config alias
+├── game/         # Game initialization and logic
+├── keyboard/     # Keyboard input handling
+├── map/          # Map generation and management
+├── mouse/        # Mouse input handling
+├── multiplayer/  # Multiplayer functionality
+├── planet/       # Planet generation (elevation, moisture, temperature, etc.)
+├── render/       # Rendering utilities and configuration
+├── resources/    # Game resources and assets
+├── scene/        # THREE.js scene management
+├── stores/       # Barrel for store files; @stores alias
+├── ui/           # UI: Components, pages, styles; @ui alias
+├── utils/        # Utilities and helper functions; @utils alias
+└── world/        # World creation from scene and planet
+package.json      # Project dependencies
+README.md         # Project documentation
 
 # High-Level Principles
 - Crucial: Fix the cause, not the symptom. Address root issues rather than superficial symptoms.
@@ -50,13 +51,13 @@ README.md             # Project documentation
 - Organize code into clearly defined features, facilitating scalability and maintainability.
 
 ## Feature Directory Structure
-src/
-├── feature/
-│   ├── index.js               # Feature entry point with an API, main functions, and barrel export
-│   ├── featureConfig.js       # Configuradtion dedicated to the feature; include in /src/config barrel if outside access is required
-│   ├── featureStore.js        # Store dedicated to the feature; include in /src/stores barrel
-│   ├── feature{Name}.js       # Additional feature code, that doesn't pollutes index.js
-│   └── subfeature/            # If a subfeature or object is closely tied to the main feature
+src/feature/
+├── index.js               # Feature entry point an API, logic, barrel export
+├── featureConfig.js       # Feature-specific configuration; include in /src/config barrel if access required
+├── featureStore.js        # Dedicated feature store; include in /src/stores barrel
+├── [featureName].js       # Additional feature code, that doesn't pollutes index.js
+└── [subfeature]/          # Related sub-features
+
 
 # Code Quality and Style
 - Use clear, explicit variable and function names. For boolean states, use auxiliary verbs (e.g., isLoading, hasError).
@@ -107,10 +108,13 @@ Game Logic can only import from Core Services and Stores.
 Stores are dumb bags of state, can import config only.
 Core Services cannot import from anything above them
 
-- @stores/uiStore: Representation of UI elements, including opened menus, tabs, modals, dialogs, tooltips, notifications, and animations.
-- @stores/cameraStore: Representation of camera location, zoom, lookAt targets
-- @stores/gameStore: Seed, turn, era, tech tree, civic tree
-- @stores/worldStore: Representation of planet objects: number of tiles, jitter, techtonic plates, map type, elevation bias, seed
+- @stores/authStore: Authentication state, login status, user data
+- @stores/cameraStore: Camera location, zoom, lookAt targets, orbit controls state
+- @stores/gameStore: Game seed, turn, era, tech tree, civic tree, game settings
+- @stores/renderStore: Rendering state, performance settings, visual options
+- @stores/sceneStore: THREE.js scene state, lighting, objects management
+- @stores/uiStore: UI elements state - opened menus, tabs, modals, dialogs, tooltips, notifications, animations
+- @stores/worldStore: Planet representation - tiles, jitter, tectonic plates, map type, elevation bias, world seed
 
 - Name storage keys after the store they belong to
 

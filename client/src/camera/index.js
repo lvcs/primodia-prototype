@@ -42,7 +42,7 @@ export const setupOrbitControls = () => {
   let renderer = useRenderStore.getState().getRenderer();
   
   if (!renderer) {
-    throw new Error('Renderer not found in render store. Make sure setupThreeJS is called first.');
+            throw new Error('Renderer not found in render store. Make sure setupRenderer is called first.');
   }
   
   let orbitControls = new OrbitControls(camera, renderer.domElement);
