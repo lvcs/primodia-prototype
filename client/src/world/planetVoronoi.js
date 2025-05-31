@@ -1,15 +1,19 @@
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
 import { generateMapTerrain } from './registries/MapTypeRegistry.js';
-import { terrainById, Terrains } from './registries/TerrainRegistry.js';
-import { PLANET_RADIUS, PLANET_DRAW_MODE, PLANET_TILES_DEFAULT, PLANET_JITTER_DEFAULT, MAP_TYPE_DEFAULT, PLANET_ELEVATION_BIAS_DEFAULT, PLANET_TECHTONIC_PLATES_DEFAULT, PLANET_VIEW_MODE_DEFAULT } from '@config'; // Import constants
+import { Terrains } from './registries/TerrainRegistry.js';
+import {
+    PLANET_RADIUS,
+    PLANET_DRAW_MODE,
+    PLANET_TILES_DEFAULT,
+    PLANET_JITTER_DEFAULT,
+    PLANET_ELEVATION_BIAS_DEFAULT,
+    PLANET_TECHTONIC_PLATES_DEFAULT,
+    PLANET_VIEW_MODE_DEFAULT,
+    MAP_TYPE_DEFAULT,
+} from '@config'; // Import constants
 import RandomService from '@game/core/RandomService.js'; // Added import
 
-// All radius values are now in kilometers (1 unit = 1 km)
-
-// Cache for random lat/lon offsets
-const _randomLat = [];
-const _randomLon = [];
 
 const TerrainTypeIds = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
 const terrainColors = Object.fromEntries(Object.values(Terrains).map(t=>[t.id,t.color]));
@@ -92,6 +96,7 @@ function generateFibonacciPlanet2(N, jitter, randomFloat) {
     return points;
 }
 
+// What is this funciton for?
 function pushCartesianFromSpherical(out, latDeg, lonDeg) {
     const latRad = latDeg / 180.0 * Math.PI;
     const lonRad = lonDeg / 180.0 * Math.PI;

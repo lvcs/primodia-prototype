@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { generatePlanetGeometryGroup, planetSettings, classifyTerrain, classifyTileTerrainFromProperties, PLANET_VIEW_MODE_DEFAULT } from './planetVoronoi.js';
+import { generatePlanetGeometryGroup, planetSettings, classifyTerrain, classifyTileTerrainFromProperties } from './planetVoronoi.js';
 import WorldPlanet from './model/WorldPlanet.js';
 import Tile from './model/Tile.js';
 import { terrainById, getColorForTerrain } from './registries/TerrainRegistry.js';
@@ -127,7 +127,6 @@ export function generateWorld(config, seed){
   // TODO: Make number of tectonic plates slightly random in relation to the number of points.
   // For example, add a small random +/- variation to calculatedNumPlates, ensuring it stays within reasonable min/max bounds.
 
-  // const numPlatesToUse = calculatedNumPlates; // Old way: calculated from numPoints
   // Use the value directly from planetSettings, which is controlled by the UI slider
   let numPlatesToUse = planetSettings.numPlates;
   // Ensure it's within a reasonable range if not already clamped by UI/constants

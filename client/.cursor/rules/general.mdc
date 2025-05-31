@@ -100,7 +100,7 @@ Client application have these layers (from high to low):
 3. Stores (Zustand stores)
 4. Core Services (RandomService, utilities)
 
-- Higher-level modules can import from lower-level modules only:
+Higher-level modules can import from lower-level modules only:
 UI Components can import from Stores, Game Logic, and Core Services
 Game Logic can only import from Core Services and Stores.
 Stores are dumb bags of state, can import config only.
@@ -110,6 +110,8 @@ Core Services cannot import from anything above them
 - cameraStore: Representation of camera location, zoom, lookAt targets
 - gameStore: Seed, turn, era, tech tree, civic tree
 - worldStore: Representation of planet objects: number of tiles, jitter, techtonic plates, map type, elevation bias, seed
+
+- Name storage keys after the store they belong to
 
 # Configuration
 - Always read *Config.js files
