@@ -6,7 +6,6 @@ import { useCameraStore, useWorldStore } from '@stores';
 import {
   setupThreeJS,
   setupInitialWorldConfig,
-  setupLighting,
   getWorldConfig
 } from '@game/core/setup.js';
 
@@ -44,9 +43,6 @@ export function initGame(canvasElement) {
     
     const currentSelectedHighlight = getSelectedHighlight(); // From eventHandlers
     generateAndDisplayPlanet(worldConfig, null , getPlanetGroup() , currentSelectedHighlight);
-  
-
-    setupLighting();
     
     controls = setupOrbitControls(renderer);
     startAnimationLoop(); // Starts the game loop

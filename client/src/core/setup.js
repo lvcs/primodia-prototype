@@ -35,22 +35,6 @@ export function setupInitialWorldConfig() {
   return worldConfig;
 }
 
-export function setupLighting() {
-  const scene = useSceneStore.getState().getScene();
-  const ambientLight = new THREE.AmbientLight(0x606080, 1);
-  scene.add(ambientLight);
-  const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
-  sunLight.position.set(20000, 20000, 20000);
-  sunLight.castShadow = true;
-  sunLight.shadow.mapSize.width = 2048;
-  sunLight.shadow.mapSize.height = 2048;
-  sunLight.shadow.bias = -0.001;
-  scene.add(sunLight);
-  const hemiplanetLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.8);
-  scene.add(hemiplanetLight);
-}
-
-
 export const getRenderer = () => renderer;
 export const getControls = () => useCameraStore.getState().orbitControls;
-export const getWorldConfig = () => worldConfig; 
+export const getWorldConfig = () => worldConfig;
