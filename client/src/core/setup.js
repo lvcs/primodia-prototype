@@ -1,17 +1,17 @@
 import * as THREE from 'three';
 import { PLANET_RADIUS, WORLD_DETAIL_DEFAULT } from '@config';
-import { setupCosmos } from '@game/cosmos';
+import { setupScene } from '@game/scene';
 import { initializeCam } from '@game/camera/';
 import { useCameraStore } from '@stores';
 
-let cosmos, camera, renderer;
+let scene, camera, renderer;
 let worldConfig;
 
 export function setupThreeJS(canvasElement) {
   if (!canvasElement) {
     throw new Error("setupThreeJS requires a canvasElement argument.");
   }
-  cosmos = setupCosmos();
+  scene = setupScene();
   
   // Use canvas dimensions for aspect ratio initially, but it should adapt on resize
   const aspectRatio = canvasElement.clientWidth / canvasElement.clientHeight;
@@ -24,7 +24,7 @@ export function setupThreeJS(canvasElement) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   // Resizing should be handled by an event listener in the game setup or main loop,
   // updating camera aspect and renderer size.
-  return { cosmos, camera, renderer };
+  return { scene, camera, renderer };
 }
 
 export function setupInitialWorldConfig() {
@@ -50,7 +50,7 @@ export function setupLighting(_scene) {
 }
 
 
-export const getScene = () => cosmos;
+export const getScene = () => scene;
 export const getRenderer = () => renderer;
 export const getControls = () => useCameraStore.getState().orbitControls;
 export const getWorldConfig = () => worldConfig; 

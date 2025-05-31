@@ -37,7 +37,7 @@ export function initGame(canvasElement) {
     createNewSeed();
 
     const threeContext = setupThreeJS(canvasElement); 
-    scene = threeContext.cosmos; 
+    scene = threeContext.scene; 
     camera = useCameraStore.getState().camera;
     renderer = threeContext.renderer;
     
@@ -61,8 +61,8 @@ export function initGame(canvasElement) {
 }
 
 // Modified to accept settings as a parameter instead of accessing the store
-export function requestPlanetRegeneration(seed, worldSettings) {
-  console.log('requestPlanetRegeneration called with seed:', seed, 'settings:', worldSettings);
+export function requestPlanetRegeneration(worldSettings) {
+  console.log('requestPlanetRegeneration called with settings:', worldSettings);
   
   const s = getScene();
   const wc = getWorldConfig();

@@ -1,1 +1,0 @@
-export const COSMOS_BACKGROUND_COLOR = 0x0a0a2a;

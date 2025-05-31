@@ -31,7 +31,7 @@ client/               # Frontend
 │   ├── ui/           # UI: Components, pages, styles; @ui alias
 │   ├── stores/       # Barrel for store files; @stores alias
 │   ├── utils/        # utilities and helper functions; @utils alias
-│   └── world/        # Create world out of cosmos and planet
+│   └── world/        # Create world out of scene and planet
 package.json          # Project dependencies
 README.md             # Project documentation
 

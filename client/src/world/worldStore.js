@@ -34,13 +34,13 @@ export const useWorldStore = create((set, get) => ({
     set({ drawMode });
     const settings = get();
     console.log('setDrawMode - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(undefined, settings);
+    requestPlanetRegeneration(settings);
   },
   setAlgorithm: (algorithm) => {
     set({ algorithm });
     const settings = get();
     console.log('setAlgorithm - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(undefined, settings);
+    requestPlanetRegeneration(settings);
   },
   setNumPoints: (numPoints) => {
     console.log('Store: setNumPoints called with value:', numPoints);
@@ -48,13 +48,13 @@ export const useWorldStore = create((set, get) => ({
     const settings = get();
     console.log('Store: After update, numPoints in state is:', settings.numPoints);
     console.log('setNumPoints - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(undefined, settings);
+    requestPlanetRegeneration(settings);
   },
   setJitter: (jitter) => {
     set({ jitter });
     const settings = get();
     console.log('setJitter - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(undefined, settings);
+    requestPlanetRegeneration(settings);
   },
 
   setOutlineVisible: (outlineVisible) => {
@@ -67,7 +67,7 @@ export const useWorldStore = create((set, get) => ({
     set({ numPlates });
     const settings = get();
     console.log('setNumPlates - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(undefined, settings);
+    requestPlanetRegeneration(settings);
   },
   setViewMode: (viewMode) => {
     set({ viewMode });
@@ -86,7 +86,7 @@ export const useWorldStore = create((set, get) => ({
     const seed = useGameStore.getState().seed;
     const settings = get();
     console.log('regenerateWorldWithCurrentSettings - Regenerating world with seed:', seed, 'and settings:', settings);
-    requestPlanetRegeneration(seed, settings);
+    requestPlanetRegeneration(settings);
     triggerPlanetColorUpdate(settings); // Often needed after regeneration
   },
 
