@@ -1,8 +1,8 @@
 ```mdc
 ---
 description: Use when working with Requirements.md files
-globs: Requirements.md
-alwaysApply: true
+globs: 
+alwaysApply: false
 ---
 ```
 1. Understand the objectives in Requirements.md file

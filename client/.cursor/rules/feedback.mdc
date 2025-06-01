@@ -1,6 +1,6 @@
 ---
 description: Receiving feedback
-globs: src/**/*.js
+globs: -
 alwaysApply: false
 ---
 ```

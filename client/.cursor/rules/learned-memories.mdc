@@ -5,7 +5,4 @@ globs:
 alwaysApply: true
 ---
 ```
-
 - Import Style: Prefer absolute path aliases (e.g., `@alias/module`) over relative paths (e.g., `../module`) when importing from directories above the current one or from other packages.
-- Use the latest available version of each library
-- Implement code without asking me for confirmation, unless you are unsure, or have different strategies to choose from

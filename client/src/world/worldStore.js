@@ -5,91 +5,47 @@ import {
   PLANET_JITTER_DEFAULT,
   PLANET_TECHTONIC_PLATES_DEFAULT,
   PLANET_ELEVATION_BIAS_DEFAULT,
-  PLANET_DRAW_MODE,
-  PLANET_VIEW_MODE_DEFAULT
+  PLANET_DRAW_MODES,
+  PLANET_VIEW_MODE_DEFAULT,
+  PLANET_DRAW_ALGORITHM,
+  PLANET_TILE_OUTLINES,
+  PLANET_RADIUS
 } from '@config';
 
-// Import the actual game functions
-import { requestPlanetRegeneration, triggerPlanetColorUpdate } from '@game/game';
-import { useGameStore } from '@stores';
-
-// --- End Game Logic Imports ---
-
 const initialWorldSettings = {
-  drawMode: PLANET_DRAW_MODE.VORONOI,
-  algorithm: 1, // Default from old planetSettings
+  drawMode: PLANET_DRAW_MODES.VORONOI,
+  algorithm: PLANET_DRAW_ALGORITHM,
   numPoints: PLANET_TILES_DEFAULT,
   jitter: PLANET_JITTER_DEFAULT,
-  outlineVisible: true, // Default from old planetSettings
+  outlineVisible: PLANET_TILE_OUTLINES,
   numPlates: PLANET_TECHTONIC_PLATES_DEFAULT,
-  viewMode: PLANET_VIEW_MODE_DEFAULT, // Default from old planetSettings
+  viewMode: PLANET_VIEW_MODE_DEFAULT,
   elevationBias: PLANET_ELEVATION_BIAS_DEFAULT,
+  planetRadius: PLANET_RADIUS,
 };
 
 export const useWorldStore = create((set, get) => ({
   ...initialWorldSettings,
 
   // Actions to update settings
-  setDrawMode: (drawMode) => {
-    set({ drawMode });
-    const settings = get();
-    console.log('setDrawMode - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(settings);
-  },
-  setAlgorithm: (algorithm) => {
-    set({ algorithm });
-    const settings = get();
-    console.log('setAlgorithm - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(settings);
-  },
-  setNumPoints: (numPoints) => {
-    console.log('Store: setNumPoints called with value:', numPoints);
-    set({ numPoints });
-    const settings = get();
-    console.log('Store: After update, numPoints in state is:', settings.numPoints);
-    console.log('setNumPoints - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(settings);
-  },
-  setJitter: (jitter) => {
-    set({ jitter });
-    const settings = get();
-    console.log('setJitter - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(settings);
-  },
+  setDrawMode: (drawMode) => set({ drawMode }),
+  setAlgorithm: (algorithm) => set({ algorithm }),
+  setNumPoints: (numPoints) => set({ numPoints }),
+  setJitter: (jitter) => set({ jitter }),
+  setOutlineVisible: (outlineVisible) => set({ outlineVisible }),
+  setNumPlates: (numPlates) => set({ numPlates }),
+  setViewMode: (viewMode) => set({ viewMode }),
+  setElevationBias: (elevationBias) => set({ elevationBias }),
+  setPlanetRadius: () => {},
 
-  setOutlineVisible: (outlineVisible) => {
-    set({ outlineVisible });
-    const settings = get();
-    console.log('setOutlineVisible - passing settings to triggerPlanetColorUpdate');
-    triggerPlanetColorUpdate(settings);
-  },
-  setNumPlates: (numPlates) => {
-    set({ numPlates });
-    const settings = get();
-    console.log('setNumPlates - passing settings to requestPlanetRegeneration');
-    requestPlanetRegeneration(settings);
-  },
-  setViewMode: (viewMode) => {
-    set({ viewMode });
-    const settings = get();
-    console.log('setViewMode - passing settings to triggerPlanetColorUpdate');
-    triggerPlanetColorUpdate(settings);
-  },
-  setElevationBias: (elevationBias) => {
-    set({ elevationBias });
-    const settings = get();
-    console.log('setElevationBias - passing settings to triggerPlanetColorUpdate');
-    triggerPlanetColorUpdate(settings);
-  },
-  regenerateWorldWithCurrentSettings: () => {
-    // Get seed from gameStore instead of local state
-    const seed = useGameStore.getState().seed;
-    const settings = get();
-    console.log('regenerateWorldWithCurrentSettings - Regenerating world with seed:', seed, 'and settings:', settings);
-    requestPlanetRegeneration(settings);
-    triggerPlanetColorUpdate(settings); // Often needed after regeneration
-  },
-
-  // Full reset action (optional)
-  resetWorldSettings: () => set(initialWorldSettings),
+  // Getters
+  getDrawMode: () => get().drawMode,
+  getAlgorithm: () => get().algorithm,
+  getNumPoints: () => get().numPoints,
+  getJitter: () => get().jitter,
+  getOutlineVisible: () => get().outlineVisible,
+  getNumPlates: () => get().numPlates,
+  getViewMode: () => get().viewMode,
+  getElevationBias: () => get().elevationBias,
+  getPlanetRadius: () => get().planetRadius,
 })); 

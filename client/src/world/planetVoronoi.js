@@ -3,48 +3,61 @@ import Delaunator from 'delaunator';
 
 import { Terrains } from '@game/planet/terrain/index.js';
 import {
-    PLANET_RADIUS,
-    PLANET_DRAW_MODE,
-    PLANET_TILES_DEFAULT,
-    PLANET_JITTER_DEFAULT,
-    PLANET_ELEVATION_BIAS_DEFAULT,
-    PLANET_TECHTONIC_PLATES_DEFAULT,
-    PLANET_VIEW_MODE_DEFAULT,
-} from '@config'; // Import constants
-import { nextFloat } from '@utils/random'; // Import functional API
-
+    PLANET_DRAW_MODES,
+} from '@config';
+import { useWorldStore } from '@stores';
+import { nextFloat } from '@utils/random';
 
 const TerrainTypeIds = Object.keys(Terrains).reduce((o,k)=>(o[k]=k,o),{});
 const terrainColors = Object.fromEntries(Object.values(Terrains).map(t=>[t.id,t.color]));
 
-function generateFibonacciPlanet1(N, jitter) {
+function generateFibonacciPlanet(N, jitter, algorithm = 1) {
     const points = [];
-    const phi = Math.PI * (Math.sqrt(5) - 1); // golden ratio
+    
+    // Pre-calculate angular increment based on algorithm
+    const angularIncrement = algorithm === 1 
+        ? Math.PI * (Math.sqrt(5) - 1)  // golden ratio
+        : Math.PI * (3 - Math.sqrt(5)); // ~2.39996323
     
     // Add north pole point
     points.push(0, 1, 0);
     
-    // Generate points from top to bottom
-    for (let i = 0; i < N - 2; i++) {
-        const y = 1 - (i + 1) * 2.0 / (N - 1);
-        const radius = Math.sqrt(1 - y * y);
-        const theta = phi * i;
-        
-        const x = Math.cos(theta) * radius;
-        const z = Math.sin(theta) * radius;
-        
-        if (jitter > 0) {
-            const angle = nextFloat() * Math.PI * 2;
-            const amount = nextFloat() * jitter;
-            const rx = Math.cos(angle) * amount;
-            const rz = Math.sin(angle) * amount;
+    // Pre-calculate common values
+    const numMiddlePoints = N - 2;
+    const yStep = 2.0 / (N - 1);
+    
+    if (jitter > 0) {
+        // Jittered point generation
+        for (let i = 0; i < numMiddlePoints; i++) {
+            const y = 1 - (i + 1) * yStep;
+            const radius = Math.sqrt(1 - y * y);
+            const theta = angularIncrement * i;
+            
+            const x = Math.cos(theta) * radius;
+            const z = Math.sin(theta) * radius;
+            
+            // Apply jitter
+            const jitterAngle = nextFloat() * Math.PI * 2;
+            const jitterAmount = nextFloat() * jitter;
+            const rx = Math.cos(jitterAngle) * jitterAmount;
+            const rz = Math.sin(jitterAngle) * jitterAmount;
             
             const nx = x + rx;
             const nz = z + rz;
-            const ny = y;
-            const len = Math.sqrt(nx*nx + ny*ny + nz*nz);
-            points.push(nx/len, ny/len, nz/len);
-        } else {
+            const invLength = 1 / Math.sqrt(nx*nx + y*y + nz*nz);
+            
+            points.push(nx * invLength, y * invLength, nz * invLength);
+        }
+    } else {
+        // Non-jittered point generation (faster path)
+        for (let i = 0; i < numMiddlePoints; i++) {
+            const y = 1 - (i + 1) * yStep;
+            const radius = Math.sqrt(1 - y * y);
+            const theta = angularIncrement * i;
+            
+            const x = Math.cos(theta) * radius;
+            const z = Math.sin(theta) * radius;
+            
             points.push(x, y, z);
         }
     }
@@ -53,58 +66,6 @@ function generateFibonacciPlanet1(N, jitter) {
     points.push(0, -1, 0);
     
     return points;
-}
-
-function generateFibonacciPlanet2(N, jitter) {
-    console.log(`[generateFibonacciPlanet2] Called with N=${N}, jitter=${jitter}`);
-    const points = [];
-    const dlong = Math.PI * (3-Math.sqrt(5)); // ~2.39996323
-    
-    // Add north pole point
-    points.push(0, 1, 0);
-    
-    // Generate points in a more even distribution
-    for (let i = 0; i < N - 2; i++) {
-        const y = 1.0 - (i + 1.0) * 2.0 / (N - 1);
-        const radius = Math.sqrt(1 - y * y);
-        const theta = dlong * i;
-        
-        const x = Math.cos(theta) * radius;
-        const z = Math.sin(theta) * radius;
-        
-        if (jitter > 0) {
-            const angle = nextFloat() * Math.PI * 2;
-            const amount = nextFloat() * jitter;
-            const rx = Math.cos(angle) * amount;
-            const rz = Math.sin(angle) * amount;
-            
-            const nx = x + rx;
-            const nz = z + rz;
-            const ny = y;
-            const len = Math.sqrt(nx*nx + ny*ny + nz*nz);
-            points.push(nx/len, ny/len, nz/len);
-        } else {
-            points.push(x, y, z);
-        }
-    }
-    
-    // Add south pole point
-    points.push(0, -1, 0);
-    
-    console.log(`[generateFibonacciPlanet2] Generated ${points.length/3} points (expected ${N})`);
-    return points;
-}
-
-// What is this funciton for?
-function pushCartesianFromSpherical(out, latDeg, lonDeg) {
-    const latRad = latDeg / 180.0 * Math.PI;
-    const lonRad = lonDeg / 180.0 * Math.PI;
-    out.push(
-        Math.cos(latRad) * Math.cos(lonRad),
-        Math.cos(latRad) * Math.sin(lonRad),
-        Math.sin(latRad)
-    );
-    return out;
 }
 
 function stereographicProjection(points) {
@@ -182,34 +143,12 @@ function addSouthPoleTriangles(southPoleOriginalIndex, delaunatorInstance, origi
 }
 
 // Function to determine terrain type based on vertex position
+// NOTE: This is a placeholder function used only for initial geometry generation.
+// The actual terrain classification happens later in worldGenerator.js using
+// classifyTileTerrainFromProperties with elevation, moisture, temperature data.
 function determineTerrainType(position) {
-    const y = position.y; // Using y-coordinate as elevation
-    const noiseValue = Math.sin(position.x * 10) * Math.cos(position.z * 8) * 0.1; // Noise for variation
-    
-    if (y < -0.8) { // South pole
-        return TerrainTypeIds.SNOW;
-    } else if (y > 0.8) { // North pole
-        return TerrainTypeIds.SNOW;
-    } else if (y < -0.5) {
-        return nextFloat() > 0.7 ? TerrainTypeIds.TUNDRA : TerrainTypeIds.PLAINS;
-    } else if (y < -0.2) {
-        if (noiseValue > 0.05) return TerrainTypeIds.FOREST;
-        if (noiseValue < -0.05) return TerrainTypeIds.HILLS;
-        return TerrainTypeIds.PLAINS;
-    } else if (y < 0.2) { // Equatorial regions
-        const rand = nextFloat();
-        if (rand < 0.4) return TerrainTypeIds.OCEAN; // Increased chance of ocean for demo
-        if (rand < 0.6) return TerrainTypeIds.COAST;
-        if (noiseValue > 0.05) return TerrainTypeIds.JUNGLE;
-        if (noiseValue < -0.05) return TerrainTypeIds.DESERT;
-        return TerrainTypeIds.PLAINS;
-    } else if (y < 0.5) {
-        if (noiseValue > 0.05) return TerrainTypeIds.FOREST;
-        if (noiseValue < -0.05) return TerrainTypeIds.HILLS;
-        return TerrainTypeIds.PLAINS;
-    } else { // Approaches North pole
-        return nextFloat() > 0.7 ? TerrainTypeIds.TUNDRA : TerrainTypeIds.PLAINS;
-    }
+    // Use GRASSLAND as default placeholder - will be properly classified later
+    return TerrainTypeIds.GRASSLAND;
 }
 
 // Export determineTerrainType for external usage (e.g., picking/debug)
@@ -218,7 +157,8 @@ export { determineTerrainType as classifyTerrain };
 // Prepare an ordered list of terrain types for classification
 const orderedTerrainTypes = Object.values(Terrains).sort((a, b) => a.priority - b.priority);
 
-// New function to classify terrain based on tile properties and declarative rules
+// Modern terrain classification function using sophisticated rules based on tile properties
+// This is the main terrain classification system used by worldGenerator.js
 export function classifyTileTerrainFromProperties(tile) {
     if (!tile) {
         console.warn('[classifyTileTerrainFromProperties] Tile is null, defaulting to GRASSLAND.');
@@ -290,9 +230,9 @@ function getTerrainColorRGB(terrainType) {
     ];
 }
 
-// Helper function to calculate spherical excess (area on unit planet) of a spherical triangle
+// Helper function to calculate area of a spherical triangle on unit planet
 // vertices v1, v2, v3 are THREE.Vector3 unit vectors
-function calculateSphericalTriangleExcess(v1, v2, v3) {
+function calculateArea(v1, v2, v3) {
     // Using the formula: E = 2 * atan2( |det(v1,v2,v3)|, 1 + v1·v2 + v2·v3 + v3·v1 )
     // where det(v1,v2,v3) = v1 · (v2 x v3)
     const v2_cross_v3 = new THREE.Vector3().crossVectors(v2, v3);
@@ -306,6 +246,32 @@ function calculateSphericalTriangleExcess(v1, v2, v3) {
     }
     
     return 2.0 * Math.atan2(Math.abs(scalarTripleProduct), denominator);
+}
+
+// Helper function for edge processing in planet geometry generation
+function pushEdge(geometry, boundaryPositions, tileEdges, tileNeighborSets, aIdx, bIdx, tileA, tileB) {
+    const worldStore = useWorldStore.getState();
+    const planetRadius = worldStore.planetRadius;
+    
+    const ax0 = geometry[aIdx*3], ay0 = geometry[aIdx*3+1], az0 = geometry[aIdx*3+2];
+    const bx0 = geometry[bIdx*3], by0 = geometry[bIdx*3+1], bz0 = geometry[bIdx*3+2];
+
+    const vecA = new THREE.Vector3(ax0, ay0, az0).normalize().multiplyScalar(planetRadius*1.001);
+    const vecB = new THREE.Vector3(bx0, by0, bz0).normalize().multiplyScalar(planetRadius*1.001);
+
+    const ax = vecA.x, ay = vecA.y, az = vecA.z;
+    const bx = vecB.x, by = vecB.y, bz = vecB.z;
+    boundaryPositions.push(ax,ay,az, bx,by,bz);
+    if(!tileEdges[tileA]) tileEdges[tileA] = [];
+    tileEdges[tileA].push(ax,ay,az, bx,by,bz);
+    if(!tileEdges[tileB]) tileEdges[tileB] = [];
+    tileEdges[tileB].push(ax,ay,az, bx,by,bz);
+
+    // neighbor tracking
+    if(!tileNeighborSets[tileA]) tileNeighborSets[tileA] = new Set();
+    if(!tileNeighborSets[tileB]) tileNeighborSets[tileB] = new Set();
+    tileNeighborSets[tileA].add(tileB);
+    tileNeighborSets[tileB].add(tileA);
 }
 
 function generateDelaunayGeometry(xyz, delaunay) {
@@ -333,11 +299,11 @@ function generateDelaunayGeometry(xyz, delaunay) {
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[t] = terrainType;
 
-        // Calculate spherical excess for this Delaunay triangle (tile t)
+        // Calculate area for this Delaunay triangle (tile t)
         const v1 = new THREE.Vector3(xyz[3*a], xyz[3*a+1], xyz[3*a+2]);
         const v2 = new THREE.Vector3(xyz[3*b], xyz[3*b+1], xyz[3*b+2]);
         const v3 = new THREE.Vector3(xyz[3*c], xyz[3*c+1], xyz[3*c+2]);
-        tileSphericalExcesses[t] = calculateSphericalTriangleExcess(v1, v2, v3);
+        tileSphericalExcesses[t] = calculateArea(v1, v2, v3);
 
         for (let i = 0; i < 3; i++) {
             const vertex = triangles[3*t + i];
@@ -420,8 +386,8 @@ function generateVoronoiGeometry(points, delaunay) {
         const rgb = getTerrainColorRGB(terrainType);
         tileTerrain[v] = terrainType;
         
-        // Calculate spherical excess for this Voronoi cell (tile v)
-        let currentTileSphericalExcess = 0.0;
+        // Calculate area for this Voronoi cell (tile v)
+        let currentTileArea = 0.0;
         const polygonVertices = centersWithAngle.map(cwa => cwa.vertex);
 
         // NEW: Store polygon vertices for this tile (on unit planet)
@@ -436,10 +402,10 @@ function generateVoronoiGeometry(points, delaunay) {
                 const p_i = polygonVertices[j];
                 const p_next = polygonVertices[(j + 1) % polygonVertices.length];
                 // Triangle is (tileCenter, p_i, p_next)
-                currentTileSphericalExcess += calculateSphericalTriangleExcess(normal, p_i, p_next);
+                currentTileArea += calculateArea(normal, p_i, p_next);
             }
         }
-        tileSphericalExcesses[v] = currentTileSphericalExcess;
+        tileSphericalExcesses[v] = currentTileArea;
 
         for (let i = 0; i < centersWithAngle.length; i++) {
             const c1 = centers[centersWithAngle[i].tIdx];
@@ -460,42 +426,19 @@ function generateVoronoiGeometry(points, delaunay) {
     return { geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices };
 }
 
-// Debug function to troubleshoot potential issues with numPoints
-function debugAndFixNumPoints() {
-  
-}
-
-// Settings object to store planet generation parameters
-export const planetSettings = {
-  drawMode: PLANET_DRAW_MODE.VORONOI,
-  algorithm: 1,
-  numPoints: PLANET_TILES_DEFAULT,
-  jitter: PLANET_JITTER_DEFAULT,
-  outlineVisible: true,
-  numPlates: PLANET_TECHTONIC_PLATES_DEFAULT,
-  viewMode: PLANET_VIEW_MODE_DEFAULT,
-  elevationBias: PLANET_ELEVATION_BIAS_DEFAULT,
-};
-
 // Main function to generate the planet geometry
-export function generatePlanetGeometryGroup(config) {
-    // Check RandomService state
+export function generatePlanetGeometryGroup() {
+    // Get settings directly from worldStore
+    const worldStore = useWorldStore.getState();
+    const N = worldStore.numPoints;
+    const jitter = worldStore.jitter;
+    const algorithm = worldStore.algorithm;
+    const drawMode = worldStore.drawMode;
+    const outlineVisible = worldStore.outlineVisible;
+    const planetRadius = worldStore.planetRadius;
     
-    // Perform sanity check on numPoints
-    debugAndFixNumPoints();
-    
-    const N = planetSettings.numPoints;
-    const jitter = planetSettings.jitter;
-    const algorithm = planetSettings.algorithm;
-    const drawMode = planetSettings.drawMode;
-    
-    let points;
-
-    if(algorithm === 1){
-        points = generateFibonacciPlanet1(N, jitter);
-    } else {
-        points = generateFibonacciPlanet2(N, jitter);
-    }
+    // Generate points using the optimized function
+    const points = generateFibonacciPlanet(N, jitter, algorithm);
     
     // Project points for triangulation
     const { projected, southPoleIndex, originalIndicesMap } = stereographicProjection(points);
@@ -537,18 +480,18 @@ export function generatePlanetGeometryGroup(config) {
     
     // Generate geometry based on draw mode
     let geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices;
-    if (drawMode === PLANET_DRAW_MODE.VORONOI) {
+    if (drawMode === PLANET_DRAW_MODES.VORONOI) {
         ({geometry, colors, ids, tileTerrain, tileSphericalExcesses, tilePolygonVertices} = generateVoronoiGeometry(points, planetTriangulation));
-    } else if (drawMode === PLANET_DRAW_MODE.DELAUNAY) {
+    } else if (drawMode === PLANET_DRAW_MODES.DELAUNAY) {
         ({geometry, colors, ids, tileTerrain, tileSphericalExcesses} = generateDelaunayGeometry(points, planetTriangulation));
     }
     
     if (geometry && colors) {
         // Scale geometry to desired radius
         for (let i = 0; i < geometry.length; i += 3) {
-            geometry[i] *= PLANET_RADIUS;
-            geometry[i + 1] *= PLANET_RADIUS;
-            geometry[i + 2] *= PLANET_RADIUS;
+            geometry[i] *= planetRadius;
+            geometry[i + 1] *= planetRadius;
+            geometry[i + 2] *= planetRadius;
         }
         
         const geom = new THREE.BufferGeometry();
@@ -582,27 +525,7 @@ export function generatePlanetGeometryGroup(config) {
         const vertCount = geometry.length / 3;
         const triCount = vertCount / 3;
 
-        function pushEdge(aIdx, bIdx, tileA, tileB) {
-            const ax0 = geometry[aIdx*3], ay0 = geometry[aIdx*3+1], az0 = geometry[aIdx*3+2];
-            const bx0 = geometry[bIdx*3], by0 = geometry[bIdx*3+1], bz0 = geometry[bIdx*3+2];
 
-            const vecA = new THREE.Vector3(ax0, ay0, az0).normalize().multiplyScalar(PLANET_RADIUS*1.001);
-            const vecB = new THREE.Vector3(bx0, by0, bz0).normalize().multiplyScalar(PLANET_RADIUS*1.001);
-
-            const ax = vecA.x, ay = vecA.y, az = vecA.z;
-            const bx = vecB.x, by = vecB.y, bz = vecB.z;
-            boundaryPositions.push(ax,ay,az, bx,by,bz);
-            if(!tileEdges[tileA]) tileEdges[tileA] = [];
-            tileEdges[tileA].push(ax,ay,az, bx,by,bz);
-            if(!tileEdges[tileB]) tileEdges[tileB] = [];
-            tileEdges[tileB].push(ax,ay,az, bx,by,bz);
-
-            // neighbor tracking
-            if(!tileNeighborSets[tileA]) tileNeighborSets[tileA] = new Set();
-            if(!tileNeighborSets[tileB]) tileNeighborSets[tileB] = new Set();
-            tileNeighborSets[tileA].add(tileB);
-            tileNeighborSets[tileB].add(tileA);
-        }
 
         for (let t=0;t<triCount;t++){
             const i0 = t*3, i1 = i0+1, i2 = i0+2;
@@ -620,7 +543,7 @@ export function generatePlanetGeometryGroup(config) {
                 } else {
                     const otherTid = edgeMap.get(key);
                     if(otherTid!==tid){
-                        pushEdge(a,b, tid, otherTid);
+                        pushEdge(geometry, boundaryPositions, tileEdges, tileNeighborSets, a, b, tid, otherTid);
                     }
                 }
             }
@@ -641,7 +564,7 @@ export function generatePlanetGeometryGroup(config) {
             });
             const outlineLines = new THREE.LineSegments(outlineGeo, lineMat);
             outlineLines.userData.isOutline = true;
-            outlineLines.visible = planetSettings.outlineVisible;
+            outlineLines.visible = outlineVisible;
             group.add(outlineLines);
             group.userData.outlineLines = outlineLines;
         }

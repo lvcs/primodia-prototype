@@ -21,7 +21,7 @@ import {
   PLANET_ELEVATION_BIAS_MIN,
   PLANET_ELEVATION_BIAS_MAX,
   PLANET_ELEVATION_BIAS_STEP,
-  PLANET_DRAW_MODE,
+  PLANET_DRAW_MODES,
 
   PLANET_VIEW_MODES,
   PLANET_RENDERING_ALGORITHMS
@@ -103,7 +103,7 @@ function PlanetTab() {
     <section>
       <ControlSectionWrapper label="Draw Mode">
         <div className="flex space-x-2">
-          {Object.entries(PLANET_DRAW_MODE).map(([key, value]) => (
+          {Object.entries(PLANET_DRAW_MODES).map(([key, value]) => (
             <Button
               key={value}
               onClick={() => setDrawMode(value)}

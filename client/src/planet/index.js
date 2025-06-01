@@ -1,5 +1,3 @@
-import { debug } from '@utils/debug.js';
-import { planetSettings } from '@game/world/planetVoronoi.js'; 
 import { generateWorld } from '@game/world/worldGenerator.js';
 import { getColorForTerrain } from '@game/planet/terrain/index.js';
 import { clearTrees } from '@game/planet/tree';
@@ -9,7 +7,7 @@ import { applyElevationColors } from './elevation';
 import { applyMoistureColors } from './moisture';
 import { applyTemperatureColors } from './temperature';
 import { applyPlateColors } from './techtonics';
-import { useSceneStore } from '@stores';
+import { useSceneStore, useWorldStore } from '@stores';
 
 let planetGroup;
 let worldData;
@@ -36,11 +34,8 @@ export function generateAndDisplayPlanet(_worldConfig, _controls, _existingPlane
 
     removeHemosphere();
 
-    const currentWorldConfig = {
-      planetSettings: { ...planetSettings }
-    };   
-    
-    worldData = generateWorld(currentWorldConfig);
+    // generateWorld now gets settings directly from the store
+    worldData = generateWorld();
     
     if (worldData && worldData.meshGroup) {
       planetGroup = worldData.meshGroup;
@@ -48,10 +43,6 @@ export function generateAndDisplayPlanet(_worldConfig, _controls, _existingPlane
       addPolarIndicators(planetGroup);
 
       scene.add(planetGroup);
-    }
-
-    if (worldData && worldData.cells) {
-        debug('Simplified world data log:', {cellCount: worldData.cells.length, config: worldData.config});
     }
     
     createHemosphere();
@@ -76,19 +67,20 @@ export function updatePlanetColors() {
   const tileIds = mainMesh.geometry.getAttribute('tileId');
   if(!colorsAttr || !tileIds) return;
 
+  const worldStore = useWorldStore.getState();
   if (planetGroup && planetGroup.userData && planetGroup.userData.outlineLines) {
-    planetGroup.userData.outlineLines.visible = planetSettings.outlineVisible;
+    planetGroup.userData.outlineLines.visible = worldStore.outlineVisible;
   }
 
   const tileTerrain = mainMesh.userData.tileTerrain || {};
 
-  if(planetSettings.viewMode === 'plates') {
+  if(worldStore.viewMode === 'plates') {
     applyPlateColors(mainMesh, colorsAttr, tileIds);
-  } else if(planetSettings.viewMode === 'elevation') {
+  } else if(worldStore.viewMode === 'elevation') {
     applyElevationColors(mainMesh, colorsAttr, tileIds);
-  } else if(planetSettings.viewMode === 'moisture') {
+  } else if(worldStore.viewMode === 'moisture') {
     applyMoistureColors(mainMesh, colorsAttr, tileIds);
-  } else if (planetSettings.viewMode === 'temperature') {
+  } else if (worldStore.viewMode === 'temperature') {
     applyTemperatureColors(mainMesh, colorsAttr, tileIds, worldData);
   } else { 
     // Default terrain view

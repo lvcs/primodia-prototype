@@ -1,6 +1,6 @@
 ---
 description: This rule explains Tailwind CSS 4 changes, new features, and best practices for modern UI development.
-globs: *
+globs: src/ui/**/*.js
 alwaysApply: false
 ---
 

@@ -1,7 +1,6 @@
 ---
 description: Rule Analytics
-globs: *.js
-alwaysApply: true
+globs: src/**/*.*
+alwaysApply: false
 ---
-
-Each time you use a Cursor rule, update the analytics tracking file located in /.cursor/analytics.md
+- Each time you use a Cursor rule, update the .cursor/analytics.md tracking file, incrementing number

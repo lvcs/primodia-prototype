@@ -1,6 +1,6 @@
 ---
 description: This rule explains Tailwind CSS conventions, utility classes, and best practices for modern UI development.
-globs: *
+globs: src/ui/**/*.js
 alwaysApply: false
 ---
 

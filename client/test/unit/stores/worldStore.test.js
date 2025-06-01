@@ -17,7 +17,7 @@ describe('WorldStore', () => {
   describe('Initial State', () => {
     it('should have correct default values', () => {
       const store = useWorldStore.getState();
-      expect(store.drawMode).toBe('voronoi'); // PLANET_DRAW_MODE.VORONOI
+      expect(store.drawMode).toBe('voronoi'); // PLANET_DRAW_MODES.VORONOI
       expect(store.algorithm).toBe(1);
       expect(store.numPoints).toBe(1280); // PLANET_TILES_DEFAULT
       expect(store.jitter).toBe(0.5); // PLANET_JITTER_DEFAULT

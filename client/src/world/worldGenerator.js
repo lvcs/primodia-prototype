@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { generatePlanetGeometryGroup, planetSettings, classifyTerrain, classifyTileTerrainFromProperties } from './planetVoronoi.js';
+import { generatePlanetGeometryGroup, classifyTerrain, classifyTileTerrainFromProperties } from './planetVoronoi.js';
 import WorldPlanet from './model/WorldPlanet.js';
 import Tile from './model/Tile.js';
 import { terrainById, getColorForTerrain } from '@game/planet/terrain/index.js';
@@ -8,6 +8,7 @@ import { getColorForMoisture } from '@/planet/moisture';
 import { generatePlates } from '@game/planet/techtonics';
 import { nextFloat } from '@utils/random';
 import { PLANET_RADIUS } from '@config';
+import { useWorldStore } from './worldStore.js';
 
 import { 
   shouldHaveTrees,
@@ -16,40 +17,34 @@ import {
 
 /**
  * Generates planet mesh (legacy) plus OO WorldPlanet description.
- * @param {{planetSettings?:object}} config
- * @returns {{ meshGroup: THREE.Group, planet: WorldPlanet, config: any, actualSeed: string }}
+ * @returns {{ meshGroup: THREE.Group, planet: WorldPlanet }}
  */
-export function generateWorld(config){
+export function generateWorld(){
   
-  // If config contains planetSettings, use it to override the global planetSettings object
-  if (config.planetSettings) {
-    
-    // Update the global planetSettings with the values from config
-    planetSettings.drawMode = config.planetSettings.drawMode;
-    planetSettings.algorithm = config.planetSettings.algorithm;
-    planetSettings.numPoints = config.planetSettings.numPoints;
-    planetSettings.jitter = config.planetSettings.jitter;
-
-    planetSettings.outlineVisible = config.planetSettings.outlineVisible;
-    planetSettings.numPlates = config.planetSettings.numPlates;
-    planetSettings.viewMode = config.planetSettings.viewMode;
-    planetSettings.elevationBias = config.planetSettings.elevationBias;
-    
-  } else {
-    console.warn('[generateWorld] No planetSettings received in config, using existing values');
-  }
+  // Get planet settings from worldStore
+  const worldStore = useWorldStore.getState();
+  const planetSettings = {
+    drawMode: worldStore.drawMode,
+    algorithm: worldStore.algorithm,
+    numPoints: worldStore.numPoints,
+    jitter: worldStore.jitter,
+    outlineVisible: worldStore.outlineVisible,
+    numPlates: worldStore.numPlates,
+    viewMode: worldStore.viewMode,
+    elevationBias: worldStore.elevationBias,
+  };
   
-   
-  const meshGroup = generatePlanetGeometryGroup(config);
+  // Generate the planet geometry - settings come directly from worldStore
+  const meshGroup = generatePlanetGeometryGroup();
   const mainMesh = meshGroup.children.find(c=>c.userData && c.userData.isMainMesh);
   if(!mainMesh){
-    return { meshGroup, planet:null, config };
+    return { meshGroup, planet:null };
   }
   const idsAttr = mainMesh.geometry.getAttribute('tileId');
   const posAttr = mainMesh.geometry.getAttribute('position');
   const tileTerrain = mainMesh.userData.tileTerrain || {};
   const tileSphericalExcesses = mainMesh.userData.tileSphericalExcesses || {}; // Get excesses
-  const planetRadius = PLANET_RADIUS; // Actual radius of the planet
+  const planetRadius = worldStore.planetRadius; // Actual radius of the planet
 
   const planet = new WorldPlanet({
     drawMode: planetSettings.drawMode,
@@ -302,5 +297,5 @@ export function generateWorld(config){
     console.log(`[Trees] No forest tiles found - no trees generated`);
   }
 
-  return { meshGroup, planet, config };
+  return { meshGroup, planet };
 } 

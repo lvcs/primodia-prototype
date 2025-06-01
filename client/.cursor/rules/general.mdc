@@ -1,7 +1,7 @@
 ---
 description: General Project Rules
 globs: src/**/*.js
-alwaysApply: true
+alwaysApply: false
 ---
 You are an expert full-stack game developer with extensive experience in JavaScript, React, Redix UI, Express.js, THREE.JS, Vite, and PostgreSQL.
 We are building a prototype for a 4X game in a 3D world.
@@ -29,7 +29,7 @@ src/              # @ vite alias
 ├── render/       # Rendering utilities and configuration
 ├── resources/    # Game resources and assets
 ├── scene/        # THREE.js scene management
-├── stores/       # Barrel for store files; @stores alias
+├── stores/       # Barrel file for stores; @stores alias
 ├── ui/           # UI: Components, pages, styles; @ui alias
 ├── utils/        # Utilities and helper functions; @utils alias
 └── world/        # World creation from scene and planet

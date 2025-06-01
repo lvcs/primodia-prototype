@@ -1,4 +1,4 @@
-import { planetSettings } from '@game/world/planetVoronoi.js';
+import { useWorldStore } from '@stores';
 
 /**
  * Calculate RGB color for elevation value
@@ -6,7 +6,8 @@ import { planetSettings } from '@game/world/planetVoronoi.js';
  * @returns {Array<number>} RGB array with values 0-1
  */
 export function getElevationColor(elevationValue) {
-  const elev = elevationValue + planetSettings.elevationBias;
+  const worldStore = useWorldStore.getState();
+  const elev = elevationValue + worldStore.elevationBias;
   const oceanHex = [
     0x0a0033, 0x0b003a, 0x0c0040, 0x0d0047, 0x0e004d, 0x0f0054, 0x10005a, 0x110061, 0x120067, 0x13006e,
     0x140074, 0x15007b, 0x160081, 0x170088, 0x18008e, 0x190095, 0x1a009b, 0x1b00a2, 0x1c00a8, 0x1d00af

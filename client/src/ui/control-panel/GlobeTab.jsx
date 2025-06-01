@@ -21,20 +21,11 @@ import {
   PLANET_ELEVATION_BIAS_MIN,
   PLANET_ELEVATION_BIAS_MAX,
   PLANET_ELEVATION_BIAS_STEP,
-  PLANET_DRAW_MODE,
+  PLANET_DRAW_MODES,
 
   PLANET_VIEW_MODES,
   PLANET_RENDERING_ALGORITHMS
 } from '@config';
-
-// TODO: Integrate MapRegistry for live data
-
-// --- Mock/Placeholder Game Logic Imports ---
-
-// We don't need the mock planetSettings and functions anymore as we're using the store
-// and real functions from game.js
-
-// --- End Mock/Placeholder Game Logic Imports ---
 
 function PlanetTab() {
   const {
@@ -107,7 +98,7 @@ function PlanetTab() {
     <div>
       <ControlSectionWrapper label="Draw Mode">
         <div className="flex space-x-2">
-          {Object.entries(PLANET_DRAW_MODE).map(([key, value]) => (
+          {Object.entries(PLANET_DRAW_MODES).map(([key, value]) => (
             <Button
               key={value}
               onClick={() => setDrawMode(value)}

@@ -34,7 +34,7 @@ export const PLANET_GLOW_COLOR = 0x5c95ff;
 
 
 // UI Specific Constants
-export const PLANET_DRAW_MODE = {
+export const PLANET_DRAW_MODES = {
   POINTS: 'points',
   DELAUNAY: 'delaunay',
   VORONOI: 'voronoi',
@@ -50,4 +50,10 @@ export const PLANET_VIEW_MODES = [
 ];
 export const PLANET_VIEW_MODE_DEFAULT = 'elevation';
 
-export const PLANET_RENDERING_ALGORITHMS = [1, 2]; 
+export const PLANET_RENDERING_ALGORITHMS = [1, 2];
+
+// Planet Draw Algorithm Default
+export const PLANET_DRAW_ALGORITHM = 1;
+
+// Planet Tile Outlines
+export const PLANET_TILE_OUTLINES = true; 
