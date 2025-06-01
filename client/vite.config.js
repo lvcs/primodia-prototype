@@ -3,10 +3,16 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react({
+    fastRefresh: true,
+    jsxRuntime: 'automatic'
+  })],
   server: {
     port: 5173,
-    host: true
+    host: true,
+    hmr: {
+      overlay: true
+    }
   },
   resolve: {
     alias: {
