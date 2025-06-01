@@ -6,10 +6,14 @@ import { useAuthStore } from '@/stores'
 // Mock the auth store
 vi.mock('@/stores', () => ({
   useAuthStore: vi.fn(),
+  useGameStore: vi.fn(() => ({
+    seed: null,
+    turn: null,
+  })),
 }))
 
 // Mock the pages
-vi.mock('@/pages/LoginPage', () => ({
+vi.mock('@/ui/pages/LoginPage', () => ({
   default: ({ onSwitchToRegister }) => (
     <div data-testid="login-page">
       <button onClick={onSwitchToRegister}>Switch to Register</button>
@@ -17,7 +21,7 @@ vi.mock('@/pages/LoginPage', () => ({
   ),
 }))
 
-vi.mock('@/pages/RegisterPage', () => ({
+vi.mock('@/ui/pages/RegisterPage', () => ({
   default: ({ onSwitchToLogin }) => (
     <div data-testid="register-page">
       <button onClick={onSwitchToLogin}>Switch to Login</button>
@@ -25,13 +29,13 @@ vi.mock('@/pages/RegisterPage', () => ({
   ),
 }))
 
-vi.mock('@/pages/LoadingPage', () => ({
+vi.mock('@/ui/pages/LoadingPage', () => ({
   default: ({ message }) => (
     <div data-testid="loading-page">{message}</div>
   ),
 }))
 
-vi.mock('@/pages/GamePage', () => ({
+vi.mock('@/ui/pages/GamePage', () => ({
   default: ({ onSignOut, onPlanetViewClick }) => (
     <div data-testid="game-page">
       <button onClick={onSignOut}>Sign Out</button>

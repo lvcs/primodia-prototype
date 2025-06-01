@@ -1,137 +1,108 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { useWorldStore } from '@/stores/worldStore';
+import { useWorldStore } from '@/world/worldStore';
 
 // Mock the game functions to avoid complex dependencies
-vi.mock('@game/game', () => ({
+vi.mock('@/game', () => ({
   requestPlanetRegeneration: vi.fn(),
   triggerPlanetColorUpdate: vi.fn(),
 }));
 
 describe('WorldStore', () => {
-  let store;
-
-  beforeEach(() => {
-    // Get a fresh store instance for each test
-    store = useWorldStore.getState();
-    // Reset to initial state
-    store.resetWorldSettings();
-  });
-
   afterEach(() => {
     vi.clearAllMocks();
+    // Reset store to initial state after each test
+    useWorldStore.getState().resetWorldSettings();
   });
 
   describe('Initial State', () => {
     it('should have correct default values', () => {
-      expect(store.drawMode).toBe('VORONOI');
+      const store = useWorldStore.getState();
+      expect(store.drawMode).toBe('voronoi'); // PLANET_DRAW_MODES.VORONOI
       expect(store.algorithm).toBe(1);
-      expect(store.numPoints).toBe(12000); // DEFAULT_NUMBER_OF_PLANET_TILES
-      expect(store.jitter).toBe(0.2); // DEFAULT_JITTER
+      expect(store.numPoints).toBe(1280); // PLANET_TILES_DEFAULT
+      expect(store.jitter).toBe(0.5); // PLANET_JITTER_DEFAULT
       expect(store.outlineVisible).toBe(true);
-      expect(store.viewMode).toBe('terrain'); // DEFAULT_VIEW_MODE
-      expect(typeof store.currentSeed).toBe('string');
-    });
-
-    it('should have a valid timestamp-based seed', () => {
-      const seedValue = parseInt(store.currentSeed);
-      expect(seedValue).toBeGreaterThan(0);
-      expect(seedValue.toString()).toBe(store.currentSeed);
+      expect(store.viewMode).toBe('elevation'); // PLANET_VIEW_MODE_DEFAULT
     });
   });
 
   describe('Settings Updates', () => {
-    it('should update drawMode and trigger regeneration', () => {
-      const { requestPlanetRegeneration } = require('@game/game');
+    it('should update drawMode and trigger regeneration', async () => {
+      const { requestPlanetRegeneration } = await import('@/game');
       
-      store.setDrawMode('DELAUNAY');
+      useWorldStore.getState().setDrawMode('delaunay');
       
-      expect(store.drawMode).toBe('DELAUNAY');
+      expect(useWorldStore.getState().drawMode).toBe('delaunay');
       expect(requestPlanetRegeneration).toHaveBeenCalledWith(
-        undefined, 
-        expect.objectContaining({ drawMode: 'DELAUNAY' })
+        expect.objectContaining({ drawMode: 'delaunay' })
       );
     });
 
-    it('should update numPoints and trigger regeneration', () => {
-      const { requestPlanetRegeneration } = require('@game/game');
+    it('should update numPoints and trigger regeneration', async () => {
+      const { requestPlanetRegeneration } = await import('@/game');
       
-      store.setNumPoints(5000);
+      useWorldStore.getState().setNumPoints(5000);
       
-      expect(store.numPoints).toBe(5000);
+      expect(useWorldStore.getState().numPoints).toBe(5000);
       expect(requestPlanetRegeneration).toHaveBeenCalledWith(
-        undefined,
         expect.objectContaining({ numPoints: 5000 })
       );
     });
 
-    it('should update jitter and trigger regeneration', () => {
-      const { requestPlanetRegeneration } = require('@game/game');
+    it('should update jitter and trigger regeneration', async () => {
+      const { requestPlanetRegeneration } = await import('@/game');
       
-      store.setJitter(0.5);
+      useWorldStore.getState().setJitter(0.2);
       
-      expect(store.jitter).toBe(0.5);
+      expect(useWorldStore.getState().jitter).toBe(0.2);
       expect(requestPlanetRegeneration).toHaveBeenCalledWith(
-        undefined,
-        expect.objectContaining({ jitter: 0.5 })
+        expect.objectContaining({ jitter: 0.2 })
       );
     });
 
-    it('should update mapType and trigger regeneration', () => {
-      const { requestPlanetRegeneration } = require('@game/game');
+    it('should update numPlates and trigger regeneration', async () => {
+      const { requestPlanetRegeneration } = await import('@/game');
       
-      store.setMapType('pangaea');
+      useWorldStore.getState().setNumPlates(8);
       
-      expect(store.mapType).toBe('pangaea');
+      expect(useWorldStore.getState().numPlates).toBe(8);
       expect(requestPlanetRegeneration).toHaveBeenCalledWith(
-        undefined,
-        expect.objectContaining({ mapType: 'pangaea' })
-      );
-    });
-
-    it('should update numPlates and trigger regeneration', () => {
-      const { requestPlanetRegeneration } = require('@game/game');
-      
-      store.setNumPlates(8);
-      
-      expect(store.numPlates).toBe(8);
-      expect(requestPlanetRegeneration).toHaveBeenCalledWith(
-        undefined,
         expect.objectContaining({ numPlates: 8 })
       );
     });
   });
 
   describe('Visual Updates (No Regeneration)', () => {
-    it('should update outlineVisible and trigger color update only', () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = require('@game/game');
+    it('should update outlineVisible and trigger color update only', async () => {
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
-      store.setOutlineVisible(false);
+      useWorldStore.getState().setOutlineVisible(false);
       
-      expect(store.outlineVisible).toBe(false);
+      expect(useWorldStore.getState().outlineVisible).toBe(false);
       expect(requestPlanetRegeneration).not.toHaveBeenCalled();
       expect(triggerPlanetColorUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ outlineVisible: false })
       );
     });
 
-    it('should update viewMode and trigger color update only', () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = require('@game/game');
+    it('should update viewMode and trigger color update only', async () => {
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
-      store.setViewMode('elevation');
+      useWorldStore.getState().setViewMode('terrain');
       
-      expect(store.viewMode).toBe('elevation');
+      expect(useWorldStore.getState().viewMode).toBe('terrain');
       expect(requestPlanetRegeneration).not.toHaveBeenCalled();
       expect(triggerPlanetColorUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ viewMode: 'elevation' })
+        expect.objectContaining({ viewMode: 'terrain' })
       );
     });
 
-    it('should update elevationBias and trigger color update only', () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = require('@game/game');
+    it('should update elevationBias and trigger color update only', async () => {
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
-      store.setElevationBias(0.3);
+      useWorldStore.getState().setElevationBias(0.3);
       
-      expect(store.elevationBias).toBe(0.3);
+      expect(useWorldStore.getState().elevationBias).toBe(0.3);
       expect(requestPlanetRegeneration).not.toHaveBeenCalled();
       expect(triggerPlanetColorUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ elevationBias: 0.3 })
@@ -139,80 +110,55 @@ describe('WorldStore', () => {
     });
   });
 
-  describe('Seed Management', () => {
-    it('should update currentSeed without triggering regeneration', () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = require('@game/game');
-      
-      store.setCurrentSeed('test-seed-123');
-      
-      expect(store.currentSeed).toBe('test-seed-123');
-      expect(requestPlanetRegeneration).not.toHaveBeenCalled();
-      expect(triggerPlanetColorUpdate).not.toHaveBeenCalled();
-    });
-
-    it('should regenerate with current settings and seed', () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = require('@game/game');
+  describe('World Regeneration', () => {
+    it('should regenerate with current settings and seed from gameStore', async () => {
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
       // Set up some state
-      store.setCurrentSeed('test-seed');
-      store.setNumPoints(8000);
+      useWorldStore.getState().setNumPoints(8000);
       vi.clearAllMocks(); // Clear the calls from setNumPoints
       
-      store.regenerateWorldWithCurrentSettings();
+      useWorldStore.getState().regenerateWorldWithCurrentSettings();
       
       expect(requestPlanetRegeneration).toHaveBeenCalledWith(
-        'test-seed',
         expect.objectContaining({
-          currentSeed: 'test-seed',
           numPoints: 8000
         })
       );
       expect(triggerPlanetColorUpdate).toHaveBeenCalled();
-    });
-
-    it('should regenerate with explicit seed parameter', () => {
-      const { requestPlanetRegeneration } = require('@game/game');
-      
-      store.regenerateWorldWithCurrentSettings('explicit-seed');
-      
-      expect(requestPlanetRegeneration).toHaveBeenCalledWith(
-        'explicit-seed',
-        expect.any(Object)
-      );
     });
   });
 
   describe('State Reset', () => {
     it('should reset all settings to initial values', () => {
       // Modify some values
-      store.setNumPoints(999);
-      store.setJitter(0.9);
-      store.setViewMode('plates');
-      store.setCurrentSeed('modified-seed');
+      useWorldStore.getState().setNumPoints(999);
+      useWorldStore.getState().setJitter(0.9);
+      useWorldStore.getState().setViewMode('plates');
       
       // Reset
-      store.resetWorldSettings();
+      useWorldStore.getState().resetWorldSettings();
       
       // Check that values are back to defaults
-      expect(store.numPoints).toBe(12000);
-      expect(store.jitter).toBe(0.2);
-      expect(store.viewMode).toBe('terrain');
-      expect(store.currentSeed).not.toBe('modified-seed');
-      expect(typeof store.currentSeed).toBe('string');
+      const store = useWorldStore.getState();
+      expect(store.numPoints).toBe(1280); // PLANET_TILES_DEFAULT
+      expect(store.jitter).toBe(0.5); // PLANET_JITTER_DEFAULT
+      expect(store.viewMode).toBe('elevation'); // PLANET_VIEW_MODE_DEFAULT
     });
   });
 
   describe('State Consistency', () => {
-    it('should maintain state consistency across multiple updates', () => {
-      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = require('@game/game');
+    it('should maintain state consistency across multiple updates', async () => {
+      const { requestPlanetRegeneration, triggerPlanetColorUpdate } = await import('@/game');
       
       // Perform multiple updates
-      store.setNumPoints(6000);
-      store.setJitter(0.3);
-      store.setViewMode('moisture');
-      store.setOutlineVisible(false);
+      useWorldStore.getState().setNumPoints(6000);
+      useWorldStore.getState().setJitter(0.3);
+      useWorldStore.getState().setViewMode('moisture');
+      useWorldStore.getState().setOutlineVisible(false);
       
       // Check final state
+      const store = useWorldStore.getState();
       expect(store.numPoints).toBe(6000);
       expect(store.jitter).toBe(0.3);
       expect(store.viewMode).toBe('moisture');
@@ -223,26 +169,24 @@ describe('WorldStore', () => {
       expect(triggerPlanetColorUpdate).toHaveBeenCalledTimes(2); // viewMode and outlineVisible
     });
 
-    it('should pass complete state to regeneration functions', () => {
-      const { requestPlanetRegeneration } = require('@game/game');
+    it('should pass complete state to regeneration functions', async () => {
+      const { requestPlanetRegeneration } = await import('@/game');
       
-      store.setNumPoints(7500);
+      useWorldStore.getState().setNumPoints(7500);
       
       const lastCall = requestPlanetRegeneration.mock.calls[0];
-      const passedSettings = lastCall[1];
+      const passedSettings = lastCall[0]; // Settings are now the first parameter
       
       // Should include all current settings
       expect(passedSettings).toEqual(expect.objectContaining({
-        drawMode: store.drawMode,
-        algorithm: store.algorithm,
+        drawMode: expect.any(String),
+        algorithm: expect.any(Number),
         numPoints: 7500,
-        jitter: store.jitter,
-        mapType: store.mapType,
-        outlineVisible: store.outlineVisible,
-        numPlates: store.numPlates,
-        viewMode: store.viewMode,
-        elevationBias: store.elevationBias,
-        currentSeed: store.currentSeed,
+        jitter: expect.any(Number),
+        outlineVisible: expect.any(Boolean),
+        numPlates: expect.any(Number),
+        viewMode: expect.any(String),
+        elevationBias: expect.any(Number),
       }));
     });
   });

@@ -2,7 +2,7 @@
 
 console.log('🧪 Testing Setup Verification\n');
 
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 function runCommand(command, description) {
   console.log(`📋 ${description}...`);

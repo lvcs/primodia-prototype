@@ -2,7 +2,6 @@
 client/coverage/
 client/dist/
 client/node_modules/
-client/playwright-report/
 client/logs/
 client/test/
 client/test-results/
@@ -14,13 +13,11 @@ package-lock.json
 yarn.lock
 
 # Configuration files (stable, rarely changed)
-client/.eslintrc.cjs
-client/tailwind.config.js
-client/postcss.config.js
-client/vite.config.js
-client/vitest.config.js
-client/playwright.config.js
-client/test-setup-verification.js
+# client/.eslintrc.cjs
+# client/tailwind.config.js
+# client/postcss.config.js
+# client/vitest.config.js
+# client/test-setup-verification.js
 
 # Authentication/Login system (non-game features)
 client/src/pages/LoginPage.jsx
@@ -52,12 +49,8 @@ client/index.html
 *.log
 
 # Other directories
-server/
 shared/
 ___chats/
 
 # Documentation and project management
-___prds/
-*.md
 ROADMAP.md
-AGENTS.md

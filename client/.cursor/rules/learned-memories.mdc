@@ -1,0 +1,8 @@
+```mdc
+---
+description: 
+globs: 
+alwaysApply: true
+---
+```
+- Import Style: Prefer absolute path aliases (e.g., `@alias/module`) over relative paths (e.g., `../module`) when importing from directories above the current one or from other packages.

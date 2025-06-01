@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { classifyTileTerrainFromProperties } from '@/game/world/planetPlanetVoronoi';
-import { shouldHaveTrees } from '@/game/world/Tree';
-import { generateMapTerrain } from '@/game/world/registries/MapTypeRegistry';
-import { getColorForTerrain } from '@/game/world/registries/TerrainRegistry';
+import { classifyTileTerrainFromProperties } from '@/world/planetVoronoi';
+import { shouldHaveTrees } from '@/planet/tree';
+
+import { getColorForTerrain } from '@/planet/terrain';
 
 // Mock terrain types for testing
 const mockTile = {
@@ -111,51 +111,7 @@ describe('Terrain Classification System', () => {
     });
   });
 
-  describe('generateMapTerrain', () => {
-    const mockRandomFloat = vi.fn();
-    const mockPosition = { x: 0.5, y: 0.3, z: 0.2 };
 
-    beforeEach(() => {
-      mockRandomFloat.mockReturnValue(0.5);
-    });
-
-    it('should handle continents map type', () => {
-      const result = generateMapTerrain('continents', mockPosition, mockRandomFloat);
-      expect(typeof result).toBe('string');
-      expect(result).toBeTruthy();
-    });
-
-    it('should handle pangaea map type', () => {
-      const result = generateMapTerrain('pangaea', mockPosition, mockRandomFloat);
-      expect(typeof result).toBe('string');
-      expect(result).toBeTruthy();
-    });
-
-    it('should handle archipelago map type', () => {
-      const result = generateMapTerrain('archipelago', mockPosition, mockRandomFloat);
-      expect(typeof result).toBe('string');
-      expect(result).toBeTruthy();
-    });
-
-    it('should return null for unknown map type', () => {
-      const result = generateMapTerrain('unknown_map', mockPosition, mockRandomFloat);
-      expect(result).toBeNull();
-    });
-
-    it('should be deterministic with same inputs', () => {
-      const result1 = generateMapTerrain('continents', mockPosition, () => 0.3);
-      const result2 = generateMapTerrain('continents', mockPosition, () => 0.3);
-      expect(result1).toBe(result2);
-    });
-
-    it('should produce different results with different random values', () => {
-      const result1 = generateMapTerrain('continents', mockPosition, () => 0.1);
-      const result2 = generateMapTerrain('continents', mockPosition, () => 0.9);
-      // Results might be different (but not guaranteed due to terrain logic)
-      expect(typeof result1).toBe('string');
-      expect(typeof result2).toBe('string');
-    });
-  });
 
   describe('getColorForTerrain', () => {
     it('should return color for simple terrain types', () => {

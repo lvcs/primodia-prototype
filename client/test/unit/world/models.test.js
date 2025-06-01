@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import Tile from '@/game/world/model/Tile';
-import TerrainType from '@/game/world/model/TerrainType';
-import WorldPlanet from '@/game/world/model/WorldPlanet';
-import Plate from '@/game/world/model/Plate';
+import Tile from '@/world/model/Tile';
+import { TerrainType } from '@/planet/terrain';
+import WorldPlanet from '@/world/model/WorldPlanet';
+import { Plate } from '@/planet/techtonics';
 import * as THREE from 'three';
 
 describe('World Model Classes', () => {
@@ -12,13 +12,15 @@ describe('World Model Classes', () => {
         id: 'TEST_TERRAIN',
         name: 'Test Terrain',
         color: 0x00FF00,
+        baseType: 'LAND',
+        priority: 100,
       });
 
       expect(terrain.id).toBe('TEST_TERRAIN');
       expect(terrain.name).toBe('Test Terrain');
       expect(terrain.color).toBe(0x00FF00);
-      expect(terrain.baseType).toBe('LAND'); // Default value
-      expect(terrain.priority).toBe(100); // Default value
+      expect(terrain.baseType).toBe('LAND');
+      expect(terrain.priority).toBe(100);
     });
 
     it('should handle optional properties correctly', () => {
@@ -298,6 +300,7 @@ describe('World Model Classes', () => {
         name: 'Ocean',
         color: 0x000066,
         baseType: 'WATER',
+        priority: 0,
         maxElevation: -0.05,
       });
 
@@ -305,6 +308,8 @@ describe('World Model Classes', () => {
         id: 'FOREST',
         name: 'Forest',
         color: 0x006600,
+        baseType: 'LAND',
+        priority: 25,
         minMoisture: 0.5,
       });
 

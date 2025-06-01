@@ -1,0 +1,6 @@
+---
+description: Rule Analytics
+globs: src/**/*.*
+alwaysApply: false
+---
+- Each time you use a Cursor rule, update the .cursor/analytics.md tracking file, incrementing number
